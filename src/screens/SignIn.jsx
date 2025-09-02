@@ -1,7 +1,10 @@
+//src\screens\SignIn.jsx
 import React, { useState } from 'react';
 import InputField from '../components/signIn/InputField.jsx';
 import Button from '../components/signIn/Button.jsx';
 import Checkbox from '../components/signIn/Checkbox.jsx';
+import AppColors from '../utils/AppColors.js';
+import AppFonts from '../utils/AppFonts.js';
 import '../css/signin.css';
 import logoImage from '../assets/images/logo.png';
 import arrowRightIcon from '../assets/icons/arrow-right.svg';
@@ -39,24 +42,36 @@ const SignIn = () => {
   return (
     <div className="signin-container">
       <div className="signin-content">
-        {/* Logo */}
+      
         <div className="logo-container">
           <img src={logoImage} alt="TipMe Logo" className="logo" />
         </div>
 
-        {/* Welcome Text */}
+       
         <div className="welcome-text">
-          <h1>Hi, Welcome Back to TipMe</h1>
-          <p>Enter your email address and password<br />to login your account.</p>
+          <h1 style={AppFonts.h3({ color: AppColors.white })}>
+            Hi, Welcome Back to TipMe
+          </h1>
+          <p style={AppFonts.mdMedium({ color: AppColors.white, opacity: '0.9' })}>
+            Enter your email address and password<br />to login your account.
+          </p>
         </div>
 
-        {/* Sign In Form */}
+       
         <div className="signin-form-container">
           <form onSubmit={handleSubmit} className="signin-form">
             <div className="form-group">
+              <label 
+                className="block mb-1" 
+                style={{
+                  ...AppFonts.mdSemiBold({ color: AppColors.black }),
+                  textAlign: 'left'
+                }}
+              >
+                Username/Email<span style={{ color: AppColors.danger, marginLeft: '4px' }}>*</span>
+              </label>
               <InputField
                 type="email"
-                label="Username/Email"
                 placeholder="Enter"
                 value={formData.email}
                 onChange={handleInputChange('email')}
@@ -68,28 +83,29 @@ const SignIn = () => {
             <div className="form-group">
               <div className="password-group">
                 <div className="password-header">
-                  <label className="password-label">
-                    Password<span className="text-red-500 ml-1">*</span>
+                  <label 
+                    className="password-label"
+                    style={AppFonts.mdSemiBold({ color: AppColors.black })}
+                  >
+                    Password<span style={{ color: AppColors.danger }}>*</span>
                   </label>
-                  <a href="#" className="forgot-password">Forget Password?</a>
+                  <a 
+                    href="#" 
+                    className="forgot-password"
+                    style={AppFonts.mdSemiBold({ 
+                      color: AppColors.secondary,
+                      textDecoration: 'underline'
+                    })}
+                  >
+                    Forget Password?
+                  </a>
                 </div>
-                <input
+                <InputField
                   type="password"
                   placeholder="Enter"
                   value={formData.password}
                   onChange={handleInputChange('password')}
                   className="input-placeholder"
-                  style={{
-                    width: '100%',
-                    maxWidth: '402px',
-                    height: '50px',
-                    border: '1px solid #E5E5E5',
-                    borderRadius: '8px',
-                    paddingLeft: '12px',
-                    paddingRight: '12px',
-                    fontSize: '16px',
-                    outline: 'none'
-                  }}
                   required
                 />
               </div>
@@ -107,9 +123,9 @@ const SignIn = () => {
             <div className="form-group">
               <Button
                 type="submit"
-                backgroundColor="#05CBE7"
-                borderColor="#05CBE7"
-                textColor="white"
+                backgroundColor={AppColors.primary}
+                borderColor={AppColors.primary}
+                textColor={AppColors.white}
                 icon={<ArrowIcon />}
                 iconPosition="right"
                 showIcon={true}

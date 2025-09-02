@@ -1,12 +1,15 @@
+//src\components\signIn\Button.jsx
 import React from 'react';
+import AppColors from '../../utils/AppColors.js';
+import AppFonts from '../../utils/AppFonts.js';
 
 const Button = ({ 
   children,
   onClick,
   type = 'button',
-  backgroundColor = '#05CBE7',
-  borderColor = '#05CBE7',
-  textColor = 'white',
+  backgroundColor = AppColors.primary,
+  borderColor = AppColors.primary,
+  textColor = AppColors.white,
   icon,
   iconPosition = 'right',
   showIcon = true,
@@ -23,6 +26,7 @@ const Button = ({
     paddingBottom: '15px',
     borderRadius: '48px',
     border: `2px solid ${borderColor}`,
+    ...AppFonts.mdBold({ color: textColor }),
   };
 
   const widthClass = fullWidth ? 'w-full' : 'w-auto px-6';
@@ -32,8 +36,11 @@ const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${widthClass} flex items-center justify-center gap-2 font-medium transition-all duration-200 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-      style={buttonStyle}
+      className={`${widthClass} flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      style={{
+        ...buttonStyle,
+        focusRingColor: AppColors.info_500,
+      }}
       {...props}
     >
       {showIcon && icon && iconPosition === 'left' && (
@@ -54,4 +61,3 @@ const Button = ({
 };
 
 export default Button;
-

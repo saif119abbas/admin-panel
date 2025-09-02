@@ -1,4 +1,7 @@
+//src\components\signIn\Checkbox.jsx
 import React from 'react';
+import AppColors from '../../utils/AppColors.js';
+import AppFonts from '../../utils/AppFonts.js';
 
 const Checkbox = ({ 
   id,
@@ -17,17 +20,19 @@ const Checkbox = ({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="w-4 h-4 rounded border-2 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        className="w-4 h-4 rounded border-2 focus:ring-2 focus:ring-offset-2"
         style={{
-          accentColor: '#3623B7',
+          accentColor: AppColors.secondary,
+          borderColor: AppColors.border_3,
+          focusRingColor: AppColors.info_500,
         }}
         {...props}
       />
       {label && (
         <label 
           htmlFor={id} 
-          className="ml-2 text-sm cursor-pointer select-none"
-          style={{ color: '#666666' }}
+          className="ml-2 cursor-pointer select-none"
+          style={AppFonts.mdSemiBold({ color: AppColors.text })}
         >
           {label}
         </label>
