@@ -1,0 +1,13 @@
+
+
+{
+  "welcomeTitle": "Hi, Welcome Back to TipMe",
+  "welcomeSubtitle": "Enter your email address and password\nto login your account.",
+  "usernameEmail": "Username/Email",
+  "password": "Password",
+  "forgetPassword": "Forget Password?",
+  "rememberMe": "Remember Me",
+  "signIn": "Sign In",
+  "enter": "Enter",
+  "required": "*"
+}
