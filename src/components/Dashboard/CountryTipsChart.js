@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import  { useState } from 'react';
 
-const CountryTipsChart= () => {
+const CountryTipsChart = () => {
   const [timeFilter, setTimeFilter] = useState('Monthly');
+  const [hoveredPoint, setHoveredPoint] = useState(null);
   
   const countryData = [
     { month: 'JAN', uae: 250, usa: 200 },
@@ -19,9 +20,9 @@ const CountryTipsChart= () => {
   ];
 
   const maxValue = Math.max(...countryData.flatMap(d => [d.uae, d.usa]));
-  
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 relative">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900">Tips Received by Country</h3>
         <div className="hidden sm:flex bg-gray-100 rounded-lg p-1">
@@ -120,49 +121,94 @@ const CountryTipsChart= () => {
           
           {/* UAE Data points */}
           {countryData.map((point, index) => (
-            <circle
-              key={`uae-${index}`}
-              cx={(index / (countryData.length - 1)) * 800}
-              cy={200 - (point.uae / maxValue) * 160}
-              r="4"
-              fill="#06B6D4"
-              stroke="white"
-              strokeWidth="2"
-              className="hover:r-6 transition-all cursor-pointer"
-            />
+            <g key={`uae-${index}`}>
+              <circle
+                cx={(index / (countryData.length - 1)) * 800}
+                cy={200 - (point.uae / maxValue) * 160}
+                r="4"
+                fill="#06B6D4"
+                stroke="white"
+                strokeWidth="2"
+                className="hover:r-6 transition-all cursor-pointer"
+                onMouseEnter={() => setHoveredPoint({ month: point.month, value: point.uae, country: 'UAE' })}
+                onMouseLeave={() => setHoveredPoint(null)}
+              />
+              
+              {/* Tooltip circle */}
+              {hoveredPoint?.month === point.month && hoveredPoint?.country === 'UAE' && (
+                <>
+                  <circle
+                    cx={(index / (countryData.length - 1)) * 800}
+                    cy={200 - (point.uae / maxValue) * 160 - 25}
+                    r="12"
+                    fill="#1f2937"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={(index / (countryData.length - 1)) * 800}
+                    y={205 - (point.uae / maxValue) * 160 - 25}
+                    textAnchor="middle"
+                    className="text-xs font-semibold fill-white"
+                  >
+                    {point.uae}
+                  </text>
+                </>
+              )}
+            </g>
           ))}
           
           {/* USA Data points */}
           {countryData.map((point, index) => (
-            <circle
-              key={`usa-${index}`}
-              cx={(index / (countryData.length - 1)) * 800}
-              cy={200 - (point.usa / maxValue) * 160}
-              r="4"
-              fill="#8B5CF6"
-              stroke="white"
-              strokeWidth="2"
-              className="hover:r-6 transition-all cursor-pointer"
-            />
+            <g key={`usa-${index}`}>
+              <circle
+                cx={(index / (countryData.length - 1)) * 800}
+                cy={200 - (point.usa / maxValue) * 160}
+                r="4"
+                fill="#8B5CF6"
+                stroke="white"
+                strokeWidth="2"
+                className="hover:r-6 transition-all cursor-pointer"
+                onMouseEnter={() => setHoveredPoint({ month: point.month, value: point.usa, country: 'USA' })}
+                onMouseLeave={() => setHoveredPoint(null)}
+              />
+              
+              {/* Tooltip circle */}
+              {hoveredPoint?.month === point.month && hoveredPoint?.country === 'USA' && (
+                <>
+                  <circle
+                    cx={(index / (countryData.length - 1)) * 800}
+                    cy={200 - (point.usa / maxValue) * 160 - 25}
+                    r="12"
+                    fill="#1f2937"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={(index / (countryData.length - 1)) * 800}
+                    y={205 - (point.usa / maxValue) * 160 - 25}
+                    textAnchor="middle"
+                    className="text-xs font-semibold fill-white"
+                  >
+                    {point.usa}
+                  </text>
+                </>
+              )}
+            </g>
           ))}
           
-          {/* Peak indicator */}
-          <circle
-            cx={(5 / (countryData.length - 1)) * 800}
-            cy={200 - (350 / maxValue) * 160}
-            r="8"
-            fill="#1f2937"
-            stroke="white"
-            strokeWidth="2"
-          />
-          <text
-            x={(5 / (countryData.length - 1)) * 800}
-            y={200 - (350 / maxValue) * 160 - 15}
-            textAnchor="middle"
-            className="text-xs font-semibold fill-white"
-          >
-            350
-          </text>
+          {/* Y-axis labels */}
+          {[500, 400, 300, 200, 100, 0].map((value) => (
+            <text
+              key={value}
+              x={-10}
+              y={205 - (value / maxValue) * 160}
+              textAnchor="end"
+              className="text-xs fill-gray-500"
+            >
+              {value}
+            </text>
+          ))}
         </svg>
         
         {/* X-axis labels */}
@@ -171,13 +217,6 @@ const CountryTipsChart= () => {
             <span key={point.month} className="text-xs text-gray-500 flex-shrink-0">
               {point.month}
             </span>
-          ))}
-        </div>
-        
-        {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 -ml-8 sm:-ml-12">
-          {[500, 400, 300, 200, 100, 0].map((value) => (
-            <span key={value}>{value}</span>
           ))}
         </div>
       </div>
