@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import  { useState } from 'react';
 
 const ChurnRateChart = () => {
   const [timeFilter, setTimeFilter] = useState('Monthly');
+  const [tooltip, setTooltip] = useState({
+    show: false,
+    x: 0,
+    y: 0,
+    value: 0,
+    month: ''
+  });
   
   const churnData = [
     { month: 'JAN', value: 2 },
@@ -19,9 +26,23 @@ const ChurnRateChart = () => {
   ];
 
   const maxValue = Math.max(...churnData.map(d => d.value));
+
+  const handleMouseEnter =(data,x,y) => {
+    setTooltip({
+      show: true,
+      x: x,
+      y: y - 10,
+      value: data.value,
+      month: data.month
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltip({ show: false, x: 0, y: 0, value: 0, month: '' });
+  };
   
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 relative">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900">Users Churn Rate Tracking</h3>
         <div className="hidden sm:flex bg-gray-100 rounded-lg p-1">
@@ -100,11 +121,13 @@ const ChurnRateChart = () => {
               key={index}
               cx={(index / (churnData.length - 1)) * 800}
               cy={200 - (point.value / maxValue) * 160}
-              r="4"
+              r="5"
               fill="#06B6D4"
               stroke="white"
               strokeWidth="2"
-              className="hover:r-6 transition-all cursor-pointer"
+              className="hover:r-7 transition-all cursor-pointer"
+              onMouseEnter={(e) => handleMouseEnter(e, point, (index / (churnData.length - 1)) * 800, 200 - (point.value / maxValue) * 160)}
+              onMouseLeave={handleMouseLeave}
             />
           ))}
           
@@ -150,6 +173,26 @@ const ChurnRateChart = () => {
           <span className="text-sm text-gray-600">User Churn Rate (%)</span>
         </div>
       </div>
+
+      {/* Tooltip */}
+      {tooltip.show && (
+        <div
+          className="absolute z-10 pointer-events-none"
+          style={{
+            left: `${(tooltip.x / 800) * 100}%`,
+            top: `${((tooltip.y + 40) / 200) * 100}%`,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          <div className="bg-black text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg">
+            <div className="text-center">
+              <div className="font-semibold">{tooltip.month}</div>
+              <div>{tooltip.value}%</div>
+            </div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import MonthlyActiveUsersChart from './MonthlyActiveUsersChart';
 import LoginFrequencyChart from './LoginFrequencyChart';
 import TotalTicketsChart from './TotalTicketsChart';
 
-const EngagementMetrics= () => {
+const EngagementMetrics = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-6">Engagement and Retention Metrics</h2>

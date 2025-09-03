@@ -1,6 +1,7 @@
 import { Home, Users, HeadphonesIcon, TrendingUp, Settings, Coffee, X } from 'lucide-react';
+import background from '../assets/images/background.svg';
 
-const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
+const Sidebar = ({ currentView, onViewChange, isOpen, onClose }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'users', label: 'Users', icon: Users },
@@ -19,8 +20,19 @@ const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
       fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-indigo-600 to-indigo-800 text-white flex flex-col transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
     `}>
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      />
+      
       {/* Logo */}
-      <div className="p-6 border-b border-indigo-500">
+      <div className="p-6 border-b border-indigo-500 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
@@ -38,7 +50,7 @@ const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 relative z-10">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const IconComponent = item.icon;
