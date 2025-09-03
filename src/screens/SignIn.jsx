@@ -1,5 +1,5 @@
 //src\screens\SignIn.jsx
-import React, { useState } from 'react';
+import { useState,useEffect } from 'react';
 import InputField from '../components/signIn/InputField.jsx';
 import Button from '../components/signIn/Button.jsx';
 import Checkbox from '../components/signIn/Checkbox.jsx';
@@ -8,20 +8,29 @@ import AppFonts from '../utils/AppFonts.js';
 import '../css/signin.css';
 import logoImage from '../assets/images/logo.png';
 import arrowRightIcon from '../assets/icons/arrow-right.svg';
+import { useAuth } from '../context/AuthContext.js'
+import { useNavigate } from "react-router-dom";;
 
 const SignIn = () => {
+    const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "user@example.com",
+    password: "User@123",
     rememberMe: false
   });
-
+  const { login,isAuthenticated } = useAuth();
   const handleInputChange = (field) => (e) => {
     setFormData(prev => ({
       ...prev,
       [field]: e.target.value
     }));
   };
+    useEffect(
+    function () {
+      if (isAuthenticated) navigate("/admin", { replace: true });
+    },
+    [isAuthenticated, navigate]
+  );
 
   const handleCheckboxChange = (e) => {
     setFormData(prev => ({
@@ -32,6 +41,7 @@ const SignIn = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    login(formData.email, formData.password);
     console.log('Sign in attempt:', formData);
   };
 
