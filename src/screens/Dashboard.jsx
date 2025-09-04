@@ -1,9 +1,9 @@
-import StatsOverview from "./StatsOverview";
-import ChurnRateChart from "./ChurnRateChart";
-import ActiveUsersChart from "./ActiveUsersChart";
-import CountryTipsChart from "./CountryTipsChart";
-import NewUsersTrendChart from "./NewUsersTrendChart";
-import EngagementRetentionMetrics from "./EngagementRetentionMetrics";
+import StatsOverview from "../components/Dashboard/StatsOverview";
+import ChurnRateChart from "../components/Dashboard/ChurnRateChart";
+import ActiveUsersChart from "../components/Dashboard/ActiveUsersChart";
+import CountryTipsChart from "../components/Dashboard/CountryTipsChart";
+import NewUsersTrendChart from "../components/Dashboard/NewUsersTrendChart";
+import EngagementRetentionMetrics from "../components/Dashboard/EngagementRetentionMetrics";
 
 const Dashboard = () => {
   return (
