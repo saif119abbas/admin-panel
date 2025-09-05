@@ -1,0 +1,239 @@
+/* src/styles/modals.css */
+
+/* Base Modal Responsive Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive Modal Sizes */
+@media (min-width: 640px) {
+  .modal-content {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 639px) {
+  .modal-content {
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+  
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 4rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .modal-header {
+    padding: 0.75rem 1rem;
+    min-height: 3.5rem;
+  }
+}
+
+/* Modal Content */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+@media (max-width: 639px) {
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+/* Modal Footer */
+.modal-footer {
+  background-color: #000034;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .modal-footer {
+    padding: 0.75rem 1rem;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+  
+  .modal-footer button {
+    width: 100% !important;
+  }
+}
+
+/* Form Responsive Styles */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 639px) {
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Phone Input Responsive */
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+}
+
+.phone-input-container:focus-within {
+  ring: 2px;
+  ring-color: #05CBE7;
+  border-color: transparent;
+}
+
+.country-code-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-right: 1px solid #d1d5db;
+  transition: background-color 0.15s;
+  height: 2.5rem;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+.country-code-button:hover {
+  background-color: #f3f4f6;
+}
+
+
+@media (max-width: 639px) {
+  .country-code-button .country-name {
+    display: none;
+  }
+  
+  .phone-verify-text {
+    display: none;
+  }
+}
+
+/* Dropdown Responsive */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  min-width: 100%;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 639px) {
+  .dropdown-menu {
+    max-height: 8rem;
+  }
+}
+
+/* Button Responsive */
+.action-button {
+  transition: all 0.15s;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 639px) {
+  .action-button {
+    font-size: 0.75rem;
+    min-height: 2.25rem;
+  }
+}
+
+/* Loading States */
+.loading-spinner {
+  animate: spin 1s linear infinite;
+  border-radius: 50%;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #3b82f6;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility Classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus Styles for Accessibility */
+.focus-visible:focus {
+  outline: 2px solid #05CBE7;
+  outline-offset: 2px;
+}
+
+/* Smooth Transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

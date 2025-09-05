@@ -81,6 +81,19 @@ const AppColors = {
   border_3: "#E5E5E5",
   text: "#666666",
 
+  dark_bg: "#000034",
+  
+  status: {
+    active: {
+      background: "#5BC039",
+      text: "#FFFFFF"
+    },
+    pending: {
+      background: "#B77F12", 
+      text: "#FFFFFF"
+    }
+  },
+
   purple_600: "#7C3AED",
   green_600: "#059669",
   cyan_500: "#06B6D4",
