@@ -80,6 +80,19 @@ const AppColors = {
   border_2: "#F0F0F0",
   border_3: "#E5E5E5",
   text: "#666666",
+
+  purple_600: "#7C3AED",
+  green_600: "#059669",
+  cyan_500: "#06B6D4",
+  cyan_600: "#0891B2",
+  blue_600: "#2563EB",
+  orange_600: "#EA580C",
+  gray_100: "#F3F4F6",
+  gray_300: "#D1D5DB",
+  gray_500: "#6B7280",
+  gray_600: "#4B5563",
+  gray_700: "#374151",
+  gray_800: "#1F2937",
 };
 
 export default AppColors;

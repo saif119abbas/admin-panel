@@ -1,31 +1,32 @@
-//src\screens\SignIn.jsx
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import InputField from '../components/signIn/InputField.jsx';
 import Button from '../components/signIn/Button.jsx';
 import Checkbox from '../components/signIn/Checkbox.jsx';
 import AppColors from '../utils/AppColors.js';
 import AppFonts from '../utils/AppFonts.js';
-import '../css/signin.css';
 import logoImage from '../assets/images/logo.png';
 import arrowRightIcon from '../assets/icons/arrow-right.svg';
+import backgroundImage from '../assets/images/background.svg';
 import { useAuth } from '../context/AuthContext.js'
-import { useNavigate } from "react-router-dom";;
+import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "user@example.com",
     password: "User@123",
     rememberMe: false
   });
-  const { login,isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
   const handleInputChange = (field) => (e) => {
     setFormData(prev => ({
       ...prev,
       [field]: e.target.value
     }));
   };
-    useEffect(
+
+  useEffect(
     function () {
       if (isAuthenticated) navigate("/admin", { replace: true });
     },
@@ -46,39 +47,57 @@ const SignIn = () => {
   };
 
   const ArrowIcon = () => (
-    <img src={arrowRightIcon} alt="arrow" className="w-5 h-5 signin-button-arrow" />
+    <img 
+      src={arrowRightIcon} 
+      alt="arrow" 
+      className="w-5 h-5 brightness-0 invert" 
+    />
   );
 
   return (
-    <div className="signin-container">
-      <div className="signin-content">
-      
-        <div className="logo-container">
-          <img src={logoImage} alt="TipMe Logo" className="logo" />
+    <div 
+      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-5 sm:p-4 xs:p-3"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
+      <div className="flex flex-col items-center w-full max-w-md">
+        {/* Logo Container */}
+        <div className="mb-10">
+          <img 
+            src={logoImage} 
+            alt="TipMe Logo" 
+            className="h-20 w-auto sm:h-15 xs:h-12" 
+          />
         </div>
 
-       
-        <div className="welcome-text">
-          <h1 style={AppFonts.h3({ color: AppColors.white })}>
+        {/* Welcome Text */}
+        <div className="text-center mb-10 sm:mb-8 xs:mb-8 text-white">
+          <h1 
+            className="mb-3 leading-tight"
+            style={AppFonts.h3({ color: AppColors.white })}
+          >
             Hi, Welcome Back to TipMe
           </h1>
-          <p style={AppFonts.mdMedium({ color: AppColors.white, opacity: '0.9' })}>
-            Enter your email address and password<br />to login your account.
+          <p 
+            className="leading-relaxed opacity-90"
+            style={AppFonts.mdMedium({ color: AppColors.white, opacity: '0.9' })}
+          >
+            Enter your email address and password<br />
+            to login your account.
           </p>
         </div>
 
-       
-        <div className="signin-form-container">
-          <form onSubmit={handleSubmit} className="signin-form">
-            <div className="form-group">
+        {/* Form Container */}
+        <div className="bg-white rounded-3xl p-6 w-full max-w-md h-80 shadow-xl flex flex-col justify-center sm:w-[90vw] sm:max-w-md sm:h-auto sm:min-h-80 xs:w-[95vw] xs:max-w-sm xs:p-5 xs:rounded-xl">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5 h-full justify-between">
+            {/* Email Input */}
+            <div className="flex flex-col">
               <label 
-                className="block mb-1" 
+                className="block mb-1 text-left"
                 style={{
                   ...AppFonts.mdSemiBold({ color: AppColors.black }),
-                  textAlign: 'left'
                 }}
               >
-                Username/Email<span style={{ color: AppColors.danger, marginLeft: '4px' }}>*</span>
+                Username/Email<span className="text-red-500 ml-1">*</span>
               </label>
               <InputField
                 type="email"
@@ -86,25 +105,24 @@ const SignIn = () => {
                 value={formData.email}
                 onChange={handleInputChange('email')}
                 required
-                className="input-placeholder"
               />
             </div>
 
-            <div className="form-group">
-              <div className="password-group">
-                <div className="password-header">
+            {/* Password Input */}
+            <div className="flex flex-col">
+              <div className="relative">
+                <div className="flex justify-between items-center mb-2">
                   <label 
                     className="password-label"
                     style={AppFonts.mdSemiBold({ color: AppColors.black })}
                   >
-                    Password<span style={{ color: AppColors.danger }}>*</span>
+                    Password<span className="text-red-500">*</span>
                   </label>
                   <a 
                     href="#" 
-                    className="forgot-password"
+                    className="text-right transition-opacity duration-200 hover:opacity-80 underline"
                     style={AppFonts.mdSemiBold({ 
                       color: AppColors.secondary,
-                      textDecoration: 'underline'
                     })}
                   >
                     Forget Password?
@@ -115,13 +133,13 @@ const SignIn = () => {
                   placeholder="Enter"
                   value={formData.password}
                   onChange={handleInputChange('password')}
-                  className="input-placeholder"
                   required
                 />
               </div>
             </div>
 
-            <div className="form-group">
+            {/* Remember Me Checkbox */}
+            <div className="flex flex-col">
               <Checkbox
                 id="rememberMe"
                 checked={formData.rememberMe}
@@ -130,7 +148,8 @@ const SignIn = () => {
               />
             </div>
 
-            <div className="form-group">
+            {/* Submit Button */}
+            <div className="flex flex-col">
               <Button
                 type="submit"
                 backgroundColor={AppColors.primary}
@@ -140,7 +159,7 @@ const SignIn = () => {
                 iconPosition="right"
                 showIcon={true}
                 fullWidth={false}
-                className="signin-button"
+                className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90 sm:!max-w-md xs:!max-w-sm"
               >
                 Sign In
               </Button>

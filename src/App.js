@@ -1,4 +1,5 @@
 import SignIn from "./screens/SignIn";
+import Settings from "./screens/Settings";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import Main from "./components/Main";
@@ -10,7 +11,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route index element={<SignIn />} />
+          <Route index element={<Settings />} />
 
           <Route
             path="admin"

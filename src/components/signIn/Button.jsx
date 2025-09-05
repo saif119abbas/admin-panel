@@ -1,4 +1,3 @@
-//src\components\signIn\Button.jsx
 import React from 'react';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
@@ -16,27 +15,80 @@ const Button = ({
   fullWidth = true,
   disabled = false,
   className = '',
+  style = {},
+  variant = 'default',
   ...props 
 }) => {
+  const paddingVariants = {
+    default: 'py-4 px-6',
+    addUser: 'py-2.5 px-4',
+    filter: 'py-2.5 px-5'
+  };
+
+  const selectedPadding = paddingVariants[variant] || paddingVariants.default;
+
   const buttonStyle = {
     backgroundColor: backgroundColor,
     borderColor: borderColor,
     color: textColor,
-    paddingTop: '15px',
-    paddingBottom: '15px',
-    borderRadius: '48px',
-    border: `2px solid ${borderColor}`,
     ...AppFonts.mdBold({ color: textColor }),
+    ...style,
   };
 
-  const widthClass = fullWidth ? 'w-full' : 'w-auto px-6';
+  const baseClasses = `
+    ${fullWidth ? 'w-full' : 'w-auto'}
+    ${selectedPadding}
+    rounded-full
+    border
+    transition-all
+    duration-200
+    ease-in-out
+    outline-none
+    flex
+    items-center
+    justify-center
+    gap-2
+    focus:ring-2
+    focus:ring-offset-2
+    ${disabled 
+      ? 'cursor-not-allowed opacity-50' 
+      : 'cursor-pointer hover:opacity-90'
+    }
+    ${variant === 'addUser' ? 'whitespace-nowrap' : ''}
+    ${className}
+  `;
+
+  const renderIcon = (iconElement) => {
+    if (!iconElement) return null;
+    
+    if (typeof iconElement === 'string') {
+      return (
+        <img 
+          src={iconElement} 
+          alt="icon" 
+          className={`w-5 h-5 ${
+            textColor === AppColors.white 
+              ? 'brightness-0 invert' 
+              : textColor === AppColors.primary 
+                ? 'brightness-0 saturate-100 invert-77 sepia-85 saturate-255 hue-rotate-166 brightness-99 contrast-96'
+                : ''
+          }`}
+        />
+      );
+    } else {
+      return React.cloneElement(iconElement, { 
+        className: 'w-5 h-5',
+        style: { color: textColor, ...iconElement.props?.style }
+      });
+    }
+  };
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${widthClass} flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={baseClasses}
       style={{
         ...buttonStyle,
         focusRingColor: AppColors.info_500,
@@ -45,15 +97,15 @@ const Button = ({
     >
       {showIcon && icon && iconPosition === 'left' && (
         <span className="flex items-center">
-          {icon}
+          {renderIcon(icon)}
         </span>
       )}
       
-      <span>{children}</span>
+      <span style={{ color: textColor }}>{children}</span>
       
       {showIcon && icon && iconPosition === 'right' && (
         <span className="flex items-center">
-          {icon}
+          {renderIcon(icon)}
         </span>
       )}
     </button>

@@ -1,4 +1,3 @@
-//src\components\signIn\Checkbox.jsx
 import React from 'react';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
@@ -20,7 +19,7 @@ const Checkbox = ({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="w-4 h-4 rounded border-2 focus:ring-2 focus:ring-offset-2"
+        className="w-4 h-4 rounded border-2 focus:ring-2 focus:ring-offset-2 cursor-pointer disabled:cursor-not-allowed"
         style={{
           accentColor: AppColors.secondary,
           borderColor: AppColors.border_3,
