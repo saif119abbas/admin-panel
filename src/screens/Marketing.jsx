@@ -7,8 +7,8 @@ export default function Marketing()
     console.log(currentView);
     return( 
     <>
-        {currentView==="all-templates" && <AllTemplates />}
-         {currentView==="send-notifications" && <NotificationTemplate />}
+        {(currentView==="all-templates" || currentView==="create-templates" )&& <AllTemplates />}
+        {currentView==="send-notifications" && <NotificationTemplate />}
     </>
     )
 }
