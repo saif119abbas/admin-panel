@@ -1,12 +1,21 @@
-import { Home, Users, HeadphonesIcon, TrendingUp, Settings, Coffee, X } from 'lucide-react';
+//src\components\Sidebar.js
+import {
+  Home,
+  Users,
+  HeadphonesIcon,
+  TrendingUp,
+  Settings,
+  Coffee,
+  X,
+} from "lucide-react";
 
-const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
+const Sidebar = ({ currentView, onViewChange, isOpen, onClose }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'support', label: 'Customer Support', icon: HeadphonesIcon },
-    { id: 'marketing', label: 'Marketing', icon: TrendingUp },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "users", label: "Users", icon: Users },
+    { id: "support", label: "Customer Support", icon: HeadphonesIcon },
+    { id: "marketing", label: "Marketing", icon: TrendingUp },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const handleItemClick = (itemId) => {
@@ -15,10 +24,12 @@ const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
   };
 
   return (
-    <div className={`
+    <div
+      className={`
       fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-indigo-600 to-indigo-800 text-white flex flex-col transform transition-transform duration-300 ease-in-out
-      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-    `}>
+      ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+    `}
+    >
       {/* Logo */}
       <div className="p-6 border-b border-indigo-500">
         <div className="flex items-center justify-between">
@@ -43,15 +54,15 @@ const Sidebar= ({ currentView, onViewChange, isOpen, onClose }) => {
           {menuItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = currentView === item.id;
-            
+
             return (
               <li key={item.id}>
                 <button
                   onClick={() => handleItemClick(item.id)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
                     isActive
-                      ? 'bg-white text-indigo-600 shadow-md'
-                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
+                      ? "bg-white text-indigo-600 shadow-md"
+                      : "text-indigo-100 hover:bg-indigo-500 hover:text-white"
                   }`}
                 >
                   <IconComponent className="w-5 h-5 flex-shrink-0" />

@@ -1,6 +1,7 @@
+
 const ActiveUsersChart = () => {
   const totalUsers = 654;
-  const activeUsers = 231;
+  const activeUsers = 327;
   const percentage = Math.round((activeUsers / totalUsers) * 100);
   
   const circumference = 2 * Math.PI * 45;

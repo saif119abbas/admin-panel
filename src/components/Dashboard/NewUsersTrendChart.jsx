@@ -1,7 +1,9 @@
 import { useState } from 'react';
+
 const NewUsersTrendChart = () => {
   const [selectedCountry, setSelectedCountry] = useState('United Arab Emirates');
   const [timeFilter, setTimeFilter] = useState('Monthly');
+  const [hoveredBar, setHoveredBar] = useState(null);
   
   const userData = [
     { month: 'JAN', dubai: 22, abuDhabi: 38 },
@@ -20,10 +22,10 @@ const NewUsersTrendChart = () => {
 
   const maxValue = Math.max(...userData.flatMap(d => [d.dubai, d.abuDhabi]));
   const barWidth = 20;
-  const barSpacing = 45;
-  
+  //const barSpacing = 45;
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900">New Users Trend By Country</h3>
         
@@ -112,6 +114,8 @@ const NewUsersTrendChart = () => {
                     fill="#4F46E5"
                     rx="2"
                     className="hover:opacity-80 transition-opacity cursor-pointer"
+                    onMouseEnter={() => setHoveredBar({ month: data.month, value: data.dubai, city: 'Dubai' })}
+                    onMouseLeave={() => setHoveredBar(null)}
                   />
                   
                   {/* Abu Dhabi Bar */}
@@ -123,7 +127,52 @@ const NewUsersTrendChart = () => {
                     fill="#A855F7"
                     rx="2"
                     className="hover:opacity-80 transition-opacity cursor-pointer"
+                    onMouseEnter={() => setHoveredBar({ month: data.month, value: data.abuDhabi, city: 'Abu Dhabi' })}
+                    onMouseLeave={() => setHoveredBar(null)}
                   />
+                  
+                  {/* Tooltip circles for bars */}
+                  {hoveredBar?.month === data.month && hoveredBar?.city === 'Dubai' && (
+                    <>
+                      <circle
+                        cx={x - barWidth/2 + barWidth/2}
+                        cy={230 - dubaiHeight - 20}
+                        r="12"
+                        fill="#1f2937"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={x - barWidth/2 + barWidth/2}
+                        y={235 - dubaiHeight - 20}
+                        textAnchor="middle"
+                        className="text-xs font-semibold fill-white"
+                      >
+                        {data.dubai}
+                      </text>
+                    </>
+                  )}
+                  
+                  {hoveredBar?.month === data.month && hoveredBar?.city === 'Abu Dhabi' && (
+                    <>
+                      <circle
+                        cx={x + barWidth/2 + 2 + barWidth/2}
+                        cy={230 - abuDhabiHeight - 20}
+                        r="12"
+                        fill="#1f2937"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={x + barWidth/2 + 2 + barWidth/2}
+                        y={235 - abuDhabiHeight - 20}
+                        textAnchor="middle"
+                        className="text-xs font-semibold fill-white"
+                      >
+                        {data.abuDhabi}
+                      </text>
+                    </>
+                  )}
                   
                   {/* Month Label */}
                   <text
@@ -137,26 +186,6 @@ const NewUsersTrendChart = () => {
                 </g>
               );
             })}
-            
-            {/* Peak indicator for June */}
-            <g>
-              <circle
-                cx={80 + 5 * 55 + barWidth/2 + 2}
-                cy={230 - (userData[5].abuDhabi / maxValue) * 180 - 15}
-                r="12"
-                fill="#1f2937"
-                stroke="white"
-                strokeWidth="2"
-              />
-              <text
-                x={80 + 5 * 55 + barWidth/2 + 2}
-                y={235 - (userData[5].abuDhabi / maxValue) * 180 - 15}
-                textAnchor="middle"
-                className="text-xs font-semibold fill-white"
-              >
-                {userData[5].abuDhabi}
-              </text>
-            </g>
           </svg>
         </div>
       </div>
