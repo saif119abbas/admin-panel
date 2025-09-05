@@ -83,7 +83,6 @@ const UserRoles = ({
                 
               }}
             >
-              {/* Role name - positioned to the left */}
               <span 
                 className="font-semibold flex-1 text-left"
                 style={AppFonts.mdSemiBold({ 

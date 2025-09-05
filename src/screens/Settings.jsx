@@ -1,12 +1,12 @@
 // src/screens/Settings.jsx
 import React, { useState } from 'react';
+import { UserProvider } from '../context/UserContext.jsx';
 import SettingsMainContent from '../components/settings/SettingsMainContent.jsx';
 import AddNewUser from '../components/settings/AddNewUser.jsx';
 
-const Settings = () => {
+const SettingsContent = () => {
   const [mainContentView, setMainContentView] = useState('users');
-  const [users, setUsers] = useState([]); // Dynamic users list
-  const [editingUser, setEditingUser] = useState(null); // User being edited
+  const [editingUser, setEditingUser] = useState(null);
 
   const handleAddNewUser = () => {
     setEditingUser(null);
@@ -23,30 +23,9 @@ const Settings = () => {
     setMainContentView('users');
   };
 
-  const handleSubmitUser = (userData) => {
-    if (editingUser) {
-      // Update existing user
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === editingUser.id 
-            ? { ...userData, id: editingUser.id }
-            : user
-        )
-      );
-    } else {
-      // Add new user
-      const newUser = {
-        ...userData,
-        id: Date.now(), // Simple ID generation
-      };
-      setUsers(prevUsers => [...prevUsers, newUser]);
-    }
+  const handleUserFormSubmit = () => {
     setMainContentView('users');
     setEditingUser(null);
-  };
-
-  const handleDeleteUser = (userId) => {
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
   };
 
   const renderMainContent = () => {
@@ -55,7 +34,7 @@ const Settings = () => {
         return (
           <AddNewUser 
             onBack={handleBackToUsers}
-            onSubmit={handleSubmitUser}
+            onSubmit={handleUserFormSubmit}
             editingUser={editingUser}
           />
         );
@@ -64,9 +43,7 @@ const Settings = () => {
         return (
           <SettingsMainContent 
             onAddNewUser={handleAddNewUser}
-            users={users}
             onEditUser={handleEditUser}
-            onDeleteUser={handleDeleteUser}
           />
         );
     }
@@ -78,6 +55,14 @@ const Settings = () => {
         {renderMainContent()}
       </main>
     </div>
+  );
+};
+
+const Settings = () => {
+  return (
+    <UserProvider>
+      <SettingsContent />
+    </UserProvider>
   );
 };
 

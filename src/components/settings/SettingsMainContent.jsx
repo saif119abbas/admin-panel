@@ -1,72 +1,106 @@
 // src/components/settings/SettingsMainContent.jsx
-import React, { useState, useMemo } from 'react';
-import { Users, UserCheck, Shield, TrendingUp, Headphones } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { 
+  Users,            
+  UserCheck,        
+  UserCog,        
+  User,             
+  Megaphone,        
+  Headphones,       
+  SlidersHorizontal
+} from "lucide-react";
+import { useUser } from '../../context/UserContext.jsx';
 import SearchField from './SearchField.jsx';
 import StatsCard from './StatsCard.jsx';
 import UserCard from './UserCard.jsx';
 import Button from '../signIn/Button.jsx';
+import FilterModal from '../Users/modals/FilterModal.jsx';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
-import filterIcon from '../../assets/icons/trash.svg';
 
-const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) => {
-  const [searchValue, setSearchValue] = useState('');
+const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    country: '',
+    city: '',
+    createdOn: '',
+    status: ''
+  });
 
-  // Calculate stats based on dynamic users
+  // Get user context data and actions
+  const {
+    filteredUsers,
+    searchTerm,
+    setSearchTerm,
+    deleteUser,
+    getUserRoleDisplayName,
+    getUserStats,
+    loading,
+    error
+  } = useUser();
+
+  // Calculate statistics using context
   const stats = useMemo(() => {
-    const totalUsers = users.length;
-    const activeUsers = users.filter(user => user.status === true).length;
-    const superAdmins = users.filter(user => user.userRole === 'superadmin').length;
-    const admins = users.filter(user => user.userRole === 'admin').length;
-    const marketing = users.filter(user => user.userRole === 'marketing').length;
-    const customerSupport = users.filter(user => user.userRole === 'customersupport').length;
-
+    const userStats = getUserStats();
+    
     return [
       {
         title: 'Total No. of Users',
-        value: totalUsers.toString(),
+        value: userStats.totalUsers.toString(),
         icon: <Users />,
         iconBackgroundColor: AppColors.purple_600
       },
       {
         title: 'Active Users',
-        value: activeUsers.toString(),
+        value: userStats.activeUsers.toString(),
         icon: <UserCheck />,
         iconBackgroundColor: AppColors.green_600
       },
       {
         title: 'Super Admin',
-        value: superAdmins.toString(),
-        icon: <Shield />,
+        value: userStats.superadmin.toString(),
+        icon: <UserCog />,
         iconBackgroundColor: AppColors.cyan_600
       },
       {
         title: 'Admin',
-        value: admins.toString(),
-        icon: <Shield />,
+        value: userStats.admin.toString(),
+        icon: <User />,
         iconBackgroundColor: AppColors.blue_600
       },
       {
         title: 'Marketing',
-        value: marketing.toString(),
-        icon: <TrendingUp />,
+        value: userStats.marketing.toString(),
+        icon: <Megaphone />,
         iconBackgroundColor: AppColors.orange_600
       },
       {
         title: 'Customer Support',
-        value: customerSupport.toString(),
+        value: userStats.customersupport.toString(),
         icon: <Headphones />,
         iconBackgroundColor: AppColors.gray_800
       }
     ];
-  }, [users]);
+  }, [getUserStats]);
 
   const handleSearchChange = (e) => {
-    setSearchValue(e.target.value);
+    setSearchTerm(e.target.value);
   };
 
   const handleFilter = () => {
-    console.log('Filter clicked');
+    setIsFilterModalOpen(true);
+  };
+
+  const handleCloseFilterModal = () => {
+    setIsFilterModalOpen(false);
+  };
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(filters);
+
+    //  just store them in state for now for the filter modal
+    console.log('Applied filters:', filters);
   };
 
   const handleEditUser = (user) => {
@@ -75,38 +109,48 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
     }
   };
 
-  const handleDeleteUser = (userId) => {
-    if (onDeleteUser) {
-      onDeleteUser(userId);
+  const handleDeleteUser = async (userId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this user?')) {
+        await deleteUser(userId);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
     }
   };
 
-  // Filter users based on search
-  const filteredUsers = users.filter(user => {
-    const searchTerm = searchValue.toLowerCase();
+  if (loading) {
     return (
-      user.name?.toLowerCase().includes(searchTerm) ||
-      user.emailAddress?.toLowerCase().includes(searchTerm) ||
-      user.firstName?.toLowerCase().includes(searchTerm) ||
-      user.lastName?.toLowerCase().includes(searchTerm) ||
-      user.userRole?.toLowerCase().includes(searchTerm)
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading users...</p>
+        </div>
+      </div>
     );
-  });
+  }
 
-  // Helper function to get role display name
-  const getRoleDisplayName = (userRole) => {
-    const roleMap = {
-      'superadmin': 'Super Admin',
-      'admin': 'Admin', 
-      'marketing': 'Marketing',
-      'customersupport': 'Customer Support'
-    };
-    return roleMap[userRole] || userRole;
-  };
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error: {error}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            backgroundColor={AppColors.primary}
+            borderColor={AppColors.primary}
+            textColor={AppColors.white}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Page Title and Add New User Button */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <h1 
           className="text-lg font-bold text-black"
@@ -148,13 +192,12 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
         ))}
       </div>
 
-      {/* Search and Filter Section */}
-      <div className="p-4 sm:p-6">
+      <div className="px-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Search Field */}
           <SearchField
             placeholder="Search"
-            value={searchValue}
+            value={searchTerm}
             onChange={handleSearchChange}
             className="w-full sm:w-auto"
           />
@@ -166,7 +209,7 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
               backgroundColor={AppColors.white}
               borderColor={AppColors.primary}
               textColor={AppColors.primary}
-              icon={filterIcon}
+              icon={<SlidersHorizontal className="w-4 h-4" />}
               iconPosition="left"
               showIcon={true}
               fullWidth={false}
@@ -184,8 +227,7 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
         </div>
       </div>
 
-      {/* User Cards Section */}
-      <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+      <div className="px-0">
         {filteredUsers.length > 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {filteredUsers.map((user, index) => (
@@ -196,7 +238,7 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
                 email={user.emailAddress}
                 phone={user.phoneNumber}
                 photo={user.avatar}
-                status={getRoleDisplayName(user.userRole)}
+                status={getUserRoleDisplayName(user.userRole)}
                 isActive={user.status}
                 onEdit={() => handleEditUser(user)}
                 onDelete={() => handleDeleteUser(user.id)}
@@ -205,7 +247,22 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
               />
             ))}
           </div>
-        ) : users.length === 0 ? (
+        ) : searchTerm ? (
+          <div className="text-center py-12">
+            <p 
+              className="text-gray-500 mb-4"
+              style={AppFonts.mdMedium({ color: AppColors.gray_500 })}
+            >
+              No users found matching "{searchTerm}"
+            </p>
+            <p 
+              className="text-gray-400 text-sm"
+              style={AppFonts.smRegular({ color: AppColors.gray_400 })}
+            >
+              Try searching by name, email, phone number, country, or role
+            </p>
+          </div>
+        ) : (
           <div className="text-center py-12">
             <p 
               className="text-gray-500 mb-4"
@@ -213,29 +270,29 @@ const SettingsMainContent = ({ onAddNewUser, users, onEditUser, onDeleteUser }) 
             >
               No users added yet
             </p>
-            <Button
-              onClick={onAddNewUser}
-              backgroundColor={AppColors.primary}
-              borderColor={AppColors.primary}
-              textColor={AppColors.white}
-              showIcon={false}
-              fullWidth={false}
-              variant="addUser"
-            >
-              Add Your First User
-            </Button>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p 
-              className="text-gray-500"
-              style={AppFonts.mdMedium({ color: AppColors.gray_500 })}
-            >
-              No users found matching your search
-            </p>
           </div>
         )}
       </div>
+
+      {searchTerm && (
+        <div className="px-0">
+          <p 
+            className="text-gray-600 text-sm"
+            style={AppFonts.smRegular({ color: AppColors.gray_600 })}
+          >
+            Showing {filteredUsers.length} of {getUserStats().totalUsers} users
+            {searchTerm && ` for "${searchTerm}"`}
+          </p>
+        </div>
+      )}
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={handleCloseFilterModal}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={appliedFilters}
+      />
     </div>
   );
 };

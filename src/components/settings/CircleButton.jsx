@@ -12,20 +12,45 @@ const CircleButton = ({
   style = {},
   ...props 
 }) => {
+  const getBackgroundClass = () => {
+    if (backgroundColor === 'white') return 'bg-white';
+    if (backgroundColor.startsWith('#') || backgroundColor.startsWith('rgb')) {
+      return '';
+    }
+    return backgroundColor.startsWith('bg-') ? backgroundColor : `bg-${backgroundColor}`;
+  };
+
+  const getBorderClass = () => {
+    if (borderColor.startsWith('#') || borderColor.startsWith('rgb')) {
+      return 'border';
+    }
+    return borderColor.startsWith('border-') ? borderColor : `border-${borderColor}`;
+  };
+
   const buttonClasses = `
     flex items-center justify-center 
     focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 
     rounded-full border transition-all duration-200
     hover:opacity-80
-    ${backgroundColor} ${borderColor} ${className}
+    ${getBackgroundClass()} ${getBorderClass()} ${className}
   `;
 
-  // Function to render icon with proper color handling
+  const customStyles = {
+    ...style
+  };
+
+  if (backgroundColor.startsWith('#') || backgroundColor.startsWith('rgb')) {
+    customStyles.backgroundColor = backgroundColor;
+  }
+
+  if (borderColor.startsWith('#') || borderColor.startsWith('rgb')) {
+    customStyles.borderColor = borderColor;
+  }
+
   const renderIcon = () => {
     if (!icon) return null;
 
     if (typeof icon === 'string') {
-      // For image icons
       return (
         <img 
           src={icon} 
@@ -34,9 +59,14 @@ const CircleButton = ({
         />
       );
     } else {
-      // For React element icons (like Lucide icons)
+      const iconStyle = {};
+      if (iconColor.startsWith('#') || iconColor.startsWith('rgb')) {
+        iconStyle.color = iconColor;
+      }
+
       return React.cloneElement(icon, { 
-        className: `w-5 h-5 ${iconColor}`,
+        className: `w-5 h-5 ${iconColor.startsWith('#') || iconColor.startsWith('rgb') ? '' : iconColor}`,
+        style: iconStyle
       });
     }
   };
@@ -48,7 +78,7 @@ const CircleButton = ({
       style={{
         width: `${size}px`,
         height: `${size}px`,
-        ...style
+        ...customStyles
       }}
       {...props}
     >
