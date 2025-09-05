@@ -1,4 +1,3 @@
-//src\components\signIn\InputField.jsx
 import React from 'react';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
@@ -17,15 +16,22 @@ const InputField = ({
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className={`px-3 py-4 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${className}`}
+      className={`
+        w-full 
+        max-w-md 
+        h-12 
+        px-3 
+        py-4 
+        rounded-lg 
+        border 
+        focus:outline-none 
+        focus:ring-2 
+        focus:border-transparent
+        placeholder-gray-300
+        ${className}
+      `}
       style={{
-        width: '100%',
-        maxWidth: '402px',
-        height: '50px',
-        border: `1px solid ${AppColors.border_3}`,
-        borderRadius: '8px',
-        paddingLeft: '12px',
-        paddingRight: '12px',
+        borderColor: AppColors.border_3,
         ...AppFonts.mdMedium({ color: AppColors.text }),
         focusRingColor: AppColors.info_500,
       }}

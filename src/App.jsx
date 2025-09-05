@@ -1,4 +1,5 @@
 import SignIn from "./screens/SignIn";
+import Settings from "./screens/Settings";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import { SidebarProvider } from "./context/SidebarContext";
