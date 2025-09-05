@@ -1,48 +1,58 @@
 import { useState } from 'react';
 import { Mail } from 'lucide-react';
-import Editor from './Editor';
+import Editor from './Editor2';
 import Navbar from './Navbar';
 import LeftSidebar from './LeftSidebar';
 
 const NotificationTemplate = () => {
-  const [activeTab, setActiveTab] = useState('email');
+  const [activeTab, setActiveTab] = useState('Email');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editorContent, setEditorContent] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
     setEditorContent(template.content || '');
+    setIsSidebarOpen(false);
   };
-
-
 
   return (
     <div className="flex flex-col h-full bg-gray">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       
+      {/* Mobile sidebar toggle */}
+      <div className="md:hidden p-4 border-b border-gray-200 bg-white">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
+        >
+          {isSidebarOpen ? 'Hide Templates' : 'Show Templates'}
+        </button>
+      </div>
+
       {/* Main content area */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 flex-col md:flex-row">
         {/* Left Sidebar */}
-       <LeftSidebar 
-          activeTab={activeTab}
-          selectedTemplate={selectedTemplate}
-          handleTemplateSelect={handleTemplateSelect}
-       />
+        <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
+          <LeftSidebar 
+            activeTab={activeTab}
+            selectedTemplate={selectedTemplate}
+            handleTemplateSelect={handleTemplateSelect}
+          />
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white">
-          {/* Header */}
-
-
-            <div className="flex-1 p-4">
-             <div className="flex items-center justify-center py-4">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">T</span>
-                    </div>
-                    <div className="text-lg font-bold text-gray-900">TipMe</div>
-                  </div>
-             </div>
+          <div className="flex-1 p-4 overflow-auto">
+            <div className="flex items-center justify-center py-4">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">T</span>
+                </div>
+                <div className="text-lg font-bold text-gray-900">TipMe</div>
+              </div>
+            </div>
+            
             {selectedTemplate ? (
               <div className="bg-white rounded-lg shadow-xs h-full flex flex-col">
                 {/* Subject Line */}
@@ -59,31 +69,35 @@ const NotificationTemplate = () => {
                     />
                   </div>
                 )}
-               <div className='border-2 border-gray-200 rounded-xl '>
-                  <Editor value={editorContent}  onChange={setEditorContent}/>
+                
+                <div className='border-2 border-gray-200 rounded-xl flex-1 min-h-[300px]'>
+                  <Editor value={editorContent} onChange={setEditorContent}/>
                 </div>
               
                 {/* Action Buttons */}
                 <div className="p-3">
-                  <div className="flex items-center space-x-2">
-                    <button className="px-4 py-1.5 w-[120px] h-[40px]  bg-white  text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
-                      Reset
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                      Send Now
                     </button>
-                    <button className="px-4 py-1.5 w-[120px] h-[40px]  bg-white text-primary border border-primary  rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
-                      Preview
-                    </button>
-                    <button className="px-4 py-1.5  w-[120px] h-[40px]  bg-white  text-primary border border-primary  rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
-                      Submit
+                    <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                      Schedule
                     </button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-xs border border-gray-200 h-full flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-xs border border-gray-200 h-full flex items-center justify-center p-4">
                 <div className="text-center">
                   <Mail size={32} className="text-gray-300 mx-auto mb-2" />
                   <h3 className="text-sm font-medium text-gray-900 mb-1">No Template Selected</h3>
                   <p className="text-xs text-gray-500">Choose a template from the sidebar to get started</p>
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium md:hidden"
+                  >
+                    Show Templates
+                  </button>
                 </div>
               </div>
             )}
