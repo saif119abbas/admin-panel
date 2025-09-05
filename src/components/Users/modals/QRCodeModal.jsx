@@ -34,7 +34,7 @@ const QRCodeModal = ({ isOpen, onClose, user }) => {
               <div className="text-red-500 text-4xl mb-2">⚠️</div>
               <p className="text-red-600 text-sm">{error}</p>
               <button 
-                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-primary"
               >
                 Retry
               </button>

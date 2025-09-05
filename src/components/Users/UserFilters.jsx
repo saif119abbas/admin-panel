@@ -28,7 +28,7 @@ const UserFilters = ({
               onChange={(e) => onSelectAll(e.target.checked)}
               className="w-4 h-4 text-indigo-600 bg-gray-100 rounded focus:ring-indigo-500 focus:ring-2"
             />
-            <label htmlFor="select-all" className="ml-2 text-sm font-medium text-gray-700">
+            <label htmlFor="select-all" className="ml-2 text-md font-medium text-gray-700">
               Select All
             </label>
           </div>
@@ -41,7 +41,7 @@ const UserFilters = ({
               onChange={(e) => onSelectCurrentPage(e.target.checked)}
               className="w-4 h-4 text-indigo-600 bg-gray-100 rounded focus:ring-indigo-500 focus:ring-2"
             />
-            <label htmlFor="select-current-page" className="ml-2 text-sm font-medium text-gray-700">
+            <label htmlFor="select-current-page" className="ml-2 text-md font-medium text-gray-700">
               Select Current Page
             </label>
           </div>
@@ -62,7 +62,7 @@ const UserFilters = ({
             variant="outline"
             icon={CustomFilterIcon}
             onClick={onOpenFilter}
-            className="!w-[107px] !h-[40px] hover:!bg-blue-50 hover:!text-[#05CBE7]"
+            className="!w-[107px] !h-[40px] hover:!bg-blue-50 hover:!text-primary"
           >
             Filter
           </ActionButton>
