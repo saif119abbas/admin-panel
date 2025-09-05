@@ -80,6 +80,19 @@ const AppColors = {
   border_2: "#F0F0F0",
   border_3: "#E5E5E5",
   text: "#666666",
+
+  dark_bg: "#000034",
+  
+  status: {
+    active: {
+      background: "#5BC039",
+      text: "#FFFFFF"
+    },
+    pending: {
+      background: "#B77F12", 
+      text: "#FFFFFF"
+    }
+  },
 };
 
 export default AppColors;

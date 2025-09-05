@@ -1,7 +1,9 @@
+// src/components/Main.js
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Dashboard from './Dashboard/index';
+import Users from '../screens/Users';
 import { useAuth } from '../context/AuthContext';
 
 function Main() {
@@ -17,14 +19,14 @@ function Main() {
       case 'dashboard':
         return <Dashboard />;
       case 'users':
-        return <div className="text-center text-gray-500">Users Page</div>;
+        return <Users />;
       default:
         return <div className="text-center text-gray-500">Page not found</div>;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 relative">
+    <div className="flex h-screen bg-white relative">
       <Sidebar
         currentView={currentView}
         onViewChange={setCurrentView}

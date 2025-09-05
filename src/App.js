@@ -1,3 +1,4 @@
+// src/App.js
 import SignIn from "./screens/SignIn";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
