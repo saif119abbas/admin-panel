@@ -1,0 +1,14 @@
+.signin-container {
+  background-image: url("../assets/images/background.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.input-placeholder::placeholder {
+  color: #e5e5e5 !important;
+}
+
+.signin-button-arrow {
+  filter: brightness(0) invert(1);
+}
