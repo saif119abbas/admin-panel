@@ -1,8 +1,3 @@
-/* src/css/settings.css - Minimal version after Tailwind conversion */
-
-/* Only keep styles that can't be easily replicated in Tailwind */
-
-/* SignIn Page Background - Keep as CSS since it references assets */
 .signin-container {
   background-image: url("../assets/images/background.svg");
   background-size: cover;
@@ -10,14 +5,10 @@
   background-repeat: no-repeat;
 }
 
-/* Custom placeholder color that needs !important to override browser defaults */
 .input-placeholder::placeholder {
-  color: #e5e5e5 !important; /* AppColors.border_3 */
+  color: #e5e5e5 !important;
 }
 
-/* Filter styles for icons - complex CSS filters that are easier to keep as CSS */
 .signin-button-arrow {
   filter: brightness(0) invert(1);
 }
-
-/* Any other complex filter effects can be added here if needed */

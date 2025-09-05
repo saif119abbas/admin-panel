@@ -86,7 +86,7 @@ const AppColors = {
   cyan_500: "#06B6D4",
   cyan_600: "#0891B2",
   blue_600: "#2563EB",
-  orange_600: "#EA580C",
+  orange_600: "#F78D4C",
   gray_100: "#F3F4F6",
   gray_300: "#D1D5DB",
   gray_500: "#6B7280",
