@@ -1,44 +1,115 @@
-import { TipReceiverListDto } from "../../dtos/tipReceiverListDto";
-import { TipReceiverDto } from "../../dtos/tipReceiverDto";
-import { StatisticsDto } from "../../dtos/statisticsDto";
-import { TipReceiverStatisticsDto } from "../../dtos/tipReceiverStatisticsDto";
-import { TransactionsDto } from "../../dtos/transactionsDto";
-import { PaymentInfoDto } from "../../dtos/paymentInfoDto";
+
+import { apiService } from "../api/apiService";
 class TipReceiverService {
     constructor() {
 
     }
 
     async getTipReceivers(filters) {
-        return [new TipReceiverListDto()];
+        try {
+            const response = await apiService.post(`/TipReceiver`, filters);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching tip receivers:', error);
+            return [];
+        }
     }
 
     async getTipReceiverById(id) {
-        return new TipReceiverDto();
+        try {
+            const response = await apiService.get(`/TipReceiver/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching tip receiver by ID:', error);
+            return null;
+        }
     }
 
     async getStatisticsByTipReceiverId(id) {
-        return new TipReceiverStatisticsDto();
+        try {
+            const response = await apiService.get(`/TipReceiver/Statistics/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching statistics by tip receiver ID:', error);
+            return null;
+        }
     }
 
     async getStatistics() {
-        return new StatisticsDto();
+        try {
+            const response = await apiService.get(`/TipReceiver/Statistics`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching statistics:', error);
+            return null;
+        }
     }
 
     async getTransactionsByTipReceiverId(id) {
-        return [new TransactionsDto()];
+        try {
+            const response = await apiService.get(`/TipReceiver/Transactions/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching transactions by tip receiver ID:', error);
+            return null;
+        }
     }
 
     async getPaymentInfoByTipReceiverId(id) {
-        return new PaymentInfoDto();
+        try {
+            const response = await apiService.get(`/TipReceiver/PaymentInfo/${id}`);
+            if(response.success){
+                const paymentInfoDto = {
+                    id: response.data.id,
+                    accountHolderName: response.data.accountHolderName,
+                    IBAN: response.data.IBAN,
+                    bankName: response.data.bankName,
+                    countryId: response.data.bankCountryId
+                }
+                return paymentInfoDto;
+            }else{
+                console.error('Error fetching payment info by tip receiver ID:', response.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching payment info by tip receiver ID:', error);
+            return null;
+        }
     }
 
     async updatePaymentInfoByTipReceiverId(id, paymentInfoDto) {
-        return true;
+        try {
+            const response = await apiService.put(`/TipReceiver/PaymentInfo/${id}`, {
+                accountHolderName: paymentInfoDto.accountHolderName,
+                IBAN: paymentInfoDto.IBAN,
+                bankName: paymentInfoDto.bankName,
+                bankCountryId: paymentInfoDto.countryId
+            });
+            if(response.success){
+                return true;
+            }else{
+                console.error('Error updating payment info by tip receiver ID:', response.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error updating payment info by tip receiver ID:', error);
+            return false;
+        }
     }
 
     async updateTipReceiverById(id, tipReceiverDto) {
-        return true;
+        try {
+            const response = await apiService.put(`/TipReceiver/${id}`, tipReceiverDto);
+            if(response.success){
+                return true;
+            }else{
+                console.error('Error updating tip receiver by ID:', response.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error updating tip receiver by ID:', error);
+            return false;
+        }
     }
 
     async verifyTipReceiverMobileNumber(id) {

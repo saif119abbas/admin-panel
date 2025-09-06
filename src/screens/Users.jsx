@@ -257,6 +257,7 @@ const Users = () => {
   const [currentView, setCurrentView] = useState('list');
   const [selectedUser, setSelectedUser] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
+  
 
   // Debounce search term to avoid too many re-renders
   useEffect(() => {
