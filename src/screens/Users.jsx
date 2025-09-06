@@ -32,7 +32,6 @@ const Users = () => {
   });
   const [currentView, setCurrentView] = useState('list');
 
-
   // Debounce search term to avoid too many re-renders
   useEffect(() => {
     const timerId = setTimeout(() => {
