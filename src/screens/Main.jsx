@@ -4,12 +4,12 @@ import Header from '../components/Header';
 import Dashboard from './Dashboard';
 import Settings from './Settings';
 import Users from './Users';
+import CustomerSupport from './CustomerSupport';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import Marketing from './Marketing';
 import { MarketingProvider } from '../context/MarketingContext';
 import Head from '../components/Head';
-import Ticket from '../components/Ticket';
 
 function Main() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,9 +28,10 @@ const { currentView } = useSidebar();
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-3 sm:p-6">
-          {currentView==="dashboard" && <Ticket />}
+          {currentView==="dashboard" && <Dashboard />}
           {currentView==="settings" && <Settings />}
           {currentView==="users" && <Users />}
+          {currentView==="support" && <CustomerSupport />}
           {
           (currentView==="create-templates"  || currentView==="all-templates" || currentView==="send-notifications")
           && 
