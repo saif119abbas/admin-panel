@@ -1,6 +1,6 @@
 // src/components/Users/UserProfile.jsx
 import { useState } from 'react';
-import { ArrowLeft, Download, ArrowUp, ArrowDown, Gift, Pencil, CircleArrowUp, CircleArrowDown } from 'lucide-react';
+import { Download, Gift, Pencil, CircleArrowUp, CircleArrowDown } from 'lucide-react';
 import EditUserModal from './modals/EditUserModal';
 import QRCodeModal from './modals/QRCodeModal';
 import ActionButton from './common/ActionButton';
@@ -19,18 +19,15 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
+  const name=`${currentUser.firstName} ${currentUser.lastName}`
 
   // Handle user update from modal
   const handleUserUpdate = (updatedUserData) => {
     // Update the local state
     setCurrentUser(updatedUserData);
-    
-    // Call the parent callback to update the user in the main users list
     if (onUserUpdate) {
       onUserUpdate(updatedUserData);
     }
-    
-    // Close the modal
     setIsEditModalOpen(false);
   };
 
@@ -40,8 +37,6 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
     // You can add your search logic here
     console.log('Search term:', value);
   };
-
-  // Mock transaction data for different tabs
   const receivedTransactions = [
     {
       id: 1,
@@ -182,7 +177,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             All Users
           </button>
           <span className="text-text">/</span>
-          <span className="text-primary text-sm font-bold">{currentUser?.name || 'Barbara Gordon'}</span>
+          <span className="text-primary text-sm font-bold">{name || 'Barbara Gordon'}</span>
         </div>
         
         {/* Reward Button - Updated to use ActionButton */}
@@ -212,7 +207,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
               {currentUser?.image ? (
                 <img
                   src={currentUser.image}
-                  alt={currentUser?.name || 'Barbara Gordon'}
+                  alt={name || 'Barbara Gordon'}
                   className="w-full h-full object-cover rounded-xl md:rounded-2xl"
                 />
               ) : (
@@ -229,7 +224,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             {/* User Details*/}
             <div className="text-white space-y-1 md:space-y-2 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                <h1 className="text-lg sm:text-h4 font-bold truncate">{currentUser?.name || 'Barbara Gordon'}</h1>
+                <h1 className="text-lg sm:text-h4 font-bold truncate">{name || 'Barbara Gordon'}</h1>
                 <span 
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-md font-semibold w-fit"
                   style={getStatusStyle(currentUser?.status || 'Active')}

@@ -11,9 +11,9 @@ export const apiService = {
 
 
       const config = {};
-      if (token) {
+    /*  if (token) {
         config.headers = { Authorization: `Bearer ${token}` };
-      }
+      }*/
  
       const response = await api.get(`${BASE_URL}${endpoint}`);
 
