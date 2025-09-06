@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 
 const ActiveUsersChart = () => {
-  const totalUsers = 654;
+  useEffect(() => {
+    
+  }, []);
+
+  const totalUsers = 654; 
   const activeUsers = 327;
   const percentage = Math.round((activeUsers / totalUsers) * 100);
   

@@ -36,11 +36,6 @@ export default function MyEditor({ value, onChange }) { // Changed from [value, 
         }}
       />
 
-      {/* Show live content preview */}
-      <div className="mt-4 p-2 border rounded">
-        <h3>Live Preview:</h3>
-        <div dangerouslySetInnerHTML={{ __html: value }} />
-      </div>
     </div>
   );
 }

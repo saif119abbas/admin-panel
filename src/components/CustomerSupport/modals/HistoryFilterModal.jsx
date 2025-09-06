@@ -1,43 +1,32 @@
-// src/components/CustomerSupport/modals/FilterModal.jsx
+// src/components/CustomerSupport/modals/HistoryFilterModal.jsx
 import { ChevronDown, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import ActionButton from '../../Users/common/ActionButton';
 
-const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
+const HistoryFilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
   const [filters, setFilters] = useState({
     ticketId: currentFilters.ticketId || '',
-    subject: currentFilters.subject || '',
     user: currentFilters.user || '',
+    issueType: currentFilters.issueType || '',
     createdOn: currentFilters.createdOn || '',
+    resolvedOn: currentFilters.resolvedOn || '',
     status: currentFilters.status || ''
   });
 
-  // Filter options based on the mock data structure
-  const subjectOptions = [
-    'All Subject/Type',
-    'Technical',
-    'Account',
-    'Payment', 
-    'Financial',
-    'Safety'
-  ];
-
-  const createdOnOptions = [
-    'All Dates',
-    'Today',
-    'Yesterday', 
-    'Last 7 days',
-    'Last 30 days',
-    'Last 3 months',
-    'Last 6 months',
-    'Last year'
+  // Filter options based on the History view data structure
+  const issueTypeOptions = [
+    'All Issue Types',
+    'Tip Issue',
+    'Bug Report',
+    'Account Issue',
+    'Payment Issue',
+    'Technical Issue'
   ];
 
   const statusOptions = [
     'All Status',
-    'Pending',
-    'In-progress',
-    'Resolved'
+    'Resolved',
+    'Closed'
   ];
 
   const handleFilterChange = (filterType, value) => {
@@ -55,9 +44,10 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
   const handleCancel = () => {
     setFilters({
       ticketId: '',
-      subject: '',
       user: '',
+      issueType: '',
       createdOn: '',
+      resolvedOn: '',
       status: ''
     });
     onClose();
@@ -93,31 +83,9 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
               type="text"
               value={filters.ticketId}
               onChange={(e) => handleFilterChange('ticketId', e.target.value)}
-              placeholder="Enter Ticket ID"
+              placeholder="Enter"
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
-          </div>
-
-          {/* Ticket Subject/Type Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ticket Subject/Type
-            </label>
-            <div className="relative">
-              <select
-                value={filters.subject}
-                onChange={(e) => handleFilterChange('subject', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none pr-10"
-              >
-                <option value="">Select</option>
-                {subjectOptions.map((subject) => (
-                  <option key={subject} value={subject}>
-                    {subject}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
           </div>
 
           {/* User Filter */}
@@ -134,6 +102,28 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
             />
           </div>
 
+          {/* Issue Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Issue Type
+            </label>
+            <div className="relative">
+              <select
+                value={filters.issueType}
+                onChange={(e) => handleFilterChange('issueType', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none pr-10"
+              >
+                <option value="">Select</option>
+                {issueTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
           {/* Created On Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,7 +135,24 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
                 value={filters.createdOn}
                 onChange={(e) => handleFilterChange('createdOn', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:opacity-0"
-                placeholder="Select Date"
+                placeholder="Select"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Resolved On Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Resolved On
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                value={filters.resolvedOn}
+                onChange={(e) => handleFilterChange('resolvedOn', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:opacity-0"
+                placeholder="Select"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -196,4 +203,4 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters }) => {
   );
 };
 
-export default FilterModal;
+export default HistoryFilterModal;

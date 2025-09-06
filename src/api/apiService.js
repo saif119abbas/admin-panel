@@ -8,7 +8,15 @@ if (!process.env.REACT_APP_API_BASE_URL) {
 export const apiService = {
   async get(endpoint) {
     try {
+
+
+      const config = {};
+      if (token) {
+        config.headers = { Authorization: `Bearer ${token}` };
+      }
+ 
       const response = await api.get(`${BASE_URL}${endpoint}`);
+
       return response.data;
     } catch (error) {
       console.error(`GET ${endpoint} error:`, error.response?.data || error.message);
