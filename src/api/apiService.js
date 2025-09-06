@@ -1,139 +1,91 @@
 import api from ".";
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
 
-export  const apiService = {
-  async get(endpoint, token = null) {
+if (!process.env.REACT_APP_API_BASE_URL) {
+  console.warn('REACT_APP_API_BASE_URL is not set. Using empty string as base URL.');
+}
+
+export const apiService = {
+  async get(endpoint) {
     try {
+      const response = await api.get(`${BASE_URL}${endpoint}`);
+      return response.data;
+    } catch (error) {
+      console.error(`GET ${endpoint} error:`, error.response?.data || error.message);
+      throw error;
+    }
+  },
   
-      
-      const config = {};
-      if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.get(endpoint, config);
-      return response.data;
-    } catch (error) {
-      console.error(`GET ${endpoint} error:`, error.message);
-      throw error;
-    }
-  },
-
-  // GET request with query params
-  async getWithQuery(endpoint, queryParams = {}, token = null) {
+  async post(endpoint, data) {
     try {
-    
-      
-      const config = { params: queryParams };
-      if (token) {
-        config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.get(endpoint, config);
+      const response = await api.post(`${BASE_URL}${endpoint}`, data);
       return response.data;
     } catch (error) {
-      console.error(`GET ${endpoint} with query error:`, error.message);
+      console.error(`POST ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
-
-  // POST request with JSON data
-  async post(endpoint, data, token = null) {
+  
+  async put(endpoint, data = null) {
     try {
-    
-      const config = {};
-      if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.post(endpoint, data, config);
+      const response = await api.put(`${BASE_URL}${endpoint}`, data);
       return response.data;
     } catch (error) {
-      console.error(`POST ${endpoint} error:`, error.message);
+      console.error(`PUT ${endpoint} error:`, error.response?.data || error.message);
+      throw error;
+    }
+  },
+  
+  async patch(endpoint, data = null) {
+    try {
+      const response = await api.patch(`${BASE_URL}${endpoint}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`PATCH ${endpoint} error:`, error.response?.data || error.message);
+      throw error;
+    }
+  },
+  
+  async delete(endpoint) {
+    try {
+      const response = await api.delete(`${BASE_URL}${endpoint}`);
+      return response.data;
+    } catch (error) {
+      console.error(`DELETE ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
 
-  // POST request with file uploads (multipart/form-data)
-  async postWithFiles(endpoint, formData, token = null) {
-    try {     
+  async postWithFiles(endpoint, formData) {
+    try {
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data',
         }
       };
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      
-      const response = await api.post(endpoint, formData, config);
+
+      const response = await api.post(`${BASE_URL}${endpoint}`, formData, config);
       return response.data;
     } catch (error) {
-      console.error(`POST ${endpoint} with files error:`, error.message);
+      console.error(`POST ${endpoint} with files error:`, error.response?.data || error.message);
       throw error;
     }
   },
-
-  // PUT/PATCH request
-  async put(endpoint, data = null, token = null) {
-    try {      
-      const config = {};
-      if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.put(endpoint, data, config);
-      return response.data;
-    } catch (error) {
-      console.error(`PUT ${endpoint} error:`, error.message);
-      throw error;
-    }
-  },
-
-  // PATCH request
-  async patch(endpoint, data = null, token = null) {
+  async getWithQuery(endpoint, queryParams = {}) {
     try {
-
-      
-      const config = {};
-      if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.patch(endpoint, data, config);
+      const config = { params: queryParams };
+      const response = await api.get(`${BASE_URL}${endpoint}`, config);
       return response.data;
     } catch (error) {
-      console.error(`PATCH ${endpoint} error:`, error.message);
+      console.error(`GET ${endpoint} with query error:`, error.response?.data || error.message);
       throw error;
     }
   },
-
-  // DELETE request
-  async delete(endpoint, token = null) {
-    try {
-      const config = {};
-      if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }
-      
-      const response = await api.delete(endpoint, config);
-      return response.data;
-    } catch (error) {
-      console.error(`DELETE ${endpoint} error:`, error.message);
-      throw error;
-    }
-  },
-
-  // Helper method to create FormData for file uploads
-  createFormData: (data, files, fileFieldName = 'files') => {
+  createFormData(data, files, fileFieldName = 'files') {
     const formData = new FormData();
-    
-    // Append JSON data
     if (data) {
       formData.append('data', JSON.stringify(data));
     }
-    
-    // Append files
     if (files) {
       if (Array.isArray(files)) {
         files.forEach((file, index) => {
@@ -143,7 +95,6 @@ export  const apiService = {
         formData.append(fileFieldName, files);
       }
     }
-    
     return formData;
   }
 };
