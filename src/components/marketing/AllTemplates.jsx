@@ -128,9 +128,8 @@ const AllTemplates = () => {
                     </div>
                   )}
 
-                  <div className="border-2 border-gray-200 rounded-xl h-full min-h-[300px]">
                     <Editor value={editorContent} onChange={setEditorContent} />
-                  </div>
+              
 
                   {/* Action Buttons - Fixed at bottom */}
                   <div className="flex-shrink-0 p-3">

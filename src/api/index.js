@@ -26,7 +26,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const { response } = error;
-    
     if (response) {
       switch (response.status) {
         case 401:
@@ -58,7 +57,6 @@ api.interceptors.response.use(
     } else {
       console.error('Request setup error:', error.message);
     }
-    
     return Promise.reject(error);
   }
 );
