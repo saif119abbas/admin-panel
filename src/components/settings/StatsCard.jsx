@@ -39,7 +39,6 @@ const StatsCard = ({
           </p>
         </div>
 
-        {/* Icon container - moved to right */}
         <div 
           className="
             w-12 h-12 

@@ -20,7 +20,6 @@ const AppHeader = ({
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between">
-        {/* Mobile menu button - moved to left */}
         <button
           onClick={onMenuClick}
           className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -28,14 +27,10 @@ const AppHeader = ({
           <Menu className="w-6 h-6" />
         </button>
 
-        {/* Empty space for mobile, since title is now in main content */}
         <div className="hidden lg:block">
-          {/* Title removed from header since it's now in main content */}
         </div>
 
-        {/* Right side - User info and notification - moved further right */}
         <div className="flex items-center space-x-4 ml-auto">
-          {/* User info */}
           <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:block">
               <p 
@@ -53,7 +48,6 @@ const AppHeader = ({
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* User avatar */}
               <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                 {userImage ? (
                   <img 
@@ -71,7 +65,6 @@ const AppHeader = ({
                 )}
               </div>
 
-              {/* Dropdown arrow */}
               <img 
                 src={arrowDownIcon} 
                 alt="dropdown" 
@@ -80,7 +73,6 @@ const AppHeader = ({
             </div>
           </div>
 
-          {/* Notification button - moved to the right of user info */}
           <CircleButton 
             icon={notificationIcon}
             onClick={handleNotificationClick}

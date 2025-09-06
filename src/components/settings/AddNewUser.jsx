@@ -1,6 +1,7 @@
 // src/components/settings/AddNewUser.jsx
 import React, { useState, useEffect } from 'react';
-import { Upload, Camera, ChevronDown } from 'lucide-react';
+import { Camera, ChevronDown } from 'lucide-react';
+import { useUser } from '../../context/UserContext.jsx';
 import InputField from './InputField.jsx';
 import SelectField from './SelectField.jsx';
 import UserRoles from './UserRoles.jsx';
@@ -9,6 +10,16 @@ import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
 
 const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
+  // Get user context data and actions
+  const {
+    addUser,
+    updateUser,
+    validateUserData,
+    loading,
+    error,
+    clearError
+  } = useUser();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,7 +36,14 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
   const [errors, setErrors] = useState({});
   const [selectedCountryCode, setSelectedCountryCode] = useState('ae');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Clear error when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
+  // Load editing user data
   useEffect(() => {
     if (editingUser) {
       setFormData({
@@ -43,28 +61,37 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     }
   }, [editingUser]);
 
-  // Country code options
   const countryCodeOptions = [
     { code: 'ae', flag: '🇦🇪', dialCode: '+971', label: 'UAE' },
     { code: 'sa', flag: '🇸🇦', dialCode: '+966', label: 'Saudi Arabia' },
-    { code: 'us', flag: '🇺🇸', dialCode: '+1', label: 'United States' }
+    { code: 'us', flag: '🇺🇸', dialCode: '+1', label: 'United States' },
+    { code: 'uk', flag: '🇬🇧', dialCode: '+44', label: 'United Kingdom' },
+    { code: 'ca', flag: '🇨🇦', dialCode: '+1', label: 'Canada' },
+    { code: 'au', flag: '🇦🇺', dialCode: '+61', label: 'Australia' }
   ];
 
-  // Country options
   const countryOptions = [
     { value: 'uae', label: 'United Arab Emirates' },
     { value: 'usa', label: 'United States' },
     { value: 'uk', label: 'United Kingdom' },
     { value: 'canada', label: 'Canada' },
-    { value: 'australia', label: 'Australia' }
+    { value: 'australia', label: 'Australia' },
+    { value: 'saudi', label: 'Saudi Arabia' },
+    { value: 'egypt', label: 'Egypt' },
+    { value: 'jordan', label: 'Jordan' }
   ];
 
-  // City options (can be dynamic based on country)
   const cityOptions = [
     { value: 'dubai', label: 'Dubai' },
     { value: 'abudhabi', label: 'Abu Dhabi' },
     { value: 'sharjah', label: 'Sharjah' },
-    { value: 'ajman', label: 'Ajman' }
+    { value: 'ajman', label: 'Ajman' },
+    { value: 'riyadh', label: 'Riyadh' },
+    { value: 'jeddah', label: 'Jeddah' },
+    { value: 'newyork', label: 'New York' },
+    { value: 'london', label: 'London' },
+    { value: 'toronto', label: 'Toronto' },
+    { value: 'sydney', label: 'Sydney' }
   ];
 
   const handleInputChange = (field, value) => {
@@ -82,18 +109,44 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
   };
 
   const handleStatusToggle = () => {
-    setFormData(prev => ({
-      ...prev,
-      status: !prev.status
-    }));
+    if (!isSubmitting) {
+      setFormData(prev => ({
+        ...prev,
+        status: !prev.status
+      }));
+    }
   };
 
   const handleAvatarUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({
+          ...prev,
+          avatar: 'Please select a valid image file'
+        }));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          avatar: 'File size must be less than 5MB'
+        }));
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatar(e.target.result);
+        if (errors.avatar) {
+          setErrors(prev => ({
+            ...prev,
+            avatar: ''
+          }));
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -108,51 +161,49 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     return countryCodeOptions.find(option => option.code === selectedCountryCode);
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      setErrors({});
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-    if (!formData.emailAddress.trim()) {
-      newErrors.emailAddress = 'Email address is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.emailAddress)) {
-      newErrors.emailAddress = 'Please enter a valid email address';
-    }
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    }
-    if (!formData.country) {
-      newErrors.country = 'Country is required';
-    }
-    if (!formData.city) {
-      newErrors.city = 'City is required';
-    }
-    if (!formData.userRole) {
-      newErrors.userRole = 'User role is required';
-    }
+      // Validate form data using context validation
+      const validation = validateUserData(formData);
+      
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        return;
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validateForm()) {
+      // Prepare user data
       const userData = {
         ...formData,
         avatar,
         name: `${formData.firstName} ${formData.lastName}`,
-        // Map country and city values to display labels
         countryDisplay: countryOptions.find(c => c.value === formData.country)?.label || formData.country,
         cityDisplay: cityOptions.find(c => c.value === formData.city)?.label || formData.city
       };
       
-      if (onSubmit) {
-        onSubmit(userData);
+      let savedUser;
+      if (editingUser) {
+        savedUser = await updateUser(editingUser.id, userData);
+      } else {
+        savedUser = await addUser(userData);
       }
+
+      console.log(`User ${editingUser ? 'updated' : 'added'} successfully:`, savedUser);
+      
+      if (onSubmit) {
+        onSubmit(savedUser);
+      }
+
+    } catch (error) {
+      console.error('Error saving user:', error);
+      setErrors(prev => ({
+        ...prev,
+        submit: error.message || 'Failed to save user. Please try again.'
+      }));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -263,10 +314,11 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                   onChange={handleAvatarUpload}
                   className="hidden"
                   id="avatar-upload"
+                  disabled={isSubmitting}
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className="inline-block mt-2 cursor-pointer"
+                  className={`inline-block mt-2 ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                 >
                   <span
                     className="
@@ -288,9 +340,8 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
 
             {/* Status Switch - moved to right side */}
             <div className="flex flex-col items-center">
-             
               <div 
-                className="w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center cursor-pointer"
+                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                 onClick={handleStatusToggle}
               >
                 <span 
@@ -326,6 +377,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               required
               error={errors.firstName}
+              disabled={isSubmitting}
             />
 
             {/* Last Name */}
@@ -336,6 +388,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               required
               error={errors.lastName}
+              disabled={isSubmitting}
             />
 
             {/* Date of Birth */}
@@ -346,6 +399,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               value={formData.dateOfBirth}
               onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
               error={errors.dateOfBirth}
+              disabled={isSubmitting}
             />
 
             {/* Country */}
@@ -357,6 +411,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               options={countryOptions}
               required
               error={errors.country}
+              disabled={isSubmitting}
             />
 
             {/* City */}
@@ -368,6 +423,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               options={cityOptions}
               required
               error={errors.city}
+              disabled={isSubmitting}
             />
 
             {/* Phone Number with Country Code Dropdown */}
@@ -379,79 +435,104 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 Phone Number
                 <span className="text-red-500">*</span>
               </label>
-              <div className="flex">
-                {/* Country Code Dropdown */}
-                <div className="relative">
-                  <div 
-                    className={`
-                      flex items-center px-3 h-12
-                      bg-white border border-r-0 rounded-l-lg cursor-pointer
-                      hover:bg-gray-50
-                      ${errors.phoneNumber 
-                        ? 'border-red-500' 
-                        : 'border-gray-200'
-                      }
-                    `}
-                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                  >
-                    <span className="mr-2">{selectedCountryData?.flag}</span>
-                    <span 
-                      className="text-black font-medium mr-2"
-                      style={AppFonts.smMedium({ color: AppColors.black })}
+              
+              {/* Phone Field Container with consistent width */}
+              <div className={`
+                w-full h-12
+                bg-white border rounded-lg
+                ${errors.phoneNumber 
+                  ? 'border-red-500' 
+                  : 'border-gray-200'
+                }
+              `}>
+                <div className="flex h-full p-2">
+                  <div className="relative">
+                    <div 
+                      className={`
+                        flex items-center px-2 h-full
+                        bg-gray-100 rounded-md
+                        hover:bg-gray-200
+                        ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                      `}
+                      onClick={!isSubmitting ? () => setIsCountryDropdownOpen(!isCountryDropdownOpen) : undefined}
                     >
-                      {selectedCountryData?.dialCode}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <div 
+                        className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
+                        style={{ borderRadius: '4px' }}
+                      >
+                        <span className="text-sm">{selectedCountryData?.flag}</span>
+                      </div>
+                      <span 
+                        className="text-black font-medium mr-1 text-sm"
+                        style={AppFonts.smMedium({ color: AppColors.black })}
+                      >
+                        {selectedCountryData?.dialCode}
+                      </span>
+                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
+
+                    {isCountryDropdownOpen && !isSubmitting && (
+                      <div className="absolute top-full left-0 z-50 mt-1" style={{ minWidth: '200px' }}>
+                        <div 
+                          className="bg-gray-100 rounded-lg shadow-lg"
+                          style={{ 
+                            border: '6px solid #f3f4f6',
+                            borderRadius: '12px'
+                          }}
+                        >
+                          <div className="bg-white rounded-md overflow-hidden">
+                            {countryCodeOptions.map((option) => (
+                              <div
+                                key={option.code}
+                                className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                                onClick={() => handleCountryCodeSelect(option.code)}
+                              >
+                                <div 
+                                  className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
+                                  style={{ borderRadius: '4px' }}
+                                >
+                                  <span className="text-sm">{option.flag}</span>
+                                </div>
+                                <span 
+                                  className="text-black font-medium mr-2"
+                                  style={AppFonts.smMedium({ color: AppColors.black })}
+                                >
+                                  {option.dialCode}
+                                </span>
+                                <span 
+                                  className="text-gray-600 text-sm"
+                                  style={AppFonts.smRegular({ color: AppColors.gray })}
+                                >
+                                  {option.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Dropdown Menu */}
-                  {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg mt-1">
-                      {countryCodeOptions.map((option) => (
-                        <div
-                          key={option.code}
-                          className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleCountryCodeSelect(option.code)}
-                        >
-                          <span className="mr-2">{option.flag}</span>
-                          <span 
-                            className="text-black font-medium mr-2"
-                            style={AppFonts.smMedium({ color: AppColors.black })}
-                          >
-                            {option.dialCode}
-                          </span>
-                          <span 
-                            className="text-gray-600 text-sm"
-                            style={AppFonts.smRegular({ color: AppColors.gray })}
-                          >
-                            {option.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Phone Number Input */}
+                  <input
+                    type="tel"
+                    placeholder="Enter"
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    disabled={isSubmitting}
+                    className={`
+                      flex-1 h-full px-3 ml-2
+                      bg-transparent border-none
+                      outline-none
+                      ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                    style={{
+                      ...AppFonts.mdRegular({ color: AppColors.black })
+                    }}
+                  />
                 </div>
-
-                {/* Phone Number Input */}
-                <input
-                  type="tel"
-                  placeholder="Enter"
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  className={`
-                    flex-1 h-12 px-4
-                    bg-white border border-l-0 rounded-r-lg
-                    outline-none
-                    ${errors.phoneNumber 
-                      ? 'border-red-500' 
-                      : 'border-gray-200'
-                    }
-                  `}
-                  style={{
-                    ...AppFonts.mdRegular({ color: AppColors.black })
-                  }}
-                />
               </div>
+              
               {errors.phoneNumber && (
                 <span 
                   className="mt-1 text-sm text-red-500"
@@ -471,6 +552,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               onChange={(e) => handleInputChange('emailAddress', e.target.value)}
               required
               error={errors.emailAddress}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -481,7 +563,29 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
             onChange={(role) => handleInputChange('userRole', role)}
             required
             error={errors.userRole}
+            disabled={isSubmitting}
           />
+
+          {/* Avatar Error */}
+          {errors.avatar && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-600 text-sm">{errors.avatar}</p>
+            </div>
+          )}
+
+          {/* Submit Error */}
+          {errors.submit && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">{errors.submit}</p>
+            </div>
+          )}
+
+          {/* Context Error */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
@@ -494,6 +598,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 showIcon={false}
                 fullWidth={false}
                 className="px-8 py-3 h-12 rounded-full"
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
@@ -508,16 +613,21 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 showIcon={false}
                 fullWidth={false}
                 className="px-8 py-3 h-12 rounded-full"
+                disabled={isSubmitting}
               >
-                {isEditing ? 'Update' : 'Submit'}
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </div>
+                ) : (isEditing ? 'Update' : 'Submit')}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Click outside to close dropdown */}
-      {isCountryDropdownOpen && (
+      {isCountryDropdownOpen && !isSubmitting && (
         <div 
           className="fixed inset-0 z-40" 
           onClick={() => setIsCountryDropdownOpen(false)}

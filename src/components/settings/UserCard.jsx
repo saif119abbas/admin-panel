@@ -1,11 +1,10 @@
-//src\components\settings\UserCard.jsx
+
 // src/components/settings/UserCard.jsx
 import React from 'react';
+import { Pencil , Trash2 } from 'lucide-react';
 import CircleButton from './CircleButton.jsx';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
-import editIcon from '../../assets/icons/trash.svg'; // Replace with actual edit icon
-import deleteIcon from '../../assets/icons/trash.svg'; // Replace with actual delete icon
 
 const UserCard = ({ 
   name,
@@ -13,8 +12,8 @@ const UserCard = ({
   email,
   phone,
   photo,
-  status, // This is the role name (Super Admin, Admin, etc.)
-  isActive = true, // This is the active/inactive status
+  status, 
+  isActive = true,
   onEdit,
   onDelete,
   isFirst = false,
@@ -42,9 +41,15 @@ const UserCard = ({
         p-4 
         min-h-30
         flex items-center 
-        ${!isLast ? 'border-b border-gray-200' : ''}
+        ${!isLast ? 'border-b' : ''}
+        border-gray-200
         ${className}
       `}
+      style={{
+        borderTop: 'none',
+        borderLeft: 'none',
+        borderRight: 'none'
+      }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full space-y-4 sm:space-y-0">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 flex-1">
@@ -124,17 +129,17 @@ const UserCard = ({
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
             <CircleButton
-              icon={editIcon}
+              icon={<Pencil  className="w-5 h-5" />}
               onClick={onEdit}
-              backgroundColor={AppColors.white}
+              backgroundColor="white"
               borderColor={AppColors.primary_500}
               iconColor={AppColors.primary_500}
               size={40}
             />
             <CircleButton
-              icon={deleteIcon}
+              icon={<Trash2 className="w-5 h-5" />}
               onClick={onDelete}
-              backgroundColor={AppColors.white}
+              backgroundColor="white"
               borderColor={AppColors.danger_500}
               iconColor={AppColors.danger_500}
               size={40}

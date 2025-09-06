@@ -18,9 +18,9 @@ const ActionButton = ({
 
   // Variant styles
   const variants = {
-    primary: 'bg-[#05CBE7] text-white hover:bg-[#04b4d1] focus:ring-[#05CBE7] border-[#05CBE7]',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500',
-    outline: 'border border-[#05CBE7] text-[#05CBE7] bg-transparent hover:bg-[#05CBE7] hover:text-white focus:ring-[#05CBE7]',
+    primary: 'bg-primary text-white hover:bg-[#04b4d1] focus:ring-primary border-primary',
+    secondary: 'bg-white text-primary border border-gray-300 hover:bg-gray-50 focus:ring-gray-500',
+    outline: 'border border-primary text-primary bg-transparent hover:bg-primary hover:text-white focus:ring-primary',
     danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500 border-red-500',
     success: 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500 border-green-500',
     ghost: 'bg-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:ring-gray-500'

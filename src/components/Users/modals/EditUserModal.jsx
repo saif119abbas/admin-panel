@@ -199,11 +199,11 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
             {/* Verify Button */}
             <div className="px-3">
               {isVerified ? (
-                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap border-2 border-green-500">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="flex items-center gap-2 bg-success_50 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap border-2 border-success">
+                  <div className="w-4 h-4 bg-success rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-green-700">Verified</span>
+                  <span className="text-success">Verified</span>
                 </div>
               ) : (
                 <button
