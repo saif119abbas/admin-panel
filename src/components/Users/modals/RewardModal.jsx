@@ -111,7 +111,7 @@ const RewardModal = ({ isOpen, onClose, user }) => {
   };
 
   const footer = (
-    <div className="bg-[#000034] px-6 py-4 flex items-center justify-end space-x-3 rounded-b-lg -mx-6 -mb-6 mt-6">
+    <div className="bg-dark_bg px-6 py-4 flex items-center justify-end space-x-3 rounded-b-lg -mx-6 -mb-6 mt-6">
       <ActionButton
         type="button"
         variant="secondary"

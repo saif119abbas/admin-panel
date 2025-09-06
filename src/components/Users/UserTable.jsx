@@ -24,8 +24,8 @@ const UserTable = ({
 
   const getStatusColor = (status) => {
     return status === 'Active'
-      ? 'text-green-500'
-      : 'text-orange-500';
+      ? 'text-success'
+      : 'text-orange-600';
   };
 
   const generatePageNumbers = () => {
@@ -78,10 +78,10 @@ const UserTable = ({
           <thead className="bg-gray-200 rounded-t-lg rounded-b-lg">
             <tr>
               <th className="px-6 py-3 w-16 rounded-tl-lg rounded-bl-lg"></th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created On</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase rounded-tr-lg rounded-br-lg">Country</th>
+              <th className="px-6 py-3 text-left text-md font-bold text-black">Name</th>
+              <th className="px-6 py-3 text-left text-md font-bold text-black">Created On</th>
+              <th className="px-6 py-3 text-left text-md font-bold text-black">Status</th>
+              <th className="px-6 py-3 text-left text-md font-bold text-black rounded-tr-lg rounded-br-lg">Country</th>
             </tr>
           </thead>
 
@@ -106,7 +106,7 @@ const UserTable = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-md font-semibold text-white">
                           {generateAvatar(user.name)}
                         </span>
                       )}
@@ -114,18 +114,18 @@ const UserTable = ({
                     <div className="ml-4">
                       <button
                         onClick={() => onUserClick && onUserClick(user)}
-                        className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors text-left"
+                        className="text-md text-text text-left"
                       >
                         {user.name}
                       </button>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900">{user.createdOn}</td>
-                <td className="px-6 py-4 text-sm font-medium">
+                <td className="px-6 py-4 text-md text-text">{user.createdOn}</td>
+                <td className="px-6 py-4 text-md">
                   <span className={getStatusColor(user.status)}>{user.status}</span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900">{user.country}</td>
+                <td className="px-6 py-4 text-md text-text">{user.country}</td>
               </tr>
             ))}
           </tbody>
@@ -142,10 +142,10 @@ const UserTable = ({
               disabled={page === '...' || loading}
               className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
                 page === currentPage
-                  ? 'bg-[#05CBE7] text-white'
+                  ? 'bg-primary text-white'
                   : page === '...'
-                  ? 'text-gray-400 cursor-default'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'text-black cursor-default'
+                  : 'bg-gray-100 text-black hover:bg-gray-200'
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {page}

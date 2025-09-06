@@ -149,11 +149,11 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
   };
 
   const getTransactionColor = (type) => {
-    return type === 'Sending' ? 'text-red-500' : 'text-green-500';
+    return type === 'Sending' ? 'text-danger' : 'text-success';
   };
 
   const getStatusColor = (status) => {
-    return status === 'Pending' ? 'text-[#B77F12]' : 'text-green-500';
+    return status === 'Pending' ? 'text-warning' : 'text-success';
   };
 
   const getStatusStyle = (status) => {
@@ -177,12 +177,12 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
         <div className="flex items-center space-x-2 text-sm">
           <button 
             onClick={onBack}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
+            className="text-text hover:text-gray-800 transition-colors"
           >
             All Users
           </button>
-          <span className="text-gray-400">/</span>
-          <span className="text-primary font-sm">{currentUser?.name || 'Barbara Gordon'}</span>
+          <span className="text-text">/</span>
+          <span className="text-primary text-sm font-bold">{currentUser?.name || 'Barbara Gordon'}</span>
         </div>
         
         {/* Reward Button - Updated to use ActionButton */}
@@ -196,7 +196,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
       </div>
 
       {/* Main Header Panel*/}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 md:p-6 relative overflow-hidden min-h-[172px]">
+      <div className="bg-dark_bg rounded-2xl p-4 md:p-6 relative overflow-hidden min-h-[172px]">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-4 right-4 w-24 h-24 md:w-32 md:h-32 bg-white rounded-full opacity-5"></div>
@@ -229,7 +229,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             {/* User Details*/}
             <div className="text-white space-y-1 md:space-y-2 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                <h1 className="text-lg sm:text-xl font-bold truncate">{currentUser?.name || 'Barbara Gordon'}</h1>
+                <h1 className="text-lg sm:text-h4 font-bold truncate">{currentUser?.name || 'Barbara Gordon'}</h1>
                 <span 
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-md font-semibold w-fit"
                   style={getStatusStyle(currentUser?.status || 'Active')}
@@ -237,13 +237,13 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                   {currentUser?.status || 'Active'}
                 </span>
               </div>
-              <p className="text-gray-300 text-xs md:text-sm">
+              <p className="text-gray-300 text-sm md:text-md">
                 Created on {currentUser?.createdOn || '03 August, 2025'}
               </p>
-              <p className="text-gray-300 text-xs md:text-sm">
+              <p className="text-gray-300 text-sm md:text-md">
                 {currentUser?.city || 'Dubai'}, {currentUser?.country || 'United Arab Emirates'}
               </p>
-              <p className="text-gray-300 text-xs md:text-sm font-medium">
+              <p className="text-gray-300 text-sm md:text-md">
                 {currentUser?.phoneNumber || '+971 12 345 6789'}
               </p>
               {/* Edit Info Button */}
@@ -252,7 +252,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                   variant="outline"
                   size="small"
                   onClick={() => setIsEditModalOpen(true)}
-                  className="!text-[#05CBE7] !border-[#05CBE7] hover:!bg-[#05CBE7] hover:!text-white !w-[90px] !h-[28px]"
+                  className="!text-primary !border-primary hover:!bg-primary hover:!text-white !w-[90px] !h-[28px]"
                 >
                   Edit Info
                 </ActionButton>
@@ -281,8 +281,8 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                   />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <p className="text-gray-600 text-xs md:text-sm font-medium">Wallet Balance</p>
-                  <p className="text-gray-900 text-base md:text-lg lg:text-2xl font-bold mb-1">SAR 5,140</p>
+                  <p className="text-gray-600 text-sm md:text-md font-medium">Wallet Balance</p>
+                  <p className="text-secondary text-base md:text-h3 lg:text-2xl font-bold mb-1">SAR 5,140</p>
                   <ActionButton
                     variant="primary"
                     size="small"
@@ -307,7 +307,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             accountHolder={currentUser?.name || "Barbara Gordon"}
             country="United Arab Emirates"
             iban="AE070331234567890126543"
-            headerIcon={<Pencil className="w-5 h-5 text-cyan-600" />}
+            headerIcon={<Pencil className="w-5 h-5 text-primary" />}
           />
         </div>
 
@@ -324,7 +324,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                 </div>
                 <IconBadge
                   icon={CircleArrowDown}
-                  bgClass="bg-green-500"
+                  bgClass="bg-success"
                   iconClass="text-white"
                 />
               </div>

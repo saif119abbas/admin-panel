@@ -91,7 +91,21 @@ const AppColors = {
     pending: {
       background: "#B77F12", 
       text: "#FFFFFF"
-    }
+    },
+    inProgress: {
+      background: '#3B82F6', // blue-500
+      text: '#FFFFFF'
+    },
+     Resolved: {
+      background: '#3B82F6', // blue-500
+      text: '#FFFFFF'
+    },
+     Closed: {
+      background: '#3B82F6', // blue-500
+      text: '#FFFFFF'
+    },
+    
+
   },
 
   purple_600: "#7C3AED",

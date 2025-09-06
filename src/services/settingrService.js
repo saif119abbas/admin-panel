@@ -1,79 +1,41 @@
+import { apiService } from '../api/apiService';
+
 class UserService {
-  constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || "http://localhost:3001/api";
-  }
+  constructor() { }
 
   async fetchUsers() {
     try {
-      const response = await fetch(`${this.baseURL}/users`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      return await response.json();
+      return []
+      return await apiService.get('/users');
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error fetching users:', error);
       throw error;
     }
   }
 
   async createUser(userData) {
     try {
-      const response = await fetch(`${this.baseURL}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create user");
-      }
-
-      return await response.json();
+      return await apiService.post('/users', userData);
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error('Error creating user:', error);
       throw error;
     }
   }
 
   async updateUser(userId, userData) {
     try {
-      const response = await fetch(`${this.baseURL}/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update user");
-      }
-
-      return await response.json();
+      return await apiService.put(`/users/${userId}`, userData);
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error(`Error updating user ${userId}:`, error);
       throw error;
     }
   }
 
   async deleteUser(userId) {
     try {
-      const response = await fetch(`${this.baseURL}/users/${userId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete user");
-      }
-
-      return { success: true };
+      return await apiService.delete(`/users/${userId}`);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error(`Error deleting user ${userId}:`, error);
       throw error;
     }
   }
@@ -83,15 +45,7 @@ class UserService {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const response = await fetch(`${this.baseURL}/users/avatar`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload avatar");
-      }
-
+      const response = await apiService.post('/users/avatar', formData);
       return await response.json();
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -100,4 +54,4 @@ class UserService {
   }
 }
 
-export const userService = new UserService();
+export default new UserService();

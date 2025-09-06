@@ -74,7 +74,7 @@ const BaseModal = ({
 
         {/* Footer */}
         {footer && (
-          <div className="bg-[#000034] px-6 py-4 flex items-center justify-end space-x-3 rounded-b-lg">
+          <div className="bg-dark_bg px-6 py-4 flex items-center justify-end space-x-3 rounded-b-lg">
             {footer}
           </div>
         )}

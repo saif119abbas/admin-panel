@@ -8,19 +8,19 @@ const UserStats = ({ stats }) => {
       title: 'Total No. of Users',
       value: stats.total.toLocaleString(),
       icon: UsersIcon,
-      bgColor: 'bg-indigo-500',
+      bgColor: 'bg-secondary',
     },
     {
       title: 'Total No. of Active Users',
       value: stats.activeUsers.toLocaleString(),
       icon: UserCheck,
-      bgColor: 'bg-green-500',
+      bgColor: 'bg-success',
     },
     {
       title: 'Total No. of Pending Users',
       value: stats.newUsers.toLocaleString(),
       icon: UserExclamationIcon,
-      bgColor: 'bg-orange-500',
+      bgColor: 'bg-orange_600',
     }
   ];
 
@@ -39,7 +39,7 @@ const UserStats = ({ stats }) => {
         >
             <div className="flex items-center justify-between h-full">
             <div>
-                <p className="text-2xl font-bold text-gray-900 mb-1">{card.value}</p>
+                <p className="text-h3 font-bold text-gray-900 mb-1">{card.value}</p>
                 <p className="text-sm text-gray-600">{card.title}</p>
             </div>
             <div className={`w-12 h-12 ${card.bgColor} rounded-full flex items-center justify-center`}>
