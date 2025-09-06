@@ -1,15 +1,13 @@
 // src/screens/Users.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import UserTable from '../components/Users/UserTable';
 import UserStats from '../components/Users/UserStats';
 import UserFilters from '../components/Users/UserFilters';
 import FilterModal from '../components/Users/modals/FilterModal';
 import UserProfile from '../components/Users/UserProfile';
-import LoadingSpinner from '../components/Users/common/LoadingSpinner';
 import '../App.css';
 
 const Users = () => {
-  // Mock user data
   const mockUsers = [
     {
       id: 1,
