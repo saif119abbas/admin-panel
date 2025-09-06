@@ -3,8 +3,7 @@ import api from ".";
 export  const apiService = {
   async get(endpoint, token = null) {
     try {
-  
-      
+
       const config = {};
       if (token) {
         config.headers = { Authorization: `Bearer ${token}` };
