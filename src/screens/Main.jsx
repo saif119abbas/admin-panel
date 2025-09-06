@@ -8,14 +8,21 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import Marketing from './Marketing';
 import { MarketingProvider } from '../context/MarketingContext';
+import userImage from '../assets/images/image.png';
 
 function Main() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-const { currentView } = useSidebar();
-  if (!isAuthenticated) return null;
-
+  const { currentView } = useSidebar();
   
+  // User data variables - you can make these dynamic based on your auth context or props
+  const userData = {
+    name: "Kathryn Murphy",
+    role: "Admin",
+    image: userImage // or backgroundImage if you want to use the imported image as profile picture
+  };
+
+  if (!isAuthenticated) return null;
 
   return (
     <div className="flex h-screen bg-gray-50 bg-white">
@@ -24,17 +31,22 @@ const { currentView } = useSidebar();
         onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Header 
+          onMenuClick={() => setSidebarOpen(true)}
+          userName={userData.name}
+          userRole={userData.role}
+          userImage={userData.image}
+        />
         <main className="flex-1 overflow-y-auto p-3 sm:p-6">
-          {currentView==="dashboard" && <Dashboard />}
-          {currentView==="settings" && <Settings />}
-          {currentView==="users" && <Users />}
+          {currentView === "dashboard" && <Dashboard />}
+          {currentView === "settings" && <Settings />}
+          {currentView === "users" && <Users />}
           {
-          (currentView==="create-templates"  || currentView==="all-templates" || currentView==="send-notifications")
-          && 
-          <MarketingProvider>
-            <Marketing />
-          </MarketingProvider>
+            (currentView === "create-templates" || currentView === "all-templates" || currentView === "send-notifications")
+            && 
+            <MarketingProvider>
+              <Marketing />
+            </MarketingProvider>
           }
         </main>
 
