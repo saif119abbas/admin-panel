@@ -1,5 +1,7 @@
 // src/context/UserContext.jsx
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useState } from 'react';
+import userService from '../services/userService';
+import lookupService from '../services/lookupService';
 
 const USER_ACTIONS = {
   SET_USERS: 'SET_USERS',
@@ -9,14 +11,25 @@ const USER_ACTIONS = {
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   SET_SEARCH_TERM: 'SET_SEARCH_TERM',
-  CLEAR_ERROR: 'CLEAR_ERROR'
+  SET_PAGINATION: 'SET_PAGINATION',
+  CLEAR_ERROR: 'CLEAR_ERROR',
+  SET_COUNTRIES: 'SET_COUNTRIES',
+  SET_CITIES: 'SET_CITIES'
 };
 
 const initialState = {
   users: [],
   loading: false,
   error: null,
-  searchTerm: ''
+  searchTerm: '',
+  countries: [],
+  cities: [],
+  pagination: {
+    pageNumber: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 1
+  }
 };
 
 const userReducer = (state, action) => {
@@ -29,10 +42,19 @@ const userReducer = (state, action) => {
         error: null
       };
 
+    case USER_ACTIONS.SET_PAGINATION:
+      return {
+        ...state,
+        pagination: {
+          ...state.pagination,
+          ...action.payload
+        }
+      };
+
     case USER_ACTIONS.ADD_USER:
       return {
         ...state,
-        users: [...state.users, action.payload],
+        users: [action.payload, ...state.users],
         loading: false,
         error: null
       };
@@ -80,6 +102,20 @@ const userReducer = (state, action) => {
         error: null
       };
 
+    case USER_ACTIONS.SET_COUNTRIES:
+      return {
+        ...state,
+        countries: action.payload,
+        error: null
+      };
+
+    case USER_ACTIONS.SET_CITIES:
+      return {
+        ...state,
+        cities: action.payload,
+        error: null
+      };
+
     default:
       return state;
   }
@@ -97,206 +133,384 @@ export const useUser = () => {
 
 export const UserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const { pageNumber, pageSize } = state.pagination;
 
-  const setUsers = useCallback((users) => {
-    dispatch({ type: USER_ACTIONS.SET_USERS, payload: users });
-  }, []);
-
-  const addUser = useCallback((userData) => {
+  // Fetch users from API
+  const fetchUsers = useCallback(async (page = pageNumber, size = pageSize, filters = {}) => {
     try {
       dispatch({ type: USER_ACTIONS.SET_LOADING, payload: true });
       
-      const newUser = {
-        ...userData,
-        id: Date.now(), // Simple ID generation need to be edit and use real user ID
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      const response = await userService.getUsers(page, size, filters);
+      
+      if (response.success) {
+        const { items, ...pagination } = response.data;
+        dispatch({ type: USER_ACTIONS.SET_USERS, payload: items });
+        dispatch({ type: USER_ACTIONS.SET_PAGINATION, payload: pagination });
+      } else {
+        dispatch({ 
+          type: USER_ACTIONS.SET_ERROR, 
+          payload: response.error || 'Failed to load users' 
+        });
+      }
+    } catch (error) {
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: error.message || 'An error occurred while fetching users' 
+      });
+    }
+  }, [pageNumber, pageSize]);
 
+  // Initial fetch
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Filter users based on search term
+  const filteredUsers = useCallback(() => {
+    if (!state.searchTerm) return state.users;
+    
+    const term = state.searchTerm.toLowerCase();
+    return state.users.filter(user => 
+      user.fullName?.toLowerCase().includes(term) || 
+      user.email?.toLowerCase().includes(term) ||
+      user.userRole?.toLowerCase().includes(term)
+    );
+  }, [state.users, state.searchTerm]);
+
+  // Calculate user statistics
+  const getUserStats = useCallback(() => {
+    return state.users.reduce((acc, user) => {
+      acc.totalUsers = (acc.totalUsers || 0) + 1;
+      acc.activeUsers = (acc.activeUsers || 0) + (user.status === 1 ? 1 : 0);
+      acc[user.userRole?.toLowerCase()] = (acc[user.userRole?.toLowerCase()] || 0) + 1;
+      return acc;
+    }, {});
+  }, [state.users]);
+
+  // Get user role display name
+  const getUserRoleDisplayName = (type) => {
+    const roleMap = {
+      0: 'Super Admin',
+      1: 'Admin',
+      2: 'Marketing',
+      3: 'Customer Support',
+      '0': 'Super Admin',
+      '1': 'Admin',
+      '2': 'Marketing',
+      '3': 'Customer Support'
+    };
+    return roleMap[type] || `Type ${type}`;
+  };
+
+  // Get user role enum value for API
+  const getUserRoleEnumValue = (roleString) => {
+    const enumMap = {
+      'Super Admin': 0,
+      'Admin': 1,
+      'Marketing': 2,
+      'Customer Support': 3,
+      '0': 0,
+      '1': 1,
+      '2': 2,
+      '3': 3
+    };
+    return enumMap[roleString] !== undefined ? enumMap[roleString] : parseInt(roleString) || 0;
+  };
+
+  // Get user status display name
+  const getUserStatusDisplayName = (status) => {
+    const statusMap = {
+      'Active': 'Active',
+      'Inactive': 'Inactive',
+      '0': 'Inactive',
+      '1': 'Active',
+      0: 'Inactive',
+      1: 'Active'
+    };
+    return statusMap[status] || status;
+  };
+
+  // Get user status enum value
+  const getUserStatusEnumValue = (statusString) => {
+    const enumMap = {
+      'Active': 1,
+      'Inactive': 0
+    };
+    return enumMap[statusString] !== undefined ? enumMap[statusString] : statusString;
+  };
+
+  // Handle search term change
+  const setSearchTerm = useCallback((term) => {
+    dispatch({ type: USER_ACTIONS.SET_SEARCH_TERM, payload: term });
+  }, []);
+
+  // Handle page change
+  const handlePageChange = useCallback((newPage) => {
+    fetchUsers(newPage, pageSize);
+  }, [fetchUsers, pageSize]);
+
+  // Handle page size change
+  const handlePageSizeChange = useCallback((newSize) => {
+    fetchUsers(1, newSize);
+  }, [fetchUsers]);
+
+  // Handle user deletion
+  const deleteUser = useCallback(async (userId) => {
+    try {
+      dispatch({ type: USER_ACTIONS.SET_LOADING, payload: true });
+      
+      // Call the actual delete user API
+      const response = await userService.deleteUser(userId);
+      
+      if (response.success !== false) {
+        // Remove user from local state after successful API call
+        dispatch({ type: USER_ACTIONS.DELETE_USER, payload: userId });
+      } else {
+        throw new Error(response.message || 'Failed to delete user');
+      }
+    } catch (error) {
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: error.message || 'Failed to delete user' 
+      });
+      throw error;
+    } finally {
+      dispatch({ type: USER_ACTIONS.SET_LOADING, payload: false });
+    }
+  }, []);
+
+  // Add user
+  const addUser = useCallback(async (userData) => {
+    try {
+      dispatch({ type: USER_ACTIONS.SET_LOADING, payload: true });
+      // TODO: Call add user API when available
+      // const response = await userService.addUser(userData);
+      
+      // For now, create a mock user with ID
+      const newUser = {
+        id: Date.now().toString(),
+        fullName: userData.firstName + ' ' + userData.lastName,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        birthdate: userData.birthdate,
+        status: userData.status,
+        ...userData,
+        createdAt: new Date().toISOString()
+      };
+      
       dispatch({ type: USER_ACTIONS.ADD_USER, payload: newUser });
       return newUser;
     } catch (error) {
-      dispatch({ type: USER_ACTIONS.SET_ERROR, payload: error.message });
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: error.message || 'Failed to add user' 
+      });
       throw error;
     }
   }, []);
 
-  const updateUser = useCallback((userId, userData) => {
+  // Update user
+  const updateUser = useCallback(async (userId, userData) => {
     try {
       dispatch({ type: USER_ACTIONS.SET_LOADING, payload: true });
+      // TODO: Call update user API when available
+      // const response = await userService.updateUser(userId, userData);
       
+      // For now, create updated user data
       const updatedUser = {
+        fullName: userData.firstName + ' ' + userData.lastName,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        birthdate: userData.birthdate,
+        status: userData.status,
         ...userData,
         id: userId,
         updatedAt: new Date().toISOString()
       };
-
+      
       dispatch({ type: USER_ACTIONS.UPDATE_USER, payload: updatedUser });
       return updatedUser;
     } catch (error) {
-      dispatch({ type: USER_ACTIONS.SET_ERROR, payload: error.message });
-      throw error;
-    }
-  }, []);
-
-  const deleteUser = useCallback((userId) => {
-    try {
-      dispatch({ type: USER_ACTIONS.SET_LOADING, payload: true });
-      dispatch({ type: USER_ACTIONS.DELETE_USER, payload: userId });
-    } catch (error) {
-      dispatch({ type: USER_ACTIONS.SET_ERROR, payload: error.message });
-      throw error;
-    }
-  }, []);
-
-  const setSearchTerm = useCallback((searchTerm) => {
-    dispatch({ type: USER_ACTIONS.SET_SEARCH_TERM, payload: searchTerm });
-  }, []);
-
-  const clearError = useCallback(() => {
-    dispatch({ type: USER_ACTIONS.CLEAR_ERROR });
-  }, []);
-
-  // Advanced search function that searches across all user fields
-  const searchUsers = useCallback((searchTerm = state.searchTerm) => {
-    if (!searchTerm || searchTerm.trim() === '') {
-      return state.users;
-    }
-
-    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-    
-    return state.users.filter(user => {
-      // Define all searchable fields
-      const searchableFields = [
-        user.firstName,
-        user.lastName,
-        user.name,
-        user.emailAddress,
-        user.phoneNumber,
-        user.country,
-        user.countryDisplay,
-        user.city,
-        user.cityDisplay,
-        user.userRole,
-        // Map userRole to display names for search
-        getUserRoleDisplayName(user.userRole)
-      ];
-
-      // Check if any field contains the search term
-      return searchableFields.some(field => {
-        if (!field) return false;
-        return field.toString().toLowerCase().includes(normalizedSearchTerm);
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: error.message || 'Failed to update user' 
       });
-    });
-  }, [state.users, state.searchTerm]);
-
-  // Helper function to get user role display name
-  const getUserRoleDisplayName = useCallback((userRole) => {
-    const roleMap = {
-      'superadmin': 'Super Admin',
-      'admin': 'Admin', 
-      'marketing': 'Marketing',
-      'customersupport': 'Customer Support'
-    };
-    return roleMap[userRole] || userRole;
+      throw error;
+    }
   }, []);
-
-  // Get user statistics
-  const getUserStats = useCallback(() => {
-    const totalUsers = state.users.length;
-    const activeUsers = state.users.filter(user => user.status === true).length;
-    const inactiveUsers = totalUsers - activeUsers;
-    
-    // Role-based statistics
-    const roleStats = {
-      superadmin: state.users.filter(user => user.userRole === 'superadmin').length,
-      admin: state.users.filter(user => user.userRole === 'admin').length,
-      marketing: state.users.filter(user => user.userRole === 'marketing').length,
-      customersupport: state.users.filter(user => user.userRole === 'customersupport').length
-    };
-
-    return {
-      totalUsers,
-      activeUsers,
-      inactiveUsers,
-      ...roleStats
-    };
-  }, [state.users]);
-
-  // Find user by ID
-  const findUserById = useCallback((userId) => {
-    return state.users.find(user => user.id === userId);
-  }, [state.users]);
 
   // Validate user data
-  const validateUserData = useCallback((userData) => {
+  const validateUserData = useCallback((userData, isCreating = false) => {
     const errors = {};
-
+    
+    // First Name validation
     if (!userData.firstName?.trim()) {
       errors.firstName = 'First name is required';
     }
+    
+    // Last Name validation
     if (!userData.lastName?.trim()) {
       errors.lastName = 'Last name is required';
     }
+    
+    // Birthdate validation
+    if (!userData.birthdate?.trim()) {
+      errors.birthdate = 'Birth date is required';
+    }
+    
+    // Email validation
     if (!userData.emailAddress?.trim()) {
       errors.emailAddress = 'Email address is required';
-    } else if (!/\S+@\S+\.\S+/.test(userData.emailAddress)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.emailAddress.trim())) {
       errors.emailAddress = 'Please enter a valid email address';
     }
-    if (!userData.phoneNumber?.trim()) {
-      errors.phoneNumber = 'Phone number is required';
+    
+    // Phone number validation - exactly 9 digits
+    if (!userData.mobileNumber?.trim()) {
+      errors.mobileNumber = 'Phone number is required';
+    } else if (!/^\d{9}$/.test(userData.mobileNumber.trim())) {
+      errors.mobileNumber = 'Phone number must be exactly 9 digits';
     }
+    
+    // Country validation
     if (!userData.country) {
       errors.country = 'Country is required';
     }
+    
+    // City validation
     if (!userData.city) {
       errors.city = 'City is required';
     }
-    if (!userData.userRole) {
+    
+    // User Role validation - check for both string and number values
+    if (userData.userRole === '' || userData.userRole === null || userData.userRole === undefined) {
       errors.userRole = 'User role is required';
     }
 
-    // Check for duplicate email
-    const existingUser = state.users.find(user => 
-      user.emailAddress?.toLowerCase() === userData.emailAddress?.toLowerCase() &&
-      user.id !== userData.id
-    );
-    if (existingUser) {
-      errors.emailAddress = 'This email address is already in use';
+    // Password validation for new user creation
+    if (isCreating) {
+      if (!userData.password?.trim()) {
+        errors.password = 'Password is required';
+      } else if (userData.password.length < 8) {
+        errors.password = 'Password must be at least 8 characters long';
+      }
+      
+      if (!userData.confirmPassword?.trim()) {
+        errors.confirmPassword = 'Confirm password is required';
+      } else if (userData.password !== userData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+      }
     }
-
+    
     return {
       isValid: Object.keys(errors).length === 0,
       errors
     };
-  }, [state.users]);
+  }, []);
 
-  // Context value
+  // Clear error
+  const clearError = useCallback(() => {
+    dispatch({ type: USER_ACTIONS.CLEAR_ERROR });
+  }, []);
+
+  // Fetch countries
+  const fetchCountries = useCallback(async () => {
+    if (state.countries.length > 0) return; // Skip if already loaded
+    
+    setIsLoadingCountries(true);
+    try {
+      const response = await lookupService.countryCityLookupService.getCountriesWithCities();
+      if (response.success) {
+        dispatch({ type: USER_ACTIONS.SET_COUNTRIES, payload: response.data || [] });
+      } else {
+        dispatch({ 
+          type: USER_ACTIONS.SET_ERROR, 
+          payload: response.error || 'Failed to load countries. Please try again later.' 
+        });
+      }
+    } catch (error) {
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: 'Failed to load countries. Please try again later.' 
+      });
+    } finally {
+      setIsLoadingCountries(false);
+    }
+  }, [state.countries.length]);
+
+  // Fetch cities for a country
+  const fetchCitiesByCountry = useCallback(async (countryId) => {
+    if (!countryId) {
+      dispatch({ type: USER_ACTIONS.SET_CITIES, payload: [] });
+      return;
+    }
+    
+    setIsLoadingCities(true);
+    try {
+      const cities = await lookupService.countryCityLookupService.getCitiesByCountryId(countryId, state.countries);
+      dispatch({ type: USER_ACTIONS.SET_CITIES, payload: cities || [] });
+    } catch (error) {
+      dispatch({ 
+        type: USER_ACTIONS.SET_CITIES, 
+        payload: [] 
+      });
+      dispatch({ 
+        type: USER_ACTIONS.SET_ERROR, 
+        payload: 'Failed to load cities. Please try again later.' 
+      });
+    } finally {
+      setIsLoadingCities(false);
+    }
+  }, [state.countries]);
+
+  // Get country name by ID
+  const getCountryName = useCallback((countryId) => {
+    if (!countryId) return '';
+    return lookupService.countryCityLookupService.getCountryNameById(countryId, state.countries);
+  }, [state.countries]);
+
+  // Get city name by ID
+  const getCityName = useCallback((cityId) => {
+    if (!cityId) return '';
+    return lookupService.countryCityLookupService.getCityNameById(cityId, state.countries);
+  }, [state.countries]);
+
   const value = {
-    // State
+    ...state,
     users: state.users,
+    filteredUsers: filteredUsers(),
     loading: state.loading,
     error: state.error,
     searchTerm: state.searchTerm,
-    
-    // Actions
-    setUsers,
+    pagination: state.pagination,
+    isLoadingCountries,
+    isLoadingCities,
+    setSearchTerm,
+    deleteUser,
     addUser,
     updateUser,
-    deleteUser,
-    setSearchTerm,
-    clearError,
-    
-    // Computed values and utilities
-    searchUsers,
-    getUserStats,
-    findUserById,
     validateUserData,
     getUserRoleDisplayName,
-    
-    // Filtered users based on current search term
-    filteredUsers: searchUsers()
+    getUserRoleEnumValue,
+    getUserStatusDisplayName,
+    getUserStatusEnumValue,
+    getUserStats,
+    handlePageChange,
+    handlePageSizeChange,
+    refreshUsers: () => fetchUsers(pageNumber, pageSize),
+    clearError,
+    fetchCountries,
+    fetchCitiesByCountry,
+    getCountryName,
+    getCityName
   };
+
+  // Load countries when component mounts
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
 
   return (
     <UserContext.Provider value={value}>

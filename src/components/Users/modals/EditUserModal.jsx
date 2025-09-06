@@ -1,49 +1,104 @@
 // src/components/Users/modals/EditUserModal.jsx
 import { useState, useEffect } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
+import { useUser } from '../../../context/UserContext.jsx';
 import ActionButton from '../common/ActionButton';
 import BaseModal from '../common/BaseModal';
 
 const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
+  const {
+    updateUser,
+    countries,
+    cities,
+    fetchCountries,
+    fetchCitiesByCountry,
+    getCountryName,
+    getCityName,
+    getUserRoleEnumValue,
+    getUserStatusEnumValue,
+    loading
+  } = useUser();
+
   const [formData, setFormData] = useState({
     firstName: '',
-    surname: '',
-    countryCode: '+971',
-    phoneNumber: '',
-    status: 'Active'
+    lastName: '',
+    birthdate: '',
+    emailAddress: '',
+    mobileNumber: '',
+    country: '',
+    city: '',
+    userRole: '',
+    status: 'Active',
   });
 
   const [isVerified, setIsVerified] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+971');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const countryCodes = [
-    { code: '+971', country: 'AE', flag: '🇦🇪', name: 'UAE' },
-    { code: '+966', country: 'SA', flag: '🇸🇦', name: 'Saudi Arabia' },
-    { code: '+965', country: 'KW', flag: '🇰🇼', name: 'Kuwait' },
-    { code: '+974', country: 'QA', flag: '🇶🇦', name: 'Qatar' },
-    { code: '+973', country: 'BH', flag: '🇧🇭', name: 'Bahrain' },
-    { code: '+968', country: 'OM', flag: '🇴🇲', name: 'Oman' },
-    { code: '+1', country: 'US', flag: '🇺🇸', name: 'USA' },
-    { code: '+44', country: 'GB', flag: '🇬🇧', name: 'UK' }
-  ];
+  // Load countries when modal opens
+  useEffect(() => {
+    console.log('=== EditUserModal useEffect triggered ===');
+    console.log('isOpen:', isOpen);
+    console.log('countries length:', countries.length);
+    
+    if (isOpen && countries.length === 0) {
+      fetchCountries();
+    }
+  }, [isOpen, countries.length, fetchCountries]);
 
   useEffect(() => {
-    if (user && isOpen) {
-      const nameParts = user.name ? user.name.split(' ') : ['', ''];
-      const fullPhoneNumber = user.phoneNumber || '+971 12 345 6789';
-      const phoneMatch = fullPhoneNumber.match(/^(\+\d{1,4})\s(.+)$/);
+    console.log('=== EditUserModal useEffect triggered ===');
+    console.log('user prop:', user);
+    console.log('countries length:', countries.length);
+    
+    if (user) {
+      // Parse mobile number: +962790000000 -> +962 and 790000000
+      const mobileSource = user.mobileNumber || '';
+      console.log('Original mobileNumber:', mobileSource);
+      
+      let countryCode = '+971'; // Default
+      let phoneNumber = '';
+      
+      if (mobileSource.startsWith('+')) {
+        // Simple: always take first 4 characters as country code
+        countryCode = mobileSource.substring(0, 4); // +962
+        phoneNumber = mobileSource.substring(4);    // 790000000
+        console.log('Country code:', countryCode, 'Phone number:', phoneNumber);
+      } else {
+        phoneNumber = mobileSource;
+      }
+      
+      console.log('Final country code:', countryCode);
+      console.log('Final phone number:', phoneNumber);
+      
+      const userCountry = countries.find(c => c.id === user.country);
       
       setFormData({
-        firstName: nameParts[0] || '',
-        surname: nameParts.slice(1).join(' ') || '',
-        countryCode: phoneMatch ? phoneMatch[1] : '+971',
-        phoneNumber: phoneMatch ? phoneMatch[2] : '12 345 6789',
-        status: user.status || 'Active'
+        firstName: user.firstName || user.fullName?.split(' ')[0] || '',
+        lastName: user.lastName || user.fullName?.split(' ').slice(1).join(' ') || '',
+        birthdate: user.birthdate || '',
+        country: user.country || '',
+        city: user.city || '',
+        mobileNumber: phoneNumber,
+        emailAddress: user.emailAddress || user.email || '',
+        userRole: user.type?.toString() || '', // Convert 0 -> "0" for Super Admin
+        status: user.status === 1 ? 'Active' : 'Inactive'
       });
       
-      setIsVerified(user.phoneVerified !== false);
+      // Set country code from user's country or parsed code
+      const finalCountryCode = userCountry?.phoneCode || countryCode;
+      console.log('Setting selectedCountryCode to:', finalCountryCode);
+      setSelectedCountryCode(finalCountryCode);
+      
+      // Load cities for the user's country
+      if (user.country) {
+        fetchCitiesByCountry(user.country);
+      }
+    } else {
+      console.log('No user data provided to EditUserModal');
     }
-  }, [user, isOpen]);
+  }, [user, countries, fetchCitiesByCountry]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -51,47 +106,69 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
       [field]: value
     }));
     
-    if (field === 'phoneNumber' || field === 'countryCode') {
+    if (field === 'mobileNumber' || field === 'countryCode') {
       setIsVerified(false);
+    }
+
+    if (field === 'country') {
+      fetchCitiesByCountry(value);
+      setFormData(prev => ({
+        ...prev,
+        city: ''
+      }));
     }
   };
 
-  const handleCountryCodeSelect = (countryCode) => {
-    handleInputChange('countryCode', countryCode);
+  const handleCountryCodeSelect = (country) => {
+    setSelectedCountryCode(country.phoneCode || country.code);
     setIsDropdownOpen(false);
+    setIsVerified(false);
   };
 
   const handleVerifyPhone = () => {
-    console.log('Verifying phone:', formData.countryCode + ' ' + formData.phoneNumber);
+    console.log('Verifying phone:', selectedCountryCode + ' ' + formData.mobileNumber);
     setIsVerified(true);
   };
 
   const handleSubmit = async () => {
     try {
-      const updateData = {
-        firstName: formData.firstName,
-        surname: formData.surname,
-        phoneNumber: formData.countryCode + ' ' + formData.phoneNumber,
-        status: formData.status,
+      setIsSubmitting(true);
+
+      const userData = {
+        ...formData,
+        name: formData.firstName + ' ' + formData.lastName,
+        email: formData.emailAddress,
+        type: getUserRoleEnumValue(formData.userRole),
+        status: getUserStatusEnumValue(formData.status),
+        mobileNumber: selectedCountryCode + ' ' + formData.mobileNumber,
         phoneVerified: isVerified
       };
 
-      console.log('Updating user data:', updateData);
-
-      const updatedUserData = {
-        ...user,
-        name: `${formData.firstName} ${formData.surname}`,
-        phoneNumber: formData.countryCode + ' ' + formData.phoneNumber,
-        status: formData.status,
-        phoneVerified: isVerified
-      };
-
-      onSave(updatedUserData);
+      const updatedUser = await updateUser(user.id, userData);
+      
+      if (onSave) {
+        onSave(updatedUser);
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error updating user:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Format countries for dropdown
+  const countryOptions = countries.map(country => ({
+    value: country.id,
+    label: `${country.name} ${country.code ? `(${country.code})` : ''}`
+  }));
+
+  // Format cities for dropdown
+  const cityOptions = cities.map(city => ({
+    value: city.id,
+    label: city.name
+  }));
 
   const footer = (
     <>
@@ -99,6 +176,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
         variant="secondary"
         onClick={onClose}
         className="min-w-[110px] h-10"
+        disabled={isSubmitting}
       >
         Cancel
       </ActionButton>
@@ -106,13 +184,14 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
         variant="primary"
         onClick={handleSubmit}
         className="min-w-[110px] h-10"
+        disabled={isSubmitting}
       >
-        Update
+        {isSubmitting ? 'Updating...' : 'Update'}
       </ActionButton>
     </>
   );
 
-  const selectedCountry = countryCodes.find(c => c.code === formData.countryCode) || countryCodes[0];
+  const selectedCountry = countries.find(c => c.phoneCode === selectedCountryCode) || countries[0];
 
   return (
     <BaseModal
@@ -120,11 +199,11 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
       onClose={onClose}
       title="Edit User Details"
       footer={footer}
-      width="500px"
-      height="436px"
+      width="600px"
+      height="auto"
     >
       <div className="space-y-6">
-        {/* First Name and Surname Row */}
+        {/* First Name and Last Name Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -135,52 +214,110 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent"
-              placeholder="Barbara"
+              placeholder="Enter first name"
+              disabled={isSubmitting}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Surname*
+              Last Name*
             </label>
             <input
               type="text"
-              value={formData.surname}
-              onChange={(e) => handleInputChange('surname', e.target.value)}
+              value={formData.lastName}
+              onChange={(e) => handleInputChange('lastName', e.target.value)}
               className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent"
-              placeholder="Gordon"
+              placeholder="Enter last name"
+              disabled={isSubmitting}
             />
+          </div>
+        </div>
+
+        {/* Email Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address*
+          </label>
+          <input
+            type="email"
+            value={formData.emailAddress}
+            onChange={(e) => handleInputChange('emailAddress', e.target.value)}
+            className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent"
+            placeholder="Enter email address"
+            disabled={isSubmitting}
+          />
+        </div>
+
+        {/* Country and City Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Country*
+            </label>
+            <select
+              value={formData.country}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent bg-white"
+              disabled={isSubmitting}
+            >
+              <option value="">Select a country</option>
+              {countryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              City*
+            </label>
+            <select
+              value={formData.city}
+              onChange={(e) => handleInputChange('city', e.target.value)}
+              className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent bg-white"
+              disabled={!formData.country || isSubmitting}
+            >
+              <option value="">Select a city</option>
+              {cityOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {/* Phone Number */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
+            Phone Number*
           </label>
           <div className="flex items-center gap-0 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-[#05CBE7] focus-within:border-transparent">
             {/* Country Code Dropdown */}
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 h-10 bg-gray-50 border-r border-gray-300 hover:bg-gray-100 transition-colors"
+                onClick={() => !isSubmitting && setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-3 h-10 bg-gray-50 border-r border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 <span className="text-lg">{selectedCountry.flag}</span>
-                <span className="text-sm font-medium text-gray-700">{selectedCountry.code}</span>
+                <span className="text-sm font-medium text-gray-700">{selectedCountry.phoneCode}</span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
 
-              {isDropdownOpen && (
+              {isDropdownOpen && !isSubmitting && (
                 <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-y-auto max-h-32">
-                  {countryCodes.map((country) => (
+                  {countries.map((country) => (
                     <button
-                      key={country.code}
+                      key={country.phoneCode}
                       type="button"
-                      onClick={() => handleCountryCodeSelect(country.code)}
+                      onClick={() => handleCountryCodeSelect(country)}
                       className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors"
                     >
                       <span className="text-lg">{country.flag}</span>
-                      <span className="text-sm font-medium text-gray-700">{country.code}</span>
+                      <span className="text-sm font-medium text-gray-700">{country.name} ({country.phoneCode})</span>
                     </button>
                   ))}
                 </div>
@@ -190,10 +327,11 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
             {/* Phone Number Input */}
             <input
               type="text"
-              value={formData.phoneNumber}
-              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              value={formData.mobileNumber}
+              onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
               className="flex-1 px-3 h-10 border-0 focus:outline-none"
               placeholder="XX 12 345 6789"
+              disabled={isSubmitting}
             />
 
             {/* Verify Button */}
@@ -209,7 +347,8 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                 <button
                   type="button"
                   onClick={handleVerifyPhone}
-                  className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap hover:bg-blue-200 transition-colors"
+                  className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap hover:bg-blue-200 transition-colors disabled:opacity-50"
+                  disabled={isSubmitting}
                 >
                   <span>Verify</span>
                 </button>
@@ -218,19 +357,54 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
           </div>
         </div>
 
-        {/* Status Dropdown */}
+        {/* User Role and Status Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              User Role*
+            </label>
+            <select
+              value={formData.userRole}
+              onChange={(e) => handleInputChange('userRole', e.target.value)}
+              className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent bg-white"
+              disabled={isSubmitting}
+            >
+              <option value="">Select a role</option>
+              <option value="SuperAdmin">Super Admin</option>
+              <option value="Admin">Admin</option>
+              <option value="Marketing">Marketing</option>
+              <option value="CustomerSupport">Customer Support</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status*
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => handleInputChange('status', e.target.value)}
+              className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent bg-white"
+              disabled={isSubmitting}
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Date of Birth */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status*
+            Date of Birth
           </label>
-          <select
-            value={formData.status}
-            onChange={(e) => handleInputChange('status', e.target.value)}
-            className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent bg-white"
-          >
-            <option value="Active">Active</option>
-            <option value="Pedning">Pedning</option>
-          </select>
+          <input
+            type="date"
+            value={formData.birthdate}
+            onChange={(e) => handleInputChange('birthdate', e.target.value)}
+            className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05CBE7] focus:border-transparent"
+            disabled={isSubmitting}
+          />
         </div>
       </div>
     </BaseModal>

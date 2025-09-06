@@ -50,4 +50,126 @@ class LookupService {
   }
 }
 
-export default new LookupService();
+class CountryCityLookupService {
+  /**
+   * Get list of all countries with their cities
+   * @returns {Promise<Array>} - Returns array of countries with their cities
+   */
+  async getCountriesWithCities() {
+    try {
+      const response = await apiService.get('/Lookups/Countries');
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+          error: null
+        };
+      }
+      return {
+        success: false,
+        data: null,
+        error: response.message || 'Failed to fetch countries'
+      };
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.response?.data?.message || 'Failed to fetch countries. Please try again.'
+      };
+    }
+  }
+
+  /**
+   * Get country name by ID
+   * @param {string} countryId - The ID of the country
+   * @param {Array} countries - The list of countries
+   * @returns {string} - The name of the country or 'Unknown' if not found
+   */
+  getCountryNameById(countryId, countries = []) {
+    if (!countryId || !Array.isArray(countries)) return 'Unknown';
+    const country = countries.find(c => c.id === countryId);
+    return country?.name || 'Unknown';
+  }
+
+  /**
+   * Get city name by ID
+   * @param {string} cityId - The ID of the city
+   * @param {Array} countries - The list of countries
+   * @returns {string} - The name of the city or 'Unknown' if not found
+   */
+  getCityNameById(cityId, countries = []) {
+    if (!cityId || !Array.isArray(countries)) return 'Unknown';
+    for (const country of countries) {
+      const city = country.cities?.find(c => c.id === cityId);
+      if (city) return city.name;
+    }
+    return 'Unknown';
+  }
+
+  /**
+   * Get cities for a specific country
+   * @param {string} countryId - The ID of the country
+   * @param {Array} countries - The list of countries
+   * @returns {Array} - Array of cities for the specified country
+   */
+  getCitiesByCountryId(countryId, countries = []) {
+    if (!countryId || !Array.isArray(countries)) return [];
+    const country = countries.find(c => c.id === countryId);
+    return country?.cities || [];
+  }
+}
+
+class NewCountryCityLookupService {
+  async getCountriesWithCities() {
+    try {
+      const response = await apiService.get('/Lookups/Countries');
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+          error: null
+        };
+      }
+      return {
+        success: false,
+        data: null,
+        error: response.message || 'Failed to fetch countries'
+      };
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.response?.data?.message || 'Failed to fetch countries. Please try again.'
+      };
+    }
+  }
+
+  getCountryNameById(countryId, countries = []) {
+    if (!countryId || !Array.isArray(countries)) return 'Unknown';
+    const country = countries.find(c => c.id === countryId);
+    return country?.name || 'Unknown';
+  }
+
+  getCityNameById(cityId, countries = []) {
+    if (!cityId || !Array.isArray(countries)) return 'Unknown';
+    for (const country of countries) {
+      const city = country.cities?.find(c => c.id === cityId);
+      if (city) return city.name;
+    }
+    return 'Unknown';
+  }
+
+  getCitiesByCountryId(countryId, countries = []) {
+    if (!countryId || !Array.isArray(countries)) return [];
+    const country = countries.find(c => c.id === countryId);
+    return country?.cities || [];
+  }
+}
+
+export default {
+  lookupService: new LookupService(),
+  countryCityLookupService: new CountryCityLookupService(),
+  newCountryCityLookupService: new NewCountryCityLookupService()
+};

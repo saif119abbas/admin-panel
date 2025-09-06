@@ -7,6 +7,7 @@ import AddNewUser from '../components/settings/AddNewUser.jsx';
 const SettingsContent = () => {
   const [mainContentView, setMainContentView] = useState('users');
   const [editingUser, setEditingUser] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleAddNewUser = () => {
     setEditingUser(null);
@@ -18,9 +19,14 @@ const SettingsContent = () => {
     setMainContentView('addUser');
   };
 
-  const handleBackToUsers = () => {
+  const handleBackToUsers = (shouldRefresh = false) => {
     setEditingUser(null);
     setMainContentView('users');
+    
+    // If shouldRefresh is true, trigger data reload by using a key prop
+    if (shouldRefresh) {
+      setRefreshKey(prev => prev + 1);
+    }
   };
 
   const handleUserFormSubmit = () => {
@@ -42,6 +48,7 @@ const SettingsContent = () => {
       default:
         return (
           <SettingsMainContent 
+            key={refreshKey}
             onAddNewUser={handleAddNewUser}
             onEditUser={handleEditUser}
           />

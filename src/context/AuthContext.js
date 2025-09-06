@@ -1,47 +1,121 @@
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useReducer, useCallback, useEffect } from "react";
+import { apiService } from '../api/apiService';
 
 const AuthContext = createContext();
 
 const initialState = {
   user: null,
   isAuthenticated: false,
+  isLoading: false,
+  error: null
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case "login":
-      return { ...state, user: action.payload, isAuthenticated: true };
+    case "login/pending":
+      return { ...state, isLoading: true, error: null };
+    case "login/success":
+      return { 
+        ...state, 
+        user: action.payload, 
+        isAuthenticated: true, 
+        isLoading: false,
+        error: null 
+      };
+    case "login/error":
+      return { 
+        ...state, 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false,
+        error: action.payload 
+      };
     case "logout":
-      return { ...state, user: null, isAuthenticated: false };
+      return { ...initialState };
     default:
       throw new Error("Unknown action");
   }
 }
 
-const FAKE_USER = {
-  name: "user",
-  email: "user@example.com",
-  password: "User@123",
-  avatar: "https://i.pravatar.cc/100?u=zz",
-};
-
 function AuthProvider({ children }) {
-  const [{ user, isAuthenticated }, dispatch] = useReducer(
+  const [{ user, isAuthenticated, isLoading, error }, dispatch] = useReducer(
     reducer,
     initialState
   );
 
-  function login(email, password) {
-    if (email === FAKE_USER.email && password === FAKE_USER.password)
-      dispatch({ type: "login", payload: FAKE_USER });
-  }
+  const login = useCallback(async (email, password) => {
+    try {
+      dispatch({ type: "login/pending" });
+      
+      const response = await apiService.post('/Users/Auth/Login', {
+        userName: email,
+        password: password
+      });
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
+      }
+      
+      const { data: userData } = response;
+      
+      // Store the token in localStorage
+      if (userData?.token) {
+        localStorage.setItem('token', userData.token);
+        // You might want to store user data in localStorage as well
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      
+      dispatch({ 
+        type: "login/success", 
+        payload: userData 
+      });
+      
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please try again.';
+      dispatch({ 
+        type: "login/error", 
+        payload: errorMessage 
+      });
+      return { success: false, error: errorMessage };
+    }
+  }, []);
 
-  function logout() {
+  const logout = useCallback(() => {
+    // Clear the token and user data from storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     dispatch({ type: "logout" });
-  }
+  }, []);
+
+  // Check for existing token on initial load
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        dispatch({ 
+          type: "login/success", 
+          payload: parsedUser 
+        });
+      } catch (error) {
+        console.error('Failed to parse user data', error);
+        logout();
+      }
+    }
+  }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading,
+      error,
+      login, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );

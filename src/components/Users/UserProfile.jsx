@@ -244,7 +244,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                 {currentUser?.city || 'Dubai'}, {currentUser?.country || 'United Arab Emirates'}
               </p>
               <p className="text-gray-300 text-sm md:text-md">
-                {currentUser?.phoneNumber || '+971 12 345 6789'}
+                {currentUser?.mobileNumber || ''}
               </p>
               {/* Edit Info Button */}
               <div className="mt-1">

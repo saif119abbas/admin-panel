@@ -15,7 +15,7 @@ export const apiService = {
       throw error;
     }
   },
-  
+
   async post(endpoint, data) {
     try {
       const response = await api.post(`${BASE_URL}${endpoint}`, data);
@@ -25,30 +25,30 @@ export const apiService = {
       throw error;
     }
   },
-  
-  async put(endpoint, data = null) {
+
+  async put(endpoint, data = null, headers = {}) {
     try {
-      const response = await api.put(`${BASE_URL}${endpoint}`, data);
+      const response = await api.put(`${BASE_URL}${endpoint}`, data, { headers });
       return response.data;
     } catch (error) {
       console.error(`PUT ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
-  
-  async patch(endpoint, data = null) {
+
+  async patch(endpoint, data = null, headers = {}) {
     try {
-      const response = await api.patch(`${BASE_URL}${endpoint}`, data);
+      const response = await api.patch(`${BASE_URL}${endpoint}`, data, { headers });
       return response.data;
     } catch (error) {
       console.error(`PATCH ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
-  
-  async delete(endpoint) {
+
+  async delete(endpoint, headers = {}) {
     try {
-      const response = await api.delete(`${BASE_URL}${endpoint}`);
+      const response = await api.delete(`${BASE_URL}${endpoint}`, { headers });
       return response.data;
     } catch (error) {
       console.error(`DELETE ${endpoint} error:`, error.response?.data || error.message);
@@ -56,22 +56,19 @@ export const apiService = {
     }
   },
 
-  async postWithFiles(endpoint, formData) {
+  async postWithFiles(endpoint, formData, headers = {}) {
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      };
-
-      const response = await api.post(`${BASE_URL}${endpoint}`, formData, config);
+      // Don't set Content-Type header - let browser set it with proper boundary
+      const response = await api.post(`${BASE_URL}${endpoint}`, formData, {
+        headers
+      });
       return response.data;
     } catch (error) {
       console.error(`POST ${endpoint} with files error:`, error.response?.data || error.message);
       throw error;
     }
   },
-  async getWithQuery(endpoint, queryParams = {}) {
+  async getWithQuery(endpoint, queryParams = {}, headers = {}) {
     try {
       const config = { params: queryParams };
       const response = await api.get(`${BASE_URL}${endpoint}`, config);

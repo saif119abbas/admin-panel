@@ -13,12 +13,13 @@ const SelectField = ({
   className = "",
   error,
   disabled = false,
+  loading = false,
   ...props 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (option) => {
-    onChange && onChange(option);
+    onChange && onChange({ target: { value: option.value } });
     setIsOpen(false);
   };
 
@@ -39,8 +40,8 @@ const SelectField = ({
       <div className="relative">
         <button
           type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
+          onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+          disabled={disabled || loading}
           className={`
             w-full h-12 px-4 py-3
             flex items-center justify-between
@@ -55,7 +56,7 @@ const SelectField = ({
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
               : 'border-gray-200 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500'
             }
-            ${disabled 
+            ${(disabled || loading) 
               ? 'opacity-50 cursor-not-allowed' 
               : 'cursor-pointer'
             }
@@ -65,6 +66,7 @@ const SelectField = ({
               color: selectedOption ? AppColors.black : AppColors.gray_500 
             })
           }}
+          {...(loading ? { 'data-loading': 'true' } : {})}
           {...props}
         >
           <span>
@@ -76,7 +78,7 @@ const SelectField = ({
         </button>
 
         {/* Dropdown Options */}
-        {isOpen && !disabled && (
+        {isOpen && !disabled && !loading && (
           <>
             {/* Backdrop */}
             <div 

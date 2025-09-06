@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, ChevronDown } from 'lucide-react';
 import { useUser } from '../../context/UserContext.jsx';
+import userService from '../../services/userService.js';
 import InputField from './InputField.jsx';
 import SelectField from './SelectField.jsx';
 import UserRoles from './UserRoles.jsx';
@@ -17,89 +18,106 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     validateUserData,
     loading,
     error,
-    clearError
+    clearError,
+    countries,
+    cities,
+    isLoadingCountries,
+    isLoadingCities,
+    fetchCountries,
+    fetchCitiesByCountry,
+    getCountryName,
+    getCityName
   } = useUser();
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    dateOfBirth: '',
+    birthdate: '',
     country: '',
     city: '',
-    phoneNumber: '',
+    mobileNumber: '',
     emailAddress: '',
     userRole: '',
-    status: true
+    status: true,
+    password: '',
+    confirmPassword: ''
   });
 
   const [avatar, setAvatar] = useState(null);
   const [errors, setErrors] = useState({});
-  const [selectedCountryCode, setSelectedCountryCode] = useState('ae');
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+971');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Clear error when component mounts
+  useEffect(() => {
+    if (countries.length === 0) {
+      fetchCountries();
+    }
+  }, [countries.length, fetchCountries]);
+
   useEffect(() => {
     clearError();
   }, [clearError]);
 
-  // Load editing user data
   useEffect(() => {
     if (editingUser) {
+      const mobileSource = editingUser.mobileNumber || '';
+      const phoneNumber = mobileSource.substring(3);
+      const countryCode = mobileSource.substring(0, 3) || '+971';
+
       setFormData({
-        firstName: editingUser.firstName || '',
-        lastName: editingUser.lastName || '',
-        dateOfBirth: editingUser.dateOfBirth || '',
+        firstName: editingUser.firstName || editingUser.fullName?.split(' ')[0] || '',
+        lastName: editingUser.lastName || editingUser.fullName?.split(' ').slice(1).join(' ') || '',
+        birthdate: editingUser.birthdate || '',
         country: editingUser.country || '',
         city: editingUser.city || '',
-        phoneNumber: editingUser.phoneNumber || '',
-        emailAddress: editingUser.emailAddress || '',
-        userRole: editingUser.userRole || '',
-        status: editingUser.status !== undefined ? editingUser.status : true
+        mobileNumber: phoneNumber,
+        emailAddress: editingUser.emailAddress || editingUser.email || '',
+        userRole: editingUser.type?.toString() || '',
+        status: editingUser.status === 1 ? true : false
       });
       setAvatar(editingUser.avatar || null);
+      setSelectedCountryCode(countryCode);
+
+      if (editingUser.country) {
+        fetchCitiesByCountry(editingUser.country);
+        const ctry = countries.find(c => c.id === editingUser.country);
+        setSelectedCountryCode(ctry?.phoneCode || countryCode);
+      } else {
+        setSelectedCountryCode(countryCode);
+      }
     }
-  }, [editingUser]);
+  }, [editingUser, fetchCitiesByCountry, countries]);
 
-  const countryCodeOptions = [
-    { code: 'ae', flag: '🇦🇪', dialCode: '+971', label: 'UAE' },
-    { code: 'sa', flag: '🇸🇦', dialCode: '+966', label: 'Saudi Arabia' },
-    { code: 'us', flag: '🇺🇸', dialCode: '+1', label: 'United States' },
-    { code: 'uk', flag: '🇬🇧', dialCode: '+44', label: 'United Kingdom' },
-    { code: 'ca', flag: '🇨🇦', dialCode: '+1', label: 'Canada' },
-    { code: 'au', flag: '🇦🇺', dialCode: '+61', label: 'Australia' }
-  ];
+  const countryOptions = countries.map(country => ({
+    value: country.id,
+    label: `${country.name} ${country.code ? `(${country.code})` : ''}`
+  }));
 
-  const countryOptions = [
-    { value: 'uae', label: 'United Arab Emirates' },
-    { value: 'usa', label: 'United States' },
-    { value: 'uk', label: 'United Kingdom' },
-    { value: 'canada', label: 'Canada' },
-    { value: 'australia', label: 'Australia' },
-    { value: 'saudi', label: 'Saudi Arabia' },
-    { value: 'egypt', label: 'Egypt' },
-    { value: 'jordan', label: 'Jordan' }
-  ];
-
-  const cityOptions = [
-    { value: 'dubai', label: 'Dubai' },
-    { value: 'abudhabi', label: 'Abu Dhabi' },
-    { value: 'sharjah', label: 'Sharjah' },
-    { value: 'ajman', label: 'Ajman' },
-    { value: 'riyadh', label: 'Riyadh' },
-    { value: 'jeddah', label: 'Jeddah' },
-    { value: 'newyork', label: 'New York' },
-    { value: 'london', label: 'London' },
-    { value: 'toronto', label: 'Toronto' },
-    { value: 'sydney', label: 'Sydney' }
-  ];
+  const cityOptions = cities.map(city => ({
+    value: city.id,
+    label: city.name
+  }));
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
+    if (field === 'country') {
+      setFormData(prev => ({
+        ...prev,
+        city: ''
+      }));
+
+      if (value) {
+        fetchCitiesByCountry(value);
+        const ctry = countries.find(c => c.id === value);
+        if (ctry?.phoneCode) setSelectedCountryCode(ctry.phoneCode);
+      }
+    }
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -120,7 +138,6 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
   const handleAvatarUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setErrors(prev => ({
           ...prev,
@@ -129,7 +146,6 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setErrors(prev => ({
           ...prev,
@@ -152,13 +168,16 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     }
   };
 
-  const handleCountryCodeSelect = (countryCode) => {
-    setSelectedCountryCode(countryCode);
+  const handleCountryCodeSelect = (country) => {
+    setSelectedCountryCode(country.phoneCode || country.code);
     setIsCountryDropdownOpen(false);
   };
 
   const getSelectedCountryCodeData = () => {
-    return countryCodeOptions.find(option => option.code === selectedCountryCode);
+    if (!countries || countries.length === 0) return null;
+    const byForm = countries.find(option => option.id === formData.country);
+    if (byForm) return byForm;
+    return countries.find(option => option.phoneCode === selectedCountryCode) || countries[0];
   };
 
   const handleSubmit = async () => {
@@ -166,34 +185,43 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
       setIsSubmitting(true);
       setErrors({});
 
-      // Validate form data using context validation
-      const validation = validateUserData(formData);
-      
+      const validation = validateUserData(formData, !editingUser);
+
       if (!validation.isValid) {
         setErrors(validation.errors);
         return;
       }
 
-      // Prepare user data
       const userData = {
-        ...formData,
-        avatar,
-        name: `${formData.firstName} ${formData.lastName}`,
-        countryDisplay: countryOptions.find(c => c.value === formData.country)?.label || formData.country,
-        cityDisplay: cityOptions.find(c => c.value === formData.city)?.label || formData.city
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        birthdate: formData.birthdate,
+        countryId: formData.country,
+        cityId: formData.city,
+        email: formData.emailAddress,
+        mobileNumber: `${selectedCountryCode}${formData.mobileNumber}`,
+        type: parseInt(formData.userRole),
+        status: formData.status ? 1 : 0,
+        image: avatar
       };
-      
+
+      if (!editingUser) {
+        userData.password = formData.password;
+        userData.confirmPassword = formData.confirmPassword;
+      }
       let savedUser;
       if (editingUser) {
-        savedUser = await updateUser(editingUser.id, userData);
+        savedUser = await userService.updateUserProfile(editingUser.id, userData);
       } else {
-        savedUser = await addUser(userData);
+        savedUser = await userService.createUser(userData);
       }
 
-      console.log(`User ${editingUser ? 'updated' : 'added'} successfully:`, savedUser);
-      
       if (onSubmit) {
         onSubmit(savedUser);
+      }
+
+      if (onBack) {
+        onBack(true);
       }
 
     } catch (error) {
@@ -243,16 +271,16 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
         >
           System Users
         </button>
-        <span 
+        <span
           className="text-gray-400"
           style={AppFonts.smSemiBold({ color: AppColors.text })}
         >
           /
         </span>
-        <span 
+        <span
           className={isEditing ? "text-blue-500" : "text-blue-500"}
-          style={AppFonts.smSemiBold({ 
-            color: isEditing ? AppColors.primary : AppColors.primary 
+          style={AppFonts.smSemiBold({
+            color: isEditing ? AppColors.primary : AppColors.primary
           })}
         >
           {getUserDisplayName()}
@@ -261,7 +289,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
 
       {/* Page Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <h1 
+        <h1
           className="text-lg font-bold text-black"
           style={AppFonts.lgBold({ color: AppColors.black })}
         >
@@ -275,7 +303,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
           {/* User Avatar Section with Status Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <div 
+              <div
                 className="
                   relative 
                   bg-gray-800 
@@ -291,18 +319,18 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 }}
               >
                 {avatar ? (
-                  <img 
-                    src={avatar} 
-                    alt="User Avatar" 
+                  <img
+                    src={avatar}
+                    alt="User Avatar"
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <Camera className="w-8 h-8 text-white" />
                 )}
               </div>
-              
+
               <div>
-                <h3 
+                <h3
                   className="text-black font-medium"
                   style={AppFonts.smSemiBold({ color: AppColors.black })}
                 >
@@ -340,23 +368,23 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
 
             {/* Status Switch - moved to right side */}
             <div className="flex flex-col items-center">
-              <div 
+              <div
                 className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                 onClick={handleStatusToggle}
               >
-                <span 
+                <span
                   className="text-xs font-medium mb-2"
                   style={AppFonts.smMedium({ color: AppColors.black })}
                 >
                   Status
                 </span>
-                <div 
+                <div
                   className={`
                     w-12 h-6 rounded-full relative transition-colors duration-200
                     ${formData.status ? 'bg-green-500' : 'bg-gray-300'}
                   `}
                 >
-                  <div 
+                  <div
                     className={`
                       w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform duration-200
                       ${formData.status ? 'translate-x-6' : 'translate-x-0.5'}
@@ -396,58 +424,63 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="Date of Birth"
               type="date"
               placeholder="Select"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-              error={errors.dateOfBirth}
+              value={formData.birthdate}
+              onChange={(e) => handleInputChange('birthdate', e.target.value)}
+              required
+              error={errors.birthdate}
               disabled={isSubmitting}
+              onKeyDown={(e) => e.preventDefault()} // Prevent manual typing
+              readOnly={false}
             />
 
             {/* Country */}
             <SelectField
               label="Country"
-              placeholder="Select"
-              value={formData.country}
-              onChange={(option) => handleInputChange('country', option.value)}
               options={countryOptions}
+              value={formData.country}
+              onChange={(e) => handleInputChange('country', e.target.value)}
               required
               error={errors.country}
-              disabled={isSubmitting}
+              disabled={isLoadingCountries || isSubmitting}
+              loading={isLoadingCountries}
+              placeholder={isLoadingCountries ? 'Loading countries...' : 'Select a country'}
             />
 
             {/* City */}
             <SelectField
               label="City"
-              placeholder="Select"
-              value={formData.city}
-              onChange={(option) => handleInputChange('city', option.value)}
               options={cityOptions}
+              value={formData.city}
+              onChange={(e) => handleInputChange('city', e.target.value)}
               required
               error={errors.city}
-              disabled={isSubmitting}
+              disabled={!formData.country || isLoadingCities || isSubmitting}
+              loading={isLoadingCities}
+              placeholder={!formData.country ? 'Select a country first' : (isLoadingCities ? 'Loading cities...' : 'Select a city')}
             />
 
             {/* Phone Number with Country Code Dropdown */}
             <div className="flex flex-col">
-              <label 
+              <label
                 className="mb-2 text-sm font-medium text-black"
                 style={AppFonts.smMedium({ color: AppColors.black })}
               >
                 Phone Number
                 <span className="text-red-500">*</span>
               </label>
-              
+
               {/* Phone Field Container with consistent width */}
               <div className={`
                 w-full h-12
                 bg-white border rounded-lg
-                ${errors.phoneNumber 
-                  ? 'border-red-500' 
+                ${errors.mobileNumber
+                  ? 'border-red-500'
                   : 'border-gray-200'
                 }
-              `}>
+             `}>
                 <div className="flex h-full p-2">
                   <div className="relative">
-                    <div 
+                    <div
                       className={`
                         flex items-center px-2 h-full
                         bg-gray-100 rounded-md
@@ -456,54 +489,54 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                       `}
                       onClick={!isSubmitting ? () => setIsCountryDropdownOpen(!isCountryDropdownOpen) : undefined}
                     >
-                      <div 
+                      <div
                         className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
                         style={{ borderRadius: '4px' }}
                       >
                         <span className="text-sm">{selectedCountryData?.flag}</span>
                       </div>
-                      <span 
+                      <span
                         className="text-black font-medium mr-1 text-sm"
                         style={AppFonts.smMedium({ color: AppColors.black })}
                       >
-                        {selectedCountryData?.dialCode}
+                        {selectedCountryData?.phoneCode || selectedCountryCode}
                       </span>
                       <ChevronDown className="w-3 h-3 text-gray-400" />
                     </div>
 
                     {isCountryDropdownOpen && !isSubmitting && (
                       <div className="absolute top-full left-0 z-50 mt-1" style={{ minWidth: '200px' }}>
-                        <div 
+                        <div
                           className="bg-gray-100 rounded-lg shadow-lg"
-                          style={{ 
+                          style={{
                             border: '6px solid #f3f4f6',
                             borderRadius: '12px'
                           }}
                         >
-                          <div className="bg-white rounded-md overflow-hidden">
-                            {countryCodeOptions.map((option) => (
+                          <div className="bg-white rounded-md overflow-hidden max-h-64 overflow-y-auto">
+                            {countries.map((option) => (
                               <div
-                                key={option.code}
+                                key={option.phoneCode || option.id}
                                 className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                                onClick={() => handleCountryCodeSelect(option.code)}
+                                onClick={() => handleCountryCodeSelect(option)}
                               >
-                                <div 
+                                <div
                                   className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
                                   style={{ borderRadius: '4px' }}
                                 >
                                   <span className="text-sm">{option.flag}</span>
                                 </div>
-                                <span 
+                                <span
                                   className="text-black font-medium mr-2"
                                   style={AppFonts.smMedium({ color: AppColors.black })}
                                 >
-                                  {option.dialCode}
+                                  {option.phoneCode || ''}
                                 </span>
-                                <span 
+                                <span
                                   className="text-gray-600 text-sm"
                                   style={AppFonts.smRegular({ color: AppColors.gray })}
                                 >
-                                  {option.label}
+                                  {option.name}
                                 </span>
                               </div>
                             ))}
@@ -516,10 +549,17 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                   {/* Phone Number Input */}
                   <input
                     type="tel"
-                    placeholder="Enter"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    disabled={isSubmitting}
+                    placeholder="Enter 9 digits"
+                    value={formData.mobileNumber}
+                    onChange={(e) => {
+                      // Only allow digits and limit to 9 characters
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 9);
+                      handleInputChange('mobileNumber', value);
+                    }}
+                    required
+                    maxLength={9}
+                    pattern="[0-9]{9}"
+                    disabled={isSubmitting || isEditing} // Disable in edit mode
                     className={`
                       flex-1 h-full px-3 ml-2
                       bg-transparent border-none
@@ -532,13 +572,13 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                   />
                 </div>
               </div>
-              
-              {errors.phoneNumber && (
-                <span 
+
+              {errors.mobileNumber && (
+                <span
                   className="mt-1 text-sm text-red-500"
                   style={{ color: AppColors.danger }}
                 >
-                  {errors.phoneNumber}
+                  {errors.mobileNumber}
                 </span>
               )}
             </div>
@@ -552,6 +592,30 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               onChange={(e) => handleInputChange('emailAddress', e.target.value)}
               required
               error={errors.emailAddress}
+              disabled={isSubmitting || isEditing} // Disable in edit mode
+            />
+
+            {/* Password */}
+            <InputField
+              label="Password"
+              type="password"
+              placeholder="Enter"
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              required
+              error={errors.password}
+              disabled={isSubmitting}
+            />
+
+            {/* Confirm Password */}
+            <InputField
+              label="Confirm Password"
+              type="password"
+              placeholder="Enter"
+              value={formData.confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+              required
+              error={errors.confirmPassword}
               disabled={isSubmitting}
             />
           </div>
@@ -603,7 +667,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 Cancel
               </Button>
             </div>
-            
+
             <div className="w-auto">
               <Button
                 onClick={handleSubmit}
@@ -628,8 +692,8 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
       </div>
 
       {isCountryDropdownOpen && !isSubmitting && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setIsCountryDropdownOpen(false)}
         />
       )}

@@ -12,30 +12,22 @@ const UserRoles = ({
   error,
   disabled = false 
 }) => {
-  const roles = [
-    {
-      id: 'superadmin',
-      name: 'Super Admin'
-    },
-    {
-      id: 'admin',
-      name: 'Admin'
-    },
-    {
-      id: 'marketing',
-      name: 'Marketing'
-    },
-    {
-      id: 'customersupport',
-      name: 'Customer Support'
-    }
+  // SystemUserType enum mapping
+  const userRoles = [
+    { value: 0, label: 'Super Admin', description: 'Full system access' },
+    { value: 1, label: 'Admin', description: 'Administrative access' },
+    { value: 2, label: 'Marketing', description: 'Marketing operations' },
+    { value: 3, label: 'Customer Support', description: 'Customer service' }
   ];
 
-  const handleRoleSelect = (roleId) => {
+  const handleRoleSelect = (roleValue) => {
     if (!disabled && onChange) {
-      onChange(roleId);
+      onChange(roleValue); // Pass the int value (0, 1, 2, 3)
     }
   };
+
+  // Convert selectedRole to int for comparison
+  const selectedRoleInt = parseInt(selectedRole);
 
   return (
     <div className={`flex flex-col ${className}`}>
@@ -50,70 +42,65 @@ const UserRoles = ({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {roles.map((role) => {
-          const isSelected = selectedRole === role.id;
+        {userRoles.map((role) => (
+          <button
+            key={role.value}
+            type="button"
+            onClick={() => handleRoleSelect(role.value)}
+            disabled={disabled}
+            className={`
+              relative 
+              flex items-center justify-center 
+              p-4 rounded-lg 
+              min-h-14
+              transition-all duration-200 
+              outline-none 
+              border-2
+              focus:ring-2 focus:ring-offset-2
+              ${disabled 
+                ? 'cursor-not-allowed opacity-50' 
+                : 'cursor-pointer'
+              }
+              ${selectedRoleInt === role.value
+                ? 'text-white border-indigo-700'
+                : 'text-black bg-gray-200 border-gray-300 hover:bg-gray-300'
+              }
+            `}
+            style={{
+              backgroundColor: selectedRoleInt === role.value ? AppColors.secondary : '#F4F8FB', 
+              borderColor: selectedRoleInt === role.value ? AppColors.secondary : '#F0F0F0',
+            }}
+          >
+            <span 
+              className="font-semibold flex-1 text-left"
+              style={AppFonts.mdSemiBold({ 
+                color: selectedRoleInt === role.value ? AppColors.white : AppColors.text 
+              })}
+            >
+              {role.label}
+            </span>
 
-          return (
-            <button
-              key={role.id}
-              type="button"
-              onClick={() => handleRoleSelect(role.id)}
-              disabled={disabled}
-              className={`
-                relative 
-                flex items-center justify-center 
-                p-4 rounded-lg 
-                min-h-14
-                transition-all duration-200 
-                outline-none 
-                border-2
-                focus:ring-2 focus:ring-offset-2
-                ${disabled 
-                  ? 'cursor-not-allowed opacity-50' 
-                  : 'cursor-pointer'
-                }
-                ${isSelected
-                  ? 'text-white border-indigo-700'
-                  : 'text-black bg-gray-200 border-gray-300 hover:bg-gray-300'
-                }
-              `}
+            <div 
+              className="
+                w-5 h-5 rounded-full 
+                border-2 
+                flex items-center justify-center
+                flex-shrink-0
+              "
               style={{
-                backgroundColor: isSelected ? AppColors.secondary : '#F4F8FB', 
-                borderColor: isSelected ? AppColors.secondary : '#F0F0F0',
-                
+                borderColor: selectedRoleInt === role.value ? AppColors.primary  :'#F0F0F0' ,
+                backgroundColor: 'transparent'
               }}
             >
-              <span 
-                className="font-semibold flex-1 text-left"
-                style={AppFonts.mdSemiBold({ 
-                  color: isSelected ? AppColors.white : AppColors.text 
-                })}
-              >
-                {role.name}
-              </span>
-
-              <div 
-                className="
-                  w-5 h-5 rounded-full 
-                  border-2 
-                  flex items-center justify-center
-                  flex-shrink-0
-                "
-                style={{
-                  borderColor: isSelected ? AppColors.primary  :'#F0F0F0' ,
-                  backgroundColor: 'transparent'
-                }}
-              >
-                {isSelected && (
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: AppColors.primary }}
-                  />
-                )}
-              </div>
-            </button>
-          );
-        })}
+              {selectedRoleInt === role.value && (
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: AppColors.primary }}
+                />
+              )}
+            </div>
+          </button>
+        ))}
       </div>
 
       {error && (
