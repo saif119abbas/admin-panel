@@ -11,6 +11,7 @@ class TipReceiverService {
     }
 
     async getTipReceivers(filters) {
+       // return [new TipReceiverListDto()]
         try {
             const pageNumber = filters.pageNumber || 1;
             const pageSize = filters.pageSize || 10;
@@ -23,7 +24,8 @@ class TipReceiverService {
     }
 
     async getTipReceiverById(id) {
-        try {
+       // return new TipReceiverDto()
+       try {
             const response = await apiService.get(`/TipReceiver/${id}`);
             return response.data;
         } catch (error) {
@@ -33,7 +35,8 @@ class TipReceiverService {
     }
 
     async getStatisticsByTipReceiverId(id) {
-        try {
+        //return new TipReceiverStatisticsDto()
+       try {
             const response = await apiService.get(`/TipReceiver/Statistics/${id}`);
             return response.data;
         } catch (error) {
@@ -43,6 +46,7 @@ class TipReceiverService {
     }
 
     async getStatistics() {
+      //  return new StatisticsDto()
         try {
             const response = await apiService.get(`/TipReceiver/Statistics`);
             return response.data;
@@ -53,7 +57,8 @@ class TipReceiverService {
     }
 
     async getTransactionsByTipReceiverId(id) {
-        try {
+       // return [new TransactionsDto()]
+       try {
             const response = await apiService.get(`/TipReceiver/Transactions/${id}`);
             return response.data;
         } catch (error) {
@@ -63,6 +68,7 @@ class TipReceiverService {
     }
 
     async getPaymentInfoByTipReceiverId(id) {
+       // return new PaymentInfoDto()
         try {
             const response = await apiService.get(`/TipReceiver/PaymentInfo/${id}`);
             if (response.success) {

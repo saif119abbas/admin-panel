@@ -80,13 +80,13 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
 
       const updatedUserData = {
         ...user,
-        name: `${formData.firstName} ${formData.surname}`,
-        phoneNumber: formData.countryCode + ' ' + formData.phoneNumber,
+        firstName:  formData.firstName,
+        lastsNmae:  formData.lastsNmae,
+        phoneNumber: formData.mobileNumber ,
         status: formData.status,
-        phoneVerified: isVerified
       };
 
-      onSave(updatedUserData);
+    await  onSave(updatedUserData);
       onClose();
     } catch (error) {
       console.error('Error updating user:', error);

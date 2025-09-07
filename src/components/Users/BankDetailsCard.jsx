@@ -1,28 +1,25 @@
-// src/components/Users/BankDetailsCard.jsx
 import { Pencil } from "lucide-react";
 import IconBadge from "./common/IconBadge";
 import { useState } from "react";
 import bankLogo from "../../assets/images/image.png";
 import EditBankDetailsModal from "./modals/EditBankDetailsModal";
+import TipReceiverService from "../../services/tipReceiverService";
+import { useUser } from "../../context/UserContext";
 
 const BankDetailsCard = ({
-  bankName,
-  accountHolder,
-  country,
-  iban,
-  headerIcon,
+  bankData,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const {currentUser}=useUser()
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const bankData = {
-    bankName,
-    accountHolder,
-    country,
-    iban
-  };
+
+   async function onEdit(data)
+   {
+        const res=await TipReceiverService.updatePaymentInfoByTipReceiverId(currentUser.id,data)
+        console.log(res)
+   }
 
   return (
     <>
@@ -54,7 +51,7 @@ const BankDetailsCard = ({
           >
             <div>
               <p className="text-xs text-gray-500">Bank</p>
-              <p className="text-sm font-medium text-gray-900">{bankName}</p>
+              <p className="text-sm font-medium text-gray-900">{bankData.bankName}</p>
             </div>
             <div className="w-[34px] h-[34px] flex items-center justify-center rounded-full">
               <img
@@ -71,7 +68,7 @@ const BankDetailsCard = ({
                        w-full max-w-[368px] h-[82px]"
           >
             <p className="text-xs text-gray-500">Account Holder Name</p>
-            <p className="text-sm font-medium text-gray-900">{accountHolder}</p>
+            <p className="text-sm font-medium text-gray-900">{bankData.accountHolder}</p>
           </div>
 
           {/* Country */}
@@ -80,7 +77,7 @@ const BankDetailsCard = ({
                        w-full max-w-[368px] h-[82px]"
           >
             <p className="text-xs text-gray-500">Country</p>
-            <p className="text-sm font-medium text-gray-900">{country}</p>
+            <p className="text-sm font-medium text-gray-900">{bankData.country}</p>
           </div>
 
           {/* IBAN */}
@@ -90,7 +87,7 @@ const BankDetailsCard = ({
           >
             <p className="text-xs text-gray-500">IBAN</p>
             <p className="text-sm font-mono font-medium text-gray-900 break-all">
-              {iban}
+              {bankData.iban}
             </p>
           </div>
         </div>
@@ -101,6 +98,7 @@ const BankDetailsCard = ({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         bankData={bankData}
+        onSave={onEdit}
       />
     </>
   );

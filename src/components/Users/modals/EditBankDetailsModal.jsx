@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import ActionButton from '../common/ActionButton';
 import BaseModal from '../common/BaseModal';
 
-const EditBankDetailsModal = ({ isOpen, onClose, bankData = {} }) => {
+const EditBankDetailsModal = ({ isOpen, onClose,onSave, bankData  }) => {
   const [formData, setFormData] = useState({
     bankName: bankData.bankName || 'Emirates NBD',
     accountHolder: bankData.accountHolder || 'Barbara Gordon',
@@ -19,8 +19,16 @@ const EditBankDetailsModal = ({ isOpen, onClose, bankData = {} }) => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit =async  () => {
     console.log('Updated bank details:', formData);
+    const data={
+      id:bankData.id,
+      accountHolderName:formData.accountHolder,
+      IBAN:bankData.IBAN,
+      bankName:formData.bankName,
+      countryId:formData.country
+    }
+    await onSave(data)
     onClose();
   };
 
