@@ -156,6 +156,7 @@ export const UserProvider = ({ children }) => {
   const clearError = useCallback(() => {
     dispatch({ type: USER_ACTIONS.CLEAR_ERROR });
   }, []);
+  
 
   // Advanced search function that searches across all user fields
   const searchUsers = useCallback((searchTerm = state.searchTerm) => {
@@ -206,9 +207,7 @@ export const UserProvider = ({ children }) => {
     const totalUsers = state.users.length;
     const activeUsers = state.users.filter(user => user.status === true).length;
     const inactiveUsers = totalUsers - activeUsers;
-    
-    // Role-based statistics
-    const roleStats = {
+        const roleStats = {
       superadmin: state.users.filter(user => user.userRole === 'superadmin').length,
       admin: state.users.filter(user => user.userRole === 'admin').length,
       marketing: state.users.filter(user => user.userRole === 'marketing').length,
@@ -305,4 +304,4 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export default UserContext;
+export default {UserContext};

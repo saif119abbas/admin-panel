@@ -1,14 +1,11 @@
 // src/components/CustomerSupport/Ticket.jsx
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import TicketHeader from './TicketHeader';
 import TicketUserCard from './TicketUserCard';
 import TicketDetailsCard from './TicketDetailsCard';
 import ReasonMessageSection from './ReasonMessageSection';
 import RewardModal from '../Users/modals/RewardModal';
-
-const Ticket = ({ ticketData }) => {
-  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
-
+import  SupportService from "../../services/supportService"
   const defaultTicketData = {
     ticketId: 'TCK-00123',
     user: {
@@ -29,7 +26,30 @@ const Ticket = ({ ticketData }) => {
     reasonMessage: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
   };
 
-  const currentTicket = ticketData || defaultTicketData;
+const Ticket = ({ ticket }) => {
+  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const [user,setUser]=useState(defaultTicketData.user)
+  const [loading,setLoading]=useState(defaultTicketData.user)
+      useEffect(() => {
+      const loadInitialData = async () => {
+          setLoading(true);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          try {
+  
+          const userData=await SupportService.getUser(ticket.id)
+          console.log("user Data",userData)
+          setUser(userData);
+          
+          } catch (error) {
+          console.error('Error loading user:', error);
+          } finally {
+          setLoading(false);
+          }
+      };
+  
+      loadInitialData();
+      }, []);
+
 
   const handleRewardClick = () => {
     setIsRewardModalOpen(true);
@@ -38,22 +58,23 @@ const Ticket = ({ ticketData }) => {
   const handleStatusChange = (newStatus) => {
     console.log('Status changed to:', newStatus);
   };
+  if(loading) return <></>
 
   return (
-    <div style={{ padding: '8px' }} className="space-y-4"> {/* Changed from space-y-6 to space-y-4 for 16px spacing */}
+    <div style={{ padding: '8px' }} className="space-y-4">
       {/* Ticket Header */}
       <TicketHeader 
-        ticketId={currentTicket.ticketId}
+        ticketId={ticket.id}
         onRewardClick={handleRewardClick}
       />
 
       {/* User Card */}
       <TicketUserCard 
-        userImage={currentTicket.user.image}
-        userName={currentTicket.user.name}
-        location={currentTicket.user.location}
-        phoneNumber={currentTicket.user.phoneNumber}
-        status={currentTicket.user.status}
+        userImage={user.image}
+        userName={user.name}
+        location={user.countryId}
+        phoneNumber={user.mobileNumber}
+        status={user.status}
       />
 
       {/* Ticket Details Section */}
@@ -70,26 +91,27 @@ const Ticket = ({ ticketData }) => {
         </h2>
         
         <TicketDetailsCard 
-          ticketNumber={currentTicket.ticketDetails.ticketNumber}
-          createdOn={currentTicket.ticketDetails.createdOn}
-          resolvedOn={currentTicket.ticketDetails.resolvedOn}
-          startedBy={currentTicket.ticketDetails.startedBy}
-          issueType={currentTicket.ticketDetails.issueType}
-          status={currentTicket.ticketDetails.status}
+          ticketNumber={ticket.number}
+          createdOn={ticket.createdOn}
+          resolvedOn={ticket.resolvedOn}
+          startedBy={ticket.statedBy}
+          issueType={ticket.issueType}
+          status={ticket.status}
+          id={ticket.id}
           onStatusChange={handleStatusChange}
         />
       </div>
 
       {/* Reason & Message Section */}
       <ReasonMessageSection 
-        reason={currentTicket.reasonMessage}
+        reason={ticket.reasonMessage}
       />
 
       {/* Reward Modal */}
       <RewardModal
         isOpen={isRewardModalOpen}
         onClose={() => setIsRewardModalOpen(false)}
-        user={currentTicket.user}
+        user={ticket.user}
       />
     </div>
   );

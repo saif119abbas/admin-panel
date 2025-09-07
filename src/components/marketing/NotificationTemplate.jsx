@@ -1,14 +1,40 @@
-import { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, ChevronDown, ChevronUp } from 'lucide-react';
 import Editor from './Editor2';
 import Navbar from './Navbar';
 import LeftSidebar from './LeftSidebar';
+import MarketingServices from '../../services/marketingServices';
+import UsersList from './UsersList';
+import ScheduleModal from './ScheduleModal ';
 
 const NotificationTemplate = () => {
   const [activeTab, setActiveTab] = useState('Email');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editorContent, setEditorContent] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [isUserListExpanded, setIsUserListExpanded] = useState(true);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false); 
+
+  // Mock user data
+  const mockUsers = [
+    { id: 1, name: 'Lourdee Quintero', email: 'tienlopspktnd@gmail.com', phone: '+1 613 555 0143', country: 'Poland', city: 'Cincinnati (OH)', status: 'Active', createdOn: 'tienlopspktnd@gmail.com' },
+  ];
+
+  useEffect(() => {
+    setUsers(mockUsers);
+    setTotalPages(1);
+  }, []);
+
+  useEffect(() => {
+    const updatedSelectedUsers = users.filter(user => selectedUserIds.includes(user.id));
+    setSelectedUsers(updatedSelectedUsers);
+  }, [selectedUserIds, users]);
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
@@ -16,10 +42,93 @@ const NotificationTemplate = () => {
     setIsSidebarOpen(false);
   };
 
+  const handleSend = async () => {  
+    console.log("Selected Users:", selectedUsers);
+    console.log("Selected User IDs:", selectedUserIds);
+    
+    const newTemplate = {
+      ...selectedTemplate,
+      content: editorContent
+    };
+    
+    const res = await MarketingServices.sendNotification(selectedTemplate.id, newTemplate);
+    console.log(res);
+  };
+
+  const handleSelectUser = (userId, isSelected) => {
+    if (isSelected) {
+      setSelectedUserIds([...selectedUserIds, userId]);
+    } else {
+      setSelectedUserIds(selectedUserIds.filter(id => id !== userId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUserIds.length === users.length && users.length > 0) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(users.map(user => user.id));
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
-    <div className="flex flex-col h-full bg-gray">
+    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       
+      {/* User Selection Section */}
+      <div className="m-4 bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <button 
+            className="w-full flex items-center justify-between text-left"
+            onClick={() => setIsUserListExpanded(!isUserListExpanded)}
+          >
+            <h2 className="text-xl font-bold">Select Who to Notify</h2>
+            {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+        </div>
+        
+        {isUserListExpanded && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-4 py-2 border-b border-gray-200">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedUserIds.length === users.length && users.length > 0}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                />
+                <label className="ml-2 text-sm font-medium text-gray-900">Select All</label>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto max-h-64">
+              <UsersList
+                users={users}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                selectedUsers={selectedUserIds}
+                onSelectUser={handleSelectUser}
+                loading={loading}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Selected users count */}
+      {selectedUserIds.length > 0 && (
+        <div className="mx-4 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
+          </p>
+        </div>
+      )}
+
       {/* Mobile sidebar toggle */}
       <div className="md:hidden p-4 border-b border-gray-200 bg-white">
         <button
@@ -31,7 +140,7 @@ const NotificationTemplate = () => {
       </div>
 
       {/* Main content area */}
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Sidebar */}
         <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
           <LeftSidebar 
@@ -77,10 +186,16 @@ const NotificationTemplate = () => {
                 {/* Action Buttons */}
                 <div className="p-3">
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                    <button 
+                      onClick={handleSend}
+                      className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
+                    >
                       Send Now
                     </button>
-                    <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                    <button 
+                      onClick={() => setIsScheduleModalOpen(true)}
+                      className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
+                    >
                       Schedule
                     </button>
                   </div>
@@ -104,6 +219,15 @@ const NotificationTemplate = () => {
           </div>
         </div>
       </div>
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        template={selectedTemplate}
+        content={editorContent}
+        users={selectedUsers}
+      />
     </div>
   );
 };

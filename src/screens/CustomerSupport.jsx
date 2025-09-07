@@ -7,11 +7,9 @@ import FilterModal from '../components/CustomerSupport/modals/FilterModal';
 import Ticket from '../components/CustomerSupport/Ticket';
 import HistoryView from '../components/CustomerSupport/HistoryView';
 import ActionButton from '../components/Users/common/ActionButton';
+import SupportService from '../services/supportService';
 import '../App.css';
-
-const CustomerSupport = () => {
-    // Mock ticket data
-    const mockTickets = [
+  /*  const mockTickets = [
     {
         id: '#TICK-0023',
         userName: 'Ronald Richards',
@@ -132,7 +130,9 @@ const CustomerSupport = () => {
         priority: 'Critical',
         category: 'Safety'
     }
-    ];
+    ];*/
+
+const CustomerSupport = () => {
 
     const [allTickets, setAllTickets] = useState([]);
     const [filteredTickets, setFilteredTickets] = useState([]);
@@ -176,25 +176,20 @@ const CustomerSupport = () => {
     useEffect(() => {
     const loadInitialData = async () => {
         setLoading(true);
-        
         await new Promise(resolve => setTimeout(resolve, 500));
-        
         try {
-        setAllTickets(mockTickets);
-        
-        const totalTickets = mockTickets.length;
-        const pendingTickets = mockTickets.filter(ticket => ticket.status === 'Pending').length;
-        const inProgressTickets = mockTickets.filter(ticket => ticket.status === 'In-progress').length;
-        const resolvedTickets = mockTickets.filter(ticket => ticket.status === 'Resolved').length;
-        
+
+        const ticketsData=await SupportService.getTickets({})
+        setAllTickets(ticketsData);
+        const statsData=await SupportService.getStatistics()
         setStats({
-            total: totalTickets,
-            pending: pendingTickets,
-            inProgress: inProgressTickets,
-            resolved: resolvedTickets
+            total: statsData.totalNumberOfTickets,
+            pending: statsData.totalNumberOfPendingTickets,
+            inProgress: statsData.totalNumberOfOnProgressTickets,
+            resolved: statsData.totalNumberOfReseolvedTickets
         });
         
-        setFilteredTickets(mockTickets);
+        setFilteredTickets(ticketsData);
         
         } catch (error) {
         console.error('Error loading tickets:', error);
@@ -206,7 +201,6 @@ const CustomerSupport = () => {
     loadInitialData();
     }, []);
 
-    // Apply filters when they change
     useEffect(() => {
     if (allTickets.length === 0) return;
 
@@ -293,16 +287,16 @@ const CustomerSupport = () => {
     setAdvancedFilters(filters);
     };
 
-    const handleTicketClick = (ticket) => {
-    setSelectedTicket(ticket);
+    const handleTicketClick = async (id) => {
+    const ticketData=await SupportService.getTicketDetails(id)
+    setSelectedTicket(ticketData);
     setCurrentView('details');
     };
 
     const handleBackToList = () => {
     setCurrentView('list');
     setSelectedTicket(null);
-    };
-
+    };  
     if (currentView === 'details') {
     return <Ticket ticket={selectedTicket} onBack={handleBackToList} />;
     }
@@ -346,27 +340,27 @@ const CustomerSupport = () => {
 
             {/* Filters */}
             <SupportFilters 
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectAll={selectAll}
-            selectCurrentPage={selectCurrentPage}
-            onSelectAll={handleSelectAll}
-            onSelectCurrentPage={handleSelectCurrentPage}
-            onOpenFilter={() => setIsFilterModalOpen(true)}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                selectAll={selectAll}
+                selectCurrentPage={selectCurrentPage}
+                onSelectAll={handleSelectAll}
+                onSelectCurrentPage={handleSelectCurrentPage}
+                onOpenFilter={() => setIsFilterModalOpen(true)}
             />
 
             {/* Support Table */}
             <SupportTable 
-            tickets={paginatedTickets}
-            currentPage={currentPage}
-            totalPages={totalFilteredPages}
-            onPageChange={setCurrentPage}
-            selectedTickets={selectedTickets}
-            onSelectTicket={handleSelectTicket}
-            onTicketClick={handleTicketClick}
-            loading={loading}
+                tickets={paginatedTickets}
+                currentPage={currentPage}
+                totalPages={totalFilteredPages}
+                onPageChange={setCurrentPage}
+                selectedTickets={selectedTickets}
+                onSelectTicket={handleSelectTicket}
+                onTicketClick={handleTicketClick}
+                loading={loading}
             />
         </>
         )}
@@ -382,7 +376,6 @@ const CustomerSupport = () => {
         />
         )}
 
-        {/* Filter Modal */}
         <FilterModal 
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}

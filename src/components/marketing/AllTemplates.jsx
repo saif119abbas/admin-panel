@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Copy } from "lucide-react";
 import Editor from "./Editor2";
 import Navbar from "./Navbar";
@@ -7,34 +7,137 @@ import LeftSidebar from "./LeftSidebar";
 import { useMarketing } from "../../context/MarketingContext";
 import NoTemplatesFound from "./NoTemplatesFound";
 import { useSidebar } from "../../context/SidebarContext";
+import MarketingServices from "../../services/marketingServices";
+
 const AllTemplates = () => {
   const [activeTab, setActiveTab] = useState("Email");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editorContent, setEditorContent] = useState("");
+  const [subject, setSubject] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNewTemplate, setIsNewTemplate] = useState(false); // Track if it's a new template
+  const [loading] = useState(false);
+  const [variables, setVariables] = useState([]);
+  
   const { currentView } = useSidebar();
+  const { templates } = useMarketing();
 
-  const { newTemplateData } = useMarketing();
-  const handleTemplateSelect = (template) => {
-    setSelectedTemplate(template);
-    setEditorContent(template.content || "");
+  // Get variables based on whether it's a new template or existing template
+  const getVariables = () => {
+    if (isNewTemplate) {
+      return variables.map((v)=>v.name); 
+    } else if (selectedTemplate && Array.isArray(selectedTemplate.allowedVariabels)) {
+      return selectedTemplate.allowedVariabels; // Use template's allowed variables
+    }
+    return []; // Fallback to empty array
+  };
+
+  const variableTemplate = getVariables();
+
+  useEffect(() => {
+    const fetchVariables = async () => {
+      if (isNewTemplate) {
+        try {
+          const variablesData = await MarketingServices.getVariable(activeTab);
+          setVariables(variablesData);
+        } catch (error) {
+          console.error("Error fetching variables:", error);
+          setVariables([]);
+        }
+      }
+    };
+
+    fetchVariables();
+  }, [activeTab, isNewTemplate]);
+
+  const handleTemplateSelect = async (template) => {
+    if (template.id === "new-template") {
+      // Handle new template creation
+      setIsNewTemplate(true);
+      setSelectedTemplate({
+        id: "new-template",
+        name: "New Template",
+        subject: "",
+        type: activeTab,
+        content: "",
+        allowedVariabels: []
+      });
+      setEditorContent("");
+      setSubject("");
+      
+      // Fetch variables for the new template
+      try {
+        const variablesData = await MarketingServices.getVariable(activeTab);
+        setVariables(variablesData);
+      } catch (error) {
+        console.error("Error fetching variables:", error);
+        setVariables([]);
+      }
+    } else {
+      // Handle existing template selection
+      setIsNewTemplate(false);
+      setSelectedTemplate(template);
+      setEditorContent(template.content || "");
+      setSubject(template.subject || "");
+    }
     setIsSidebarOpen(false);
+  };
+
+  const handelSubmit = async () => {
+    if (isNewTemplate) {
+      return await handleAddTemplate();
+    }
+    return await handleUpdateTemplate();
+  };
+
+  const handleUpdateTemplate = async () => {
+    const content = editorContent;
+    const updatedTemplate = {
+      ...selectedTemplate,
+      content,
+      subject: subject || selectedTemplate.subject
+    };
+    const res = await MarketingServices.updateTemplate(selectedTemplate.id, updatedTemplate);
+    console.log(res);
+  };
+
+  const handleAddTemplate = async () => {
+    const content = editorContent;
+    const newTemplateData = {
+      name: subject || "New Template",
+      subject: subject || "New Template Subject",
+      type: activeTab,
+      allowedVariabels: variables, // Use the variables from API
+      category: "Custom Templates",
+      content
+    };
+    const res = await MarketingServices.addTemplate(newTemplateData);
+    console.log(res);
+    
+    // Reset after adding
+    if (res.success) {
+      setIsNewTemplate(false);
+      setSelectedTemplate(null);
+      setEditorContent("");
+      setSubject("");
+    }
   };
 
   const handleVariableInsert = (variable) => {
     const variableText = `{{${variable}}}`;
     setEditorContent((prev) => prev + variableText);
   };
-  const notFoundTemplate = currentView === "create-templates" && newTemplateData.length === 0;
+
+  const notFoundTemplate = currentView === "create-templates" && templates.length === 0;
+
+  if (loading) return <></>;
+
   return notFoundTemplate ? (
     <NoTemplatesFound />
   ) : (
-    <div className="h-screen flex flex-col  overflow-hidden fit-content ">
+    <div className="h-screen flex flex-col overflow-hidden fit-content">
       {/* Fixed Navbar */}
-      <Navbar
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-      />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Mobile toggle button */}
       <div className="md:hidden flex-shrink-0 p-4 border-b border-gray-200 bg-white">
@@ -45,56 +148,49 @@ const AllTemplates = () => {
           {isSidebarOpen ? "Hide Templates" : "Show Templates"}
         </button>
       </div>
+      
       <div className="flex flex-1 min-h-0">
-        {/* Left Sidebar - Fixed width and position */}
-        <div
-          className={`flex-shrink-0 ${
-            isSidebarOpen ? "block" : "hidden"
-          } md:block md:w-80`}
-        >
+        {/* Left Sidebar */}
+        <div className={`flex-shrink-0 ${isSidebarOpen ? "block" : "hidden"} md:block md:w-80`}>
           <LeftSidebar
             activeTab={activeTab}
             selectedTemplate={selectedTemplate}
-            handleTemplateSelect={handleTemplateSelect}
+            handelAddTemplate={handleTemplateSelect}
           />
         </div>
 
-        {/* Main Content - Takes remaining space */}
+        {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 bg-white">
-          {/* Header - Fixed */}
+          {/* Header */}
           <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
             <div className="mb-3">
               <h2 className="text-lg font-semibold text-gray-900">
                 Template Editor
               </h2>
-             
               <p className="text-lg text-gray-500 mt-1">
                 Template Variables that can be used in the Email. Example:{"${variable}"}
               </p>
             </div>
 
             {/* Template Variables */}
-            {selectedTemplate && (
+            {selectedTemplate && variableTemplate.length > 0 && (
               <div className="flex flex-wrap gap-1 overflow-x-auto">
-                {Array.isArray(selectedTemplate.variables) &&
-                  selectedTemplate.variables.map((variable) => (
-                    <div key={variable} className="flex items-center space-x-1">
-                      <button
-                        onClick={() => handleVariableInsert(variable)}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        {"${" + variable + "}"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          navigator.clipboard.writeText(`{{${variable}}}`)
-                        }
-                        className="p-0.5 hover:bg-gray-100 rounded transition-colors"
-                      >
-                        <Copy size={10} className="text-gray-400" />
-                      </button>
-                    </div>
-                  ))}
+                {variableTemplate.map((variable) => (
+                  <div key={variable} className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleVariableInsert(variable)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      {"${" + variable + "}"}
+                    </button>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`{{${variable}}}`)}
+                      className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <Copy size={10} className="text-gray-400" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -104,7 +200,7 @@ const AllTemplates = () => {
             <div className="p-4 h-full">
               <div className="flex items-center justify-center py-4">
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 mb-2 mx-auto flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
                     <span className="text-white font-bold text-lg">T</span>
                   </div>
                   <div className="text-lg font-bold text-gray-900">TipMe</div>
@@ -112,26 +208,26 @@ const AllTemplates = () => {
               </div>
 
               {selectedTemplate ? (
-                <div className="bg-white r shadow-xs  h-full flex flex-col">
+                <div className="bg-white shadow-xs h-full flex flex-col">
                   {/* Subject Line */}
                   {selectedTemplate.type === "email" && (
-                    <div className="flex-shrink-0 p-3 ">
+                    <div className="flex-shrink-0 p-3">
                       <h4 className="block font-bold text-xs font-medium text-gray-700 mb-1">
                         Subject<span className="text-red-500">*</span>
                       </h4>
                       <input
                         type="text"
-                        defaultValue={selectedTemplate.subject || ""}
-                        placeholder="Enter"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Enter subject"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-1 focus:ring-cyan-500 focus:border-transparent text-sm"
                       />
                     </div>
                   )}
 
-                    <Editor value={editorContent} onChange={setEditorContent} />
-              
+                  <Editor value={editorContent} onChange={setEditorContent} />
 
-                  {/* Action Buttons - Fixed at bottom */}
+                  {/* Action Buttons */}
                   <div className="flex-shrink-0 p-3">
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                       <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
@@ -140,8 +236,11 @@ const AllTemplates = () => {
                       <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
                         Preview
                       </button>
-                      <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
-                        Submit
+                      <button 
+                        onClick={handelSubmit}
+                        className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
+                      >
+                        {isNewTemplate ? "Create" : "Update"}
                       </button>
                     </div>
                   </div>

@@ -1,17 +1,17 @@
 
-import { TipReceiverListDto } from "../dtos/tipReceiverListDto";
+/*import { TipReceiverListDto } from "../dtos/tipReceiverListDto";
 import { TipReceiverDto } from "../dtos/tipReceiverDto";
 import { StatisticsDto } from "../dtos/statisticsDto";
 import { TipReceiverStatisticsDto } from "../dtos/tipReceiverStatisticsDto";
 import { TransactionsDto } from "../dtos/transactionsDto";
-import { PaymentInfoDto } from "../dtos/paymentInfoDto";
-import { apiService } from "../api/apiService";
+import { PaymentInfoDto } from "../dtos/paymentInfoDto";*/
+import { apiService } from "../api/apiService"
 class TipReceiverService {
     constructor() {
     }
 
     async getTipReceivers(filters) {
-       // return [new TipReceiverListDto()]
+        //return [new TipReceiverListDto()]
         try {
             const pageNumber = filters.pageNumber || 1;
             const pageSize = filters.pageSize || 10;

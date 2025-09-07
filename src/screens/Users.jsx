@@ -46,10 +46,11 @@ const Users = () => {
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500));
       try {
-        const users=await TipReceiverService.getTipReceivers({})
+        const users=await TipReceiverService.getTipReceivers({
+          
+        })
         setAllUsers(users);
         const newStats=await TipReceiverService.getStatistics()
-        
         setStats({
           total: newStats.totalNumberOfUsers,
           activeUsers: newStats.totalNumberOfActiveUsers,

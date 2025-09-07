@@ -1,17 +1,31 @@
 import { apiService } from '../api/apiService';
 
-class UserService {
+import { UsersListDto } from "../dtos/settingsDto/usersListDto";
+import { StatisticsDto } from "../dtos/settingsDto/statisticsDto";
+
+class SettingsService {
   constructor() { }
 
-  async fetchUsers() {
-    try {
+  async getUsers(filter) {
+    return [new UsersListDto()]
+   /* try {
       return []
       return await apiService.get('/users');
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
-    }
+    }*/
   }
+  async getStatistics() {
+      return new StatisticsDto()
+      /*  try {
+            const response = await apiService.get(`/TipReceiver/Statistics`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching statistics:', error);
+            return null;
+        }*/
+    }
 
   async createUser(userData) {
     try {
@@ -54,4 +68,4 @@ class UserService {
   }
 }
 
-export default new UserService();
+export default new SettingsService();

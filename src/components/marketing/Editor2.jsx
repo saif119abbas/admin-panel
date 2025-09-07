@@ -6,7 +6,7 @@ export default function MyEditor({ value, onChange }) { // Changed from [value, 
     <div>
       <Editor
         apiKey="8n29s7xnau5sbz6j2wtxlhvdk6xgw13ykhk1dp1ifiz7hsd0"
-        value={value} // controlled value
+        value={value} 
         onEditorChange={(newValue) => onChange(newValue)} // update state
         init={{
           plugins: [
