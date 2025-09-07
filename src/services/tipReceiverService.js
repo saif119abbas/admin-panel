@@ -12,7 +12,9 @@ class TipReceiverService {
 
     async getTipReceivers(filters) {
         try {
-            const response = await apiService.post(`/TipReceiver`, filters);
+            const pageNumber = filters.pageNumber || 1;
+            const pageSize = filters.pageSize || 10;
+            const response = await apiService.post(`/TipReceiver?pageNumber=${pageNumber}&pageSize=${pageSize}`, filters);
             return response.data;
         } catch (error) {
             console.error('Error fetching tip receivers:', error);
@@ -63,7 +65,7 @@ class TipReceiverService {
     async getPaymentInfoByTipReceiverId(id) {
         try {
             const response = await apiService.get(`/TipReceiver/PaymentInfo/${id}`);
-            if(response.success){
+            if (response.success) {
                 const paymentInfoDto = {
                     id: response.data.id,
                     accountHolderName: response.data.accountHolderName,
@@ -72,7 +74,7 @@ class TipReceiverService {
                     countryId: response.data.bankCountryId
                 }
                 return paymentInfoDto;
-            }else{
+            } else {
                 console.error('Error fetching payment info by tip receiver ID:', response.message);
                 return null;
             }
@@ -90,9 +92,9 @@ class TipReceiverService {
                 bankName: paymentInfoDto.bankName,
                 bankCountryId: paymentInfoDto.countryId
             });
-            if(response.success){
+            if (response.success) {
                 return true;
-            }else{
+            } else {
                 console.error('Error updating payment info by tip receiver ID:', response.message);
                 return false;
             }
@@ -105,9 +107,9 @@ class TipReceiverService {
     async updateTipReceiverById(id, tipReceiverDto) {
         try {
             const response = await apiService.put(`/TipReceiver/${id}`, tipReceiverDto);
-            if(response.success){
+            if (response.success) {
                 return true;
-            }else{
+            } else {
                 console.error('Error updating tip receiver by ID:', response.message);
                 return false;
             }
