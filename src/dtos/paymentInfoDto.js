@@ -1,9 +1,9 @@
 export class PaymentInfoDto {
     constructor() {
-        this.id = "";
-        this.accountHolderName = "";
-        this.IBAN = "";
-        this.bankName = "";
-        this.countryId = "";
+        this.id = "11";
+        this.accountHolderName = "Saif Abbas";
+        this.IBAN = "4785566";
+        this.bankName = "Test";
+        this.countryId = "UAE";
     }
 }

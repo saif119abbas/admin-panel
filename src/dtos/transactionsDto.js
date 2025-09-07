@@ -1,9 +1,9 @@
 export class TransactionsDto {
     constructor() {
-        this.amount = 0;
-        this.balance = 0;
-        this.status = "";
-        this.date = "";
-        this.time = "";
+        this.amount = 1200;
+        this.balance = 6000;
+        this.status = "pending";
+        this.date = "10 May";
+        this.time = "12 PM";
     }
 }

@@ -10,12 +10,9 @@ import { useUser } from '../context/UserContext';
 import TipReceiverService from '../services/tipReceiverService';
 
 const Users = () => {
-
   const {allUsers,setAllUsers,stats, setStats,selectedUser,setSelectedUser}=useUser()
-  const [filteredUsers, setFilteredUsers] = useState([]); // Users after filtering
-  const [loading, setLoading] = useState(true);
-
-  
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [loading, setLoading] = useState(true);  
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,8 +160,7 @@ const Users = () => {
 
   const handleUserClick = async (user) => {
     const data=await TipReceiverService.getTipReceiverById(user.id)
-    console.log(data)
-    setSelectedUser(user);
+    setSelectedUser(data);
     setCurrentView('profile');
   };
 

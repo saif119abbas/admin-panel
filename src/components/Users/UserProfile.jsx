@@ -1,6 +1,6 @@
 // src/components/Users/UserProfile.jsx
-import { useState } from 'react';
-import { Download, Gift, Pencil, CircleArrowUp, CircleArrowDown } from 'lucide-react';
+import { useState,useEffect } from 'react';
+import { Download, Gift, CircleArrowUp, CircleArrowDown } from 'lucide-react';
 import EditUserModal from './modals/EditUserModal';
 import QRCodeModal from './modals/QRCodeModal';
 import ActionButton from './common/ActionButton';
@@ -11,33 +11,9 @@ import BankDetailsCard from "./BankDetailsCard";
 import IconBadge from "./common/IconBadge";
 import RewardModal from './modals/RewardModal';
 import AppColors from '../../utils/AppColors';
-
-const UserProfile = ({ user, onBack, onUserUpdate }) => {
-  const [activeTab, setActiveTab] = useState('Received');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(user);
-  const name=`${currentUser.firstName} ${currentUser.lastName}`
-
-  // Handle user update from modal
-  const handleUserUpdate = (updatedUserData) => {
-    // Update the local state
-    setCurrentUser(updatedUserData);
-    if (onUserUpdate) {
-      onUserUpdate(updatedUserData);
-    }
-    setIsEditModalOpen(false);
-  };
-
-  // Handle search change
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-    // You can add your search logic here
-    console.log('Search term:', value);
-  };
-  const receivedTransactions = [
+import { useUser } from '../../context/UserContext';
+import TipReceiverService from '../../services/tipReceiverService';
+  const initialReceivedTransactions = [
     {
       id: 1,
       date: '10 May',
@@ -90,7 +66,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
     }
   ];
 
-  const redeemedTransactions = [
+  const initialRedeemedTransactions = [
     {
       id: 6,
       date: '12 May',
@@ -122,6 +98,61 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
       status: 'Processed'
     }
   ];
+
+const UserProfile = ({ onBack, onUserUpdate }) => {
+  const [activeTab, setActiveTab] = useState('Received');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const {currentUser, setCurrentUser} = useUser()
+  const [receivedTransactions,setReceivedTransactions]=useState(initialReceivedTransactions)
+  const [redeemedTransactions]=useState(initialRedeemedTransactions)
+  const [loading,setLoading]=useState(false)
+  const [bankDetails,setBankDetails]=useState({})
+  const [state,setState]=useState({})
+  const name=`${currentUser.firstName} ${currentUser.lastName}`
+
+
+    useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      try {
+        const transData=await TipReceiverService.getTransactionsByTipReceiverId(currentUser.id)
+        setReceivedTransactions(transData);
+        const bankData=await TipReceiverService.getPaymentInfoByTipReceiverId(currentUser.id)
+        setBankDetails(bankData)
+        const stateDate=await TipReceiverService.getStatisticsByTipReceiverId(currentUser.id)
+        setState(stateDate)
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
+
+  // Handle user update from modal
+  const handleUserUpdate = async (updatedUserData) => {
+    const response =await TipReceiverService.updateTipReceiverById(currentUser.id)
+    console.log(response)
+    setCurrentUser(updatedUserData);
+    if (onUserUpdate) {
+      onUserUpdate(updatedUserData);
+    }
+    setIsEditModalOpen(false);
+  };
+
+  // Handle search change
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    // You can add your search logic here
+    console.log('Search term:', value);
+  };
+
 
   // Get current transactions based on active tab
   const getCurrentTransactions = () => {
@@ -164,7 +195,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
       };
     }
   };
-
+if(loading) return <></>
   return (
     <div className="space-y-6">
       {/* Breadcrumb with Reward Button */}
@@ -239,7 +270,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
                 {currentUser?.city || 'Dubai'}, {currentUser?.country || 'United Arab Emirates'}
               </p>
               <p className="text-gray-300 text-sm md:text-md">
-                {currentUser?.phoneNumber || '+971 12 345 6789'}
+                {currentUser?.mobileNumber || '+971 12 345 6789'}
               </p>
               {/* Edit Info Button */}
               <div className="mt-1">
@@ -298,11 +329,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
         {/* Left Column - Bank Details */}
         <div>
           <BankDetailsCard
-            bankName="Emirates NBD"
-            accountHolder={currentUser?.name || "Barbara Gordon"}
-            country="United Arab Emirates"
-            iban="AE070331234567890126543"
-            headerIcon={<Pencil className="w-5 h-5 text-primary" />}
+            bankData={bankDetails}
           />
         </div>
 
@@ -314,7 +341,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">SAR 12,340</p>
+                  <p className="text-2xl font-bold text-gray-900">SAR {state.totalReceivedAmount}</p>
                   <p className="text-sm text-gray-600 mt-1">Total Received Amount</p>
                 </div>
                 <IconBadge
@@ -329,7 +356,7 @@ const UserProfile = ({ user, onBack, onUserUpdate }) => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">SAR 9,200</p>
+                  <p className="text-2xl font-bold text-gray-900">SAR {state.totalRequestedAmount}</p>
                   <p className="text-sm text-gray-600 mt-1">Total Requested Amount</p>
                 </div>
                 <IconBadge
