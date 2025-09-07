@@ -11,6 +11,7 @@ import Marketing from './Marketing';
 import { MarketingProvider } from '../context/MarketingContext';
 import userImage from '../assets/images/image.png';
 import { UserProvider } from '../context/UserContext';
+import { SettingsProvider } from '../context/SettingsContext';
 
 function Main() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,7 +42,11 @@ function Main() {
         />
         <main className="flex-1 overflow-y-auto p-3 sm:p-6">
           {currentView==="dashboard" && <Dashboard />}
-          {currentView==="settings" && <Settings />}
+          {currentView==="settings" && 
+          <SettingsProvider>
+            <Settings />
+          </SettingsProvider>
+          }
           {currentView==="users" && 
           <UserProvider>
             <Users />

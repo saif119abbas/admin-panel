@@ -1,40 +1,34 @@
 // src/components/settings/AddNewUser.jsx
-import React, { useState, useEffect } from 'react';
-import { Camera, ChevronDown } from 'lucide-react';
-import { useUser } from '../../context/UserContext.jsx';
-import InputField from './InputField.jsx';
-import SelectField from './SelectField.jsx';
-import UserRoles from './UserRoles.jsx';
-import Button from '../signIn/Button.jsx';
-import AppColors from '../../utils/AppColors.js';
-import AppFonts from '../../utils/AppFonts.js';
+import { useState, useEffect } from "react";
+import { Camera, ChevronDown } from "lucide-react";
+import { useUser } from "../../context/UserContext.jsx";
+import InputField from "./InputField.jsx";
+import SelectField from "./SelectField.jsx";
+import UserRoles from "./UserRoles.jsx";
+import Button from "../signIn/Button.jsx";
+import AppColors from "../../utils/AppColors.js";
+import AppFonts from "../../utils/AppFonts.js";
+import { useSettings } from "../../context/SettingsContext.js";
 
-const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
-  // Get user context data and actions
-  const {
-    addUser,
-    updateUser,
-    validateUserData,
-    loading,
-    error,
-    clearError
-  } = useUser();
+const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
+  const { selectedUser, validateUserData, error } = useSettings();
+  const { clearError } = useUser();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    country: '',
-    city: '',
-    phoneNumber: '',
-    emailAddress: '',
-    userRole: '',
-    status: true
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    country: "",
+    city: "",
+    mobileNumber: "",
+    email: "",
+    role: "",
+    status: true,
   });
 
   const [avatar, setAvatar] = useState(null);
   const [errors, setErrors] = useState({});
-  const [selectedCountryCode, setSelectedCountryCode] = useState('ae');
+  const [selectedCountryCode, setSelectedCountryCode] = useState("ae");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,76 +37,90 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     clearError();
   }, [clearError]);
 
-  // Load editing user data
-  useEffect(() => {
-    if (editingUser) {
-      setFormData({
-        firstName: editingUser.firstName || '',
-        lastName: editingUser.lastName || '',
-        dateOfBirth: editingUser.dateOfBirth || '',
-        country: editingUser.country || '',
-        city: editingUser.city || '',
-        phoneNumber: editingUser.phoneNumber || '',
-        emailAddress: editingUser.emailAddress || '',
-        userRole: editingUser.userRole || '',
-        status: editingUser.status !== undefined ? editingUser.status : true
-      });
-      setAvatar(editingUser.avatar || null);
-    }
-  }, [editingUser]);
+
+useEffect(() => {
+  if (selectedUser && Object.keys(selectedUser).length > 0) {
+    setFormData({
+      firstName: selectedUser.firstName || '',
+      lastName: selectedUser.lastName || '',
+      dateOfBirth: selectedUser.dateOfBirth || '',
+      country: selectedUser.country || '',
+      city: selectedUser.city || '',
+      mobileNumber: selectedUser.mobileNumber || '',
+      email: selectedUser.email || '',
+      role: selectedUser.role || '',
+      status: selectedUser.status !== undefined ? selectedUser.status : true
+    });
+    setAvatar(selectedUser.image || null);
+  } else {
+    // Reset form when not editing
+    setFormData({
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      country: '',
+      city: '',
+      mobileNumber: '',
+      email: '',
+      role: '',
+      status: true
+    });
+    setAvatar(null);
+  }
+}, [selectedUser]);
 
   const countryCodeOptions = [
-    { code: 'ae', flag: '🇦🇪', dialCode: '+971', label: 'UAE' },
-    { code: 'sa', flag: '🇸🇦', dialCode: '+966', label: 'Saudi Arabia' },
-    { code: 'us', flag: '🇺🇸', dialCode: '+1', label: 'United States' },
-    { code: 'uk', flag: '🇬🇧', dialCode: '+44', label: 'United Kingdom' },
-    { code: 'ca', flag: '🇨🇦', dialCode: '+1', label: 'Canada' },
-    { code: 'au', flag: '🇦🇺', dialCode: '+61', label: 'Australia' }
+    { code: "ae", flag: "🇦🇪", dialCode: "+971", label: "UAE" },
+    { code: "sa", flag: "🇸🇦", dialCode: "+966", label: "Saudi Arabia" },
+    { code: "us", flag: "🇺🇸", dialCode: "+1", label: "United States" },
+    { code: "uk", flag: "🇬🇧", dialCode: "+44", label: "United Kingdom" },
+    { code: "ca", flag: "🇨🇦", dialCode: "+1", label: "Canada" },
+    { code: "au", flag: "🇦🇺", dialCode: "+61", label: "Australia" },
   ];
 
   const countryOptions = [
-    { value: 'uae', label: 'United Arab Emirates' },
-    { value: 'usa', label: 'United States' },
-    { value: 'uk', label: 'United Kingdom' },
-    { value: 'canada', label: 'Canada' },
-    { value: 'australia', label: 'Australia' },
-    { value: 'saudi', label: 'Saudi Arabia' },
-    { value: 'egypt', label: 'Egypt' },
-    { value: 'jordan', label: 'Jordan' }
+    { value: "uae", label: "United Arab Emirates" },
+    { value: "usa", label: "United States" },
+    { value: "uk", label: "United Kingdom" },
+    { value: "canada", label: "Canada" },
+    { value: "australia", label: "Australia" },
+    { value: "saudi", label: "Saudi Arabia" },
+    { value: "egypt", label: "Egypt" },
+    { value: "jordan", label: "Jordan" },
   ];
 
   const cityOptions = [
-    { value: 'dubai', label: 'Dubai' },
-    { value: 'abudhabi', label: 'Abu Dhabi' },
-    { value: 'sharjah', label: 'Sharjah' },
-    { value: 'ajman', label: 'Ajman' },
-    { value: 'riyadh', label: 'Riyadh' },
-    { value: 'jeddah', label: 'Jeddah' },
-    { value: 'newyork', label: 'New York' },
-    { value: 'london', label: 'London' },
-    { value: 'toronto', label: 'Toronto' },
-    { value: 'sydney', label: 'Sydney' }
+    { value: "dubai", label: "Dubai" },
+    { value: "abudhabi", label: "Abu Dhabi" },
+    { value: "sharjah", label: "Sharjah" },
+    { value: "ajman", label: "Ajman" },
+    { value: "riyadh", label: "Riyadh" },
+    { value: "jeddah", label: "Jeddah" },
+    { value: "newyork", label: "New York" },
+    { value: "london", label: "London" },
+    { value: "toronto", label: "Toronto" },
+    { value: "sydney", label: "Sydney" },
   ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
 
   const handleStatusToggle = () => {
     if (!isSubmitting) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        status: !prev.status
+        status: !prev.status,
       }));
     }
   };
@@ -121,19 +129,19 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({
           ...prev,
-          avatar: 'Please select a valid image file'
+          avatar: "Please select a valid image file",
         }));
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          avatar: 'File size must be less than 5MB'
+          avatar: "File size must be less than 5MB",
         }));
         return;
       }
@@ -142,9 +150,9 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
       reader.onload = (e) => {
         setAvatar(e.target.result);
         if (errors.avatar) {
-          setErrors(prev => ({
+          setErrors((prev) => ({
             ...prev,
-            avatar: ''
+            avatar: "",
           }));
         }
       };
@@ -158,49 +166,53 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
   };
 
   const getSelectedCountryCodeData = () => {
-    return countryCodeOptions.find(option => option.code === selectedCountryCode);
+    return countryCodeOptions.find(
+      (option) => option.code === selectedCountryCode
+    );
   };
 
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
       setErrors({});
-
-      // Validate form data using context validation
       const validation = validateUserData(formData);
-      
       if (!validation.isValid) {
+        console.log("not valid")
         setErrors(validation.errors);
         return;
       }
-
-      // Prepare user data
       const userData = {
         ...formData,
-        avatar,
+        image: avatar,
         name: `${formData.firstName} ${formData.lastName}`,
-        countryDisplay: countryOptions.find(c => c.value === formData.country)?.label || formData.country,
-        cityDisplay: cityOptions.find(c => c.value === formData.city)?.label || formData.city
+        countryDisplay:
+          countryOptions.find((c) => c.value === formData.country)?.label ||
+          formData.country,
+        cityDisplay:
+          cityOptions.find((c) => c.value === formData.city)?.label ||
+          formData.city,
       };
-      
+
       let savedUser;
-      if (editingUser) {
-        savedUser = await updateUser(editingUser.id, userData);
+      if (selectedUser) {
+        savedUser = await updateUser(selectedUser.id, userData);
       } else {
         savedUser = await addUser(userData);
       }
 
-      console.log(`User ${editingUser ? 'updated' : 'added'} successfully:`, savedUser);
-      
+      console.log(
+        `User ${selectedUser ? "updated" : "added"} successfully:`,
+        savedUser
+      );
+
       if (onSubmit) {
         onSubmit(savedUser);
       }
-
     } catch (error) {
-      console.error('Error saving user:', error);
-      setErrors(prev => ({
+      console.error("Error saving user:", error);
+      setErrors((prev) => ({
         ...prev,
-        submit: error.message || 'Failed to save user. Please try again.'
+        submit: error.message || "Failed to save user. Please try again.", // Make sure this is a string
       }));
     } finally {
       setIsSubmitting(false);
@@ -219,17 +231,17 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
     }
   };
 
-  const getUserDisplayName = () => {
-    if (editingUser && editingUser.name) {
-      return editingUser.name;
+const getUserDisplayName = () => {
+  if (selectedUser && Object.keys(selectedUser).length > 0) {
+    if (selectedUser.name) {
+      return selectedUser.name;
     }
-    if (editingUser) {
-      return `${editingUser.firstName || ''} ${editingUser.lastName || ''}`.trim();
-    }
-    return 'Add New User';
-  };
+    return `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim();
+  }
+  return 'Add New User';
+};
 
-  const isEditing = !!editingUser;
+ const isEditing = selectedUser && Object.keys(selectedUser).length > 0;
   const selectedCountryData = getSelectedCountryCodeData();
 
   return (
@@ -243,16 +255,16 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
         >
           System Users
         </button>
-        <span 
+        <span
           className="text-gray-400"
           style={AppFonts.smSemiBold({ color: AppColors.text })}
         >
           /
         </span>
-        <span 
+        <span
           className={isEditing ? "text-blue-500" : "text-blue-500"}
-          style={AppFonts.smSemiBold({ 
-            color: isEditing ? AppColors.primary : AppColors.primary 
+          style={AppFonts.smSemiBold({
+            color: isEditing ? AppColors.primary : AppColors.primary,
           })}
         >
           {getUserDisplayName()}
@@ -261,7 +273,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
 
       {/* Page Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <h1 
+        <h1
           className="text-lg font-bold text-black"
           style={AppFonts.lgBold({ color: AppColors.black })}
         >
@@ -275,7 +287,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
           {/* User Avatar Section with Status Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <div 
+              <div
                 className="
                   relative 
                   bg-gray-800 
@@ -285,24 +297,24 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                   flex-shrink-0
                 "
                 style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '100px'
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "100px",
                 }}
               >
                 {avatar ? (
-                  <img 
-                    src={avatar} 
-                    alt="User Avatar" 
+                  <img
+                    src={avatar}
+                    alt="User Avatar"
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <Camera className="w-8 h-8 text-white" />
                 )}
               </div>
-              
+
               <div>
-                <h3 
+                <h3
                   className="text-black font-medium"
                   style={AppFonts.smSemiBold({ color: AppColors.black })}
                 >
@@ -318,7 +330,11 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className={`inline-block mt-2 ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                  className={`inline-block mt-2 ${
+                    isSubmitting
+                      ? "cursor-not-allowed opacity-50"
+                      : "cursor-pointer"
+                  }`}
                 >
                   <span
                     className="
@@ -329,10 +345,10 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                     "
                     style={{
                       backgroundColor: AppColors.primary,
-                      ...AppFonts.smMedium({ color: AppColors.white })
+                      ...AppFonts.smMedium({ color: AppColors.white }),
                     }}
                   >
-                    {isEditing ? 'Change Photo' : 'Upload'}
+                    {isEditing ? "Change Photo" : "Upload"}
                   </span>
                 </label>
               </div>
@@ -340,26 +356,30 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
 
             {/* Status Switch - moved to right side */}
             <div className="flex flex-col items-center">
-              <div 
-                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              <div
+                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${
+                  isSubmitting
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
                 onClick={handleStatusToggle}
               >
-                <span 
+                <span
                   className="text-xs font-medium mb-2"
                   style={AppFonts.smMedium({ color: AppColors.black })}
                 >
                   Status
                 </span>
-                <div 
+                <div
                   className={`
                     w-12 h-6 rounded-full relative transition-colors duration-200
-                    ${formData.status ? 'bg-green-500' : 'bg-gray-300'}
+                    ${formData.status ? "bg-green-500" : "bg-gray-300"}
                   `}
                 >
-                  <div 
+                  <div
                     className={`
                       w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform duration-200
-                      ${formData.status ? 'translate-x-6' : 'translate-x-0.5'}
+                      ${formData.status ? "translate-x-6" : "translate-x-0.5"}
                     `}
                   />
                 </div>
@@ -374,9 +394,9 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="First Name"
               placeholder="Enter"
               value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
               required
-              error={errors.firstName}
+              error={errors?.firstName}
               disabled={isSubmitting}
             />
 
@@ -385,9 +405,9 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="Last Name"
               placeholder="Enter"
               value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
+              onChange={(e) => handleInputChange("lastName", e.target.value)}
               required
-              error={errors.lastName}
+              error={errors?.lastName}
               disabled={isSubmitting}
             />
 
@@ -397,8 +417,8 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               type="date"
               placeholder="Select"
               value={formData.dateOfBirth}
-              onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-              error={errors.dateOfBirth}
+              onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+              error={errors?.dateOfBirth}
               disabled={isSubmitting}
             />
 
@@ -407,10 +427,10 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="Country"
               placeholder="Select"
               value={formData.country}
-              onChange={(option) => handleInputChange('country', option.value)}
+              onChange={(option) => handleInputChange("country", option.value)}
               options={countryOptions}
               required
-              error={errors.country}
+              error={errors?.country}
               disabled={isSubmitting}
             />
 
@@ -419,50 +439,60 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="City"
               placeholder="Select"
               value={formData.city}
-              onChange={(option) => handleInputChange('city', option.value)}
+              onChange={(option) => handleInputChange("city", option.value)}
               options={cityOptions}
               required
-              error={errors.city}
+              error={errors?.city}
               disabled={isSubmitting}
             />
 
             {/* Phone Number with Country Code Dropdown */}
             <div className="flex flex-col">
-              <label 
+              <label
                 className="mb-2 text-sm font-medium text-black"
                 style={AppFonts.smMedium({ color: AppColors.black })}
               >
                 Phone Number
                 <span className="text-red-500">*</span>
               </label>
-              
+
               {/* Phone Field Container with consistent width */}
-              <div className={`
+              <div
+                className={`
                 w-full h-12
                 bg-white border rounded-lg
-                ${errors.phoneNumber 
-                  ? 'border-red-500' 
-                  : 'border-gray-200'
-                }
-              `}>
+                ${errors?.mobileNumber ? "border-red-500" : "border-gray-200"}
+              `}
+              >
                 <div className="flex h-full p-2">
                   <div className="relative">
-                    <div 
+                    <div
                       className={`
                         flex items-center px-2 h-full
                         bg-gray-100 rounded-md
                         hover:bg-gray-200
-                        ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                        ${
+                          isSubmitting
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer"
+                        }
                       `}
-                      onClick={!isSubmitting ? () => setIsCountryDropdownOpen(!isCountryDropdownOpen) : undefined}
+                      onClick={
+                        !isSubmitting
+                          ? () =>
+                              setIsCountryDropdownOpen(!isCountryDropdownOpen)
+                          : undefined
+                      }
                     >
-                      <div 
+                      <div
                         className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
-                        style={{ borderRadius: '4px' }}
+                        style={{ borderRadius: "4px" }}
                       >
-                        <span className="text-sm">{selectedCountryData?.flag}</span>
+                        <span className="text-sm">
+                          {selectedCountryData?.flag}
+                        </span>
                       </div>
-                      <span 
+                      <span
                         className="text-black font-medium mr-1 text-sm"
                         style={AppFonts.smMedium({ color: AppColors.black })}
                       >
@@ -472,12 +502,15 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                     </div>
 
                     {isCountryDropdownOpen && !isSubmitting && (
-                      <div className="absolute top-full left-0 z-50 mt-1" style={{ minWidth: '200px' }}>
-                        <div 
+                      <div
+                        className="absolute top-full left-0 z-50 mt-1"
+                        style={{ minWidth: "200px" }}
+                      >
+                        <div
                           className="bg-gray-100 rounded-lg shadow-lg"
-                          style={{ 
-                            border: '6px solid #f3f4f6',
-                            borderRadius: '12px'
+                          style={{
+                            border: "6px solid #f3f4f6",
+                            borderRadius: "12px",
                           }}
                         >
                           <div className="bg-white rounded-md overflow-hidden">
@@ -485,23 +518,29 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                               <div
                                 key={option.code}
                                 className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                                onClick={() => handleCountryCodeSelect(option.code)}
+                                onClick={() =>
+                                  handleCountryCodeSelect(option.code)
+                                }
                               >
-                                <div 
+                                <div
                                   className="w-6 h-4 mr-2 overflow-hidden flex items-center justify-center"
-                                  style={{ borderRadius: '4px' }}
+                                  style={{ borderRadius: "4px" }}
                                 >
                                   <span className="text-sm">{option.flag}</span>
                                 </div>
-                                <span 
+                                <span
                                   className="text-black font-medium mr-2"
-                                  style={AppFonts.smMedium({ color: AppColors.black })}
+                                  style={AppFonts.smMedium({
+                                    color: AppColors.black,
+                                  })}
                                 >
                                   {option.dialCode}
                                 </span>
-                                <span 
+                                <span
                                   className="text-gray-600 text-sm"
-                                  style={AppFonts.smRegular({ color: AppColors.gray })}
+                                  style={AppFonts.smRegular({
+                                    color: AppColors.gray,
+                                  })}
                                 >
                                   {option.label}
                                 </span>
@@ -517,28 +556,30 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                   <input
                     type="tel"
                     placeholder="Enter"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    value={formData.mobileNumber}
+                    onChange={(e) =>
+                      handleInputChange("mobileNumber", e.target.value)
+                    }
                     disabled={isSubmitting}
                     className={`
                       flex-1 h-full px-3 ml-2
                       bg-transparent border-none
                       outline-none
-                      ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
+                      ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}
                     `}
                     style={{
-                      ...AppFonts.mdRegular({ color: AppColors.black })
+                      ...AppFonts.mdRegular({ color: AppColors.black }),
                     }}
                   />
                 </div>
               </div>
-              
-              {errors.phoneNumber && (
-                <span 
+
+              {errors?.mobileNumber && (
+                <span
                   className="mt-1 text-sm text-red-500"
                   style={{ color: AppColors.danger }}
                 >
-                  {errors.phoneNumber}
+                  {errors.mobileNumber}
                 </span>
               )}
             </div>
@@ -548,10 +589,10 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
               label="Email Address"
               type="email"
               placeholder="Enter"
-              value={formData.emailAddress}
-              onChange={(e) => handleInputChange('emailAddress', e.target.value)}
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
               required
-              error={errors.emailAddress}
+              error={errors?.emailAddress}
               disabled={isSubmitting}
             />
           </div>
@@ -559,33 +600,45 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
           {/* User Roles Section */}
           <UserRoles
             label="User Roles"
-            selectedRole={formData.userRole}
-            onChange={(role) => handleInputChange('userRole', role)}
+            selectedRole={formData.role}
+            onChange={(role) => handleInputChange("role", role)}
             required
-            error={errors.userRole}
+            error={errors?.role}
             disabled={isSubmitting}
           />
 
           {/* Avatar Error */}
-          {errors.avatar && (
+          {errors?.avatar && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-red-600 text-sm">{errors.avatar}</p>
             </div>
           )}
 
           {/* Submit Error */}
-          {errors.submit && (
+          {errors?.submit && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-600 text-sm">{errors.submit}</p>
             </div>
           )}
 
           {/* Context Error */}
-          {error && (
+          {error && typeof error === "string" && error.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
+
+          {error &&
+            typeof error === "object" &&
+            Object.keys(error).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                {Object.entries(error).map(([key, value]) => (
+                  <p key={key} className="text-red-600 text-sm">
+                    {value}
+                  </p>
+                ))}
+              </div>
+            )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
@@ -603,7 +656,7 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                 Cancel
               </Button>
             </div>
-            
+
             <div className="w-auto">
               <Button
                 onClick={handleSubmit}
@@ -620,7 +673,11 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Saving...
                   </div>
-                ) : (isEditing ? 'Update' : 'Submit')}
+                ) : isEditing ? (
+                  "Update"
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </div>
           </div>
@@ -628,8 +685,8 @@ const AddNewUser = ({ onBack, onSubmit, editingUser }) => {
       </div>
 
       {isCountryDropdownOpen && !isSubmitting && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setIsCountryDropdownOpen(false)}
         />
       )}

@@ -16,8 +16,8 @@ const UserCard = ({
   isActive = true,
   onEdit,
   onDelete,
-  isFirst = false,
   isLast = false,
+  id,
   className = ""
 }) => {
   const getStatusColor = (status) => {

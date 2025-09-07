@@ -1,5 +1,5 @@
 // src/components/settings/SettingsMainContent.jsx
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect,useCallback } from 'react';
 import { 
   Users,            
   UserCheck,        
@@ -7,9 +7,8 @@ import {
   User,             
   Megaphone,        
   Headphones,       
-  SlidersHorizontal
+  SlidersHorizontal,
 } from "lucide-react";
-import { useUser } from '../../context/UserContext.jsx';
 import SearchField from './SearchField.jsx';
 import StatsCard from './StatsCard.jsx';
 import UserCard from './UserCard.jsx';
@@ -17,10 +16,15 @@ import Button from '../signIn/Button.jsx';
 import FilterModal from '../Users/modals/FilterModal.jsx';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
+import SettingsService from '../../services/settingsService.js';
 
 const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
-  // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [statsData, setStatsData] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(null);
+  const [error] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({
     country: '',
     city: '',
@@ -28,61 +32,111 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
     status: ''
   });
 
-  // Get user context data and actions
-  const {
-    filteredUsers,
-    searchTerm,
-    setSearchTerm,
-    deleteUser,
-    getUserRoleDisplayName,
-    getUserStats,
-    loading,
-    error
-  } = useUser();
 
-  // Calculate statistics using context
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const users = await SettingsService.getUsers({});
+        setFilteredUsers(users);
+        
+        // Load statistics
+        const stats = await SettingsService.getStatistics();
+        setStatsData(stats);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
+
+  // Calculate statistics using the fetched data
   const stats = useMemo(() => {
-    const userStats = getUserStats();
+    if (!statsData) return [];
     
     return [
       {
         title: 'Total No. of Users',
-        value: userStats.totalUsers.toString(),
+        value: statsData.totalNumberOfUsers,
         icon: <Users />,
         iconBackgroundColor: AppColors.purple_600
       },
       {
         title: 'Active Users',
-        value: userStats.activeUsers.toString(),
+        value: statsData.totalNumberOfActiveUsers,
         icon: <UserCheck />,
         iconBackgroundColor: AppColors.green_600
       },
       {
         title: 'Super Admin',
-        value: userStats.superadmin.toString(),
+        value: statsData.totalNumberOfSuperAdmin,
         icon: <UserCog />,
         iconBackgroundColor: AppColors.cyan_600
       },
       {
         title: 'Admin',
-        value: userStats.admin.toString(),
+        value: statsData.totalNumberOfAdmin,
         icon: <User />,
         iconBackgroundColor: AppColors.blue_600
       },
       {
         title: 'Marketing',
-        value: userStats.marketing.toString(),
+        value: statsData.totalNumberOfMarekting,
         icon: <Megaphone />,
         iconBackgroundColor: AppColors.orange_600
       },
       {
         title: 'Customer Support',
-        value: userStats.customersupport.toString(),
+        value: statsData.totalNumberOfSupport,
         icon: <Headphones />,
         iconBackgroundColor: AppColors.gray_800
       }
     ];
-  }, [getUserStats]);
+  }, [statsData]);
+      const getUserStats = useCallback(() => {
+      const totalUsers = filteredUsers.length;
+      const activeUsers = filteredUsers.filter(user => user.status === true).length;
+      const inactiveUsers = totalUsers - activeUsers;
+      
+      // Role-based statistics
+      const roleStats = {
+        superadmin: filteredUsers.filter(user => user.userRole === 'superadmin').length,
+        admin: filteredUsers.filter(user => user.userRole === 'admin').length,
+        marketing: filteredUsers.filter(user => user.userRole === 'marketing').length,
+        customersupport: filteredUsers.filter(user => user.userRole === 'customersupport').length
+      };
+  
+      return {
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        ...roleStats
+      };
+    }, [filteredUsers]);
+  const deleteUser = useCallback((userId) => {
+        try {
+          
+        } catch (error) {
+         
+          throw error;
+        }
+      }, []);
+  const getUserRoleDisplayName = useCallback((userRole) => {
+          const roleMap = {
+            'superadmin': 'Super Admin',
+            'admin': 'Admin', 
+            'marketing': 'Marketing',
+            'customersupport': 'Customer Support'
+          };
+          return roleMap[userRole] || userRole;
+        }, []);
+    
+    
+  
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -98,8 +152,6 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
 
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
-
-    //  just store them in state for now for the filter modal
     console.log('Applied filters:', filters);
   };
 
@@ -179,18 +231,20 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {stats.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            iconBackgroundColor={stat.iconBackgroundColor}
-            className="min-w-0"
-          />
-        ))}
-      </div>
+      {statsData && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {stats.map((stat, index) => (
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              iconBackgroundColor={stat.iconBackgroundColor}
+              className="min-w-0"
+            />
+          ))}
+        </div>
+      )}
 
       <div className="px-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
@@ -235,10 +289,10 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
                 key={user.id}
                 name={user.name || `${user.firstName} ${user.lastName}`.trim()}
                 country={`${user.cityDisplay || user.city}, ${user.countryDisplay || user.country}`}
-                email={user.emailAddress}
-                phone={user.phoneNumber}
-                photo={user.avatar}
-                status={getUserRoleDisplayName(user.userRole)}
+                email={user.email}
+                phone={user.mobileNumber}
+                photo={user.image}
+                status={getUserRoleDisplayName(user.role)}
                 isActive={user.status}
                 onEdit={() => handleEditUser(user)}
                 onDelete={() => handleDeleteUser(user.id)}

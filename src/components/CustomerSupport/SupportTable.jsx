@@ -1,5 +1,3 @@
-//src/components/CustomerSupport/SupportTable.jsx
-import { useMemo } from 'react';
 import { Eye, Trash2 } from 'lucide-react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
 
@@ -26,8 +24,13 @@ const SupportTable = ({
         return 'text-gray-600';
     }
   };
+  const onClick=async(ticket)=>
+  {
+    console.log("ticket data clicked")
+    await onTicketClick(ticket.id)
+  }
 
-  const getPriorityColor = (priority) => {
+  /*const getPriorityColor = (priority) => {
     switch(priority) {
       case 'Critical':
         return 'text-red-600 font-semibold';
@@ -40,7 +43,8 @@ const SupportTable = ({
       default:
         return 'text-gray-600';
     }
-  };
+  };*/
+
 
   const generatePageNumbers = () => {
     const pages = [];
@@ -66,6 +70,7 @@ const SupportTable = ({
 
     return pages;
   };
+  console.log("tickets",tickets)
 
   if (loading && tickets.length === 0) {
     return (
@@ -94,6 +99,7 @@ const SupportTable = ({
 
           <tbody>
             {tickets.map((ticket) => (
+              
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
                 <td className="px-6 py-2 w-16">
                   <input
@@ -110,7 +116,7 @@ const SupportTable = ({
                   <span className="text-md text-text font-medium">{ticket.id}</span>
                 </td>
                 <td className="px-4 py-4">
-                  <span className="text-md text-text">{ticket.userName}</span>
+                  <span className="text-md text-text">{ticket.username}</span>
                 </td>
                 <td className="px-4 py-4">
                   <span className="text-md text-text max-w-xs truncate inline-block" title={ticket.subject}>
@@ -131,7 +137,7 @@ const SupportTable = ({
                 <td className="px-2 py-4">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onTicketClick && onTicketClick(ticket)}
+                      onClick={() =>  onClick(ticket)}
                       className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
                       title="View Details"
                     >

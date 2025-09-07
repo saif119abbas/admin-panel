@@ -1,32 +1,43 @@
 // src/screens/Settings.jsx
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { UserProvider } from '../context/UserContext.jsx';
 import SettingsMainContent from '../components/settings/SettingsMainContent.jsx';
 import AddNewUser from '../components/settings/AddNewUser.jsx';
+import { useSettings } from '../context/SettingsContext.js';
+import SettingsService from '../services/settingsService.js';
 
 const SettingsContent = () => {
   const [mainContentView, setMainContentView] = useState('users');
-  const [editingUser, setEditingUser] = useState(null);
+  const {changeUser}=useSettings()
 
   const handleAddNewUser = () => {
-    setEditingUser(null);
+    changeUser(null);
     setMainContentView('addUser');
   };
 
   const handleEditUser = (user) => {
-    setEditingUser(user);
+    changeUser(user);
     setMainContentView('addUser');
   };
 
   const handleBackToUsers = () => {
-    setEditingUser(null);
+    changeUser(null);
     setMainContentView('users');
   };
 
   const handleUserFormSubmit = () => {
     setMainContentView('users');
-    setEditingUser(null);
+    changeUser(null);
   };
+  const handleUpdateUser=async(id,user)=>{
+    console.log("handleUpdateUser ")
+    const res=await SettingsService.updateUser(id,user)
+    console.log(res)
+  }
+  const handleAddUser=async(user)=>{
+    const res=await SettingsService.updateUser(user)
+    console.log(res)
+  }
 
   const renderMainContent = () => {
     switch (mainContentView) {
@@ -35,7 +46,8 @@ const SettingsContent = () => {
           <AddNewUser 
             onBack={handleBackToUsers}
             onSubmit={handleUserFormSubmit}
-            editingUser={editingUser}
+            updateUser={handleUpdateUser}
+            addUser={handleAddUser}
           />
         );
       case 'users':
