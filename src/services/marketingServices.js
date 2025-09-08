@@ -1,5 +1,6 @@
 import { TemplateDto } from "../dtos/marketingDto/templateDto";
 import { VariableDto } from "../dtos/marketingDto/variableDto";
+import { apiService } from "../api/apiService";
 const templateData = {
   newTemplateData: [
     {
@@ -142,6 +143,58 @@ const templateData = {
 };
 
 class MarketingService {
+
+
+  async getAllTemplates_v2() {
+    try {
+      const response = await apiService.get('/MarketingTemplate');
+      const { newTemplateData, inappTemplates, smsTemplates, emailTemplates } = response.data;
+      const allGroups = [
+        ...newTemplateData,
+        ...inappTemplates,
+        ...smsTemplates,
+        ...emailTemplates,
+      ];
+      return allGroups.flatMap((group) =>
+        group.templates.map(
+          (t) =>
+            new TemplateDto(
+              t.id,
+              t.title,
+              t.content,
+              t.type,
+              t.category,
+              t.variables,
+              t.subject
+            )
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      return [];
+    }
+  }
+
+  async addTemplate(templateDto) {
+    try {
+      const response = await apiService.post('/MarketingTemplate', templateDto);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding template:', error);
+      return null;
+    }
+  }
+
+  async updateTemplate(id, templateDto) {
+    try {
+      const response = await apiService.put(`/MarketingTemplate/${id}`, templateDto);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating template:', error);
+      return null;
+    }
+  }
+
   async getAllTemplates() {
     const { newTemplateData, inappTemplates, smsTemplates, emailTemplates } =
       templateData;
@@ -182,16 +235,6 @@ class MarketingService {
 
   async scheduleNotification(data) {
     console.log("send===", data);
-    return true;
-  }
-
-  async addTemplate(templateDto) {
-    console.log(templateDto);
-    return true;
-  }
-
-  async updateTemplate(id, template) {
-    console.log("update template=", template);
     return true;
   }
 }

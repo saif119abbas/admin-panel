@@ -15,6 +15,7 @@ export default function Marketing() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       try {
         const templatesData = await MarketingServices.getAllTemplates();
+        console.log("templatesData", templatesData);
         setTemplates(templatesData);
       } catch (error) {
         console.error("Error loading tickets:", error);
