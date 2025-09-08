@@ -1,5 +1,5 @@
-// src/components/Users/UserTable.jsx
 import { useMemo } from 'react';
+import { Search, Filter } from 'lucide-react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
 
 const UsersList = ({ 
@@ -10,7 +10,9 @@ const UsersList = ({
   selectedUsers, 
   onSelectUser, 
   onUserClick,
-  loading = false 
+  handleSelectAll,
+  loading = false ,
+  onOpen
 }) => {
   const generateAvatar = (name) => {
     const words = name.split(' ');
@@ -20,12 +22,6 @@ const UsersList = ({
     }
     
     return words[0].charAt(0).toUpperCase() + words[words.length - 1].charAt(0).toUpperCase();
-  };
-
-  const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'text-success'
-      : 'text-orange-600';
   };
 
   const generatePageNumbers = () => {
@@ -72,34 +68,69 @@ const UsersList = ({
   }
 
   return (
-    <div >
+    <div>
+      {/* Search and Filter Header */}
+      <div className="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedUsers.length === users.length && users.length > 0}
+              onChange={handleSelectAll}
+              className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2"
+            />
+            <span className="ml-2 text-sm font-medium text-gray-900">Select All</span>
+          </label>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
+          
+          <button 
+          onClick={onOpen}
+          
+          className="flex items-center space-x-2 px-3 py-2 border border-cyan-500 text-cyan-500 rounded-lg hover:bg-cyan-50 transition-colors">
+            <Filter size={16} />
+            <span className="text-sm font-medium">Filter</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-200 rounded-t-lg rounded-b-lg">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 w-16 rounded-tl-lg rounded-bl-lg"></th>
-              <th className="px-6 py-3 text-left text-md font-bold text-black">Name</th>
-              <th className="px-6 py-3 text-left text-md font-bold text-black">Email</th>
-              <th className="px-6 py-3 text-left text-md font-bold text-black">Phone</th>
-              <th className="px-6 py-3 text-left text-md font-bold text-black rounded-tr-lg rounded-br-lg">Country</th>
-              <th className="px-6 py-3 text-left text-md font-bold text-black ">City</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Phone</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Country</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">City</th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 cursor-pointer" onClick={() => onUserClick && onUserClick(user)}>
-                <td className="px-6 py-4 w-16">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(user.id)}
-                    onChange={(e) => onSelectUser(user.id, e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
-                  />
-                </td>
+              <tr key={user.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => onUserClick && onUserClick(user)}>
                 <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${user.image ? '' : getAvatarColor(user.id)}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        onSelectUser(user.id, e.target.checked);
+                      }}
+                      className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2 mr-3"
+                    />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${user.image ? '' : getAvatarColor(user.id)} mr-3`}>
                       {user.image ? (
                         <img
                           src={user.image}
@@ -107,26 +138,20 @@ const UsersList = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-md font-semibold text-white">
+                        <span className="text-sm font-semibold text-white">
                           {generateAvatar(user.name)}
                         </span>
                       )}
                     </div>
-                    <div className="ml-4">
-                      <button
-                        onClick={() => onUserClick && onUserClick(user)}
-                        className="text-md text-text text-left"
-                      >
-                        {user.name}
-                      </button>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-md text-text">{user.createdOn}</td>
-                <td className="px-6 py-4 text-md">
-                  <span className={getStatusColor(user.status)}>{user.status}</span>
-                </td>
-                <td className="px-6 py-4 text-md text-text">{user.country}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{user.phone}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{user.country}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{user.city}</td>
               </tr>
             ))}
           </tbody>
@@ -134,26 +159,28 @@ const UsersList = ({
       </div>
 
       {/* Pagination */}
-      <div className="px-6 py-4 border-t border-gray-200">
-        <div className="flex items-center justify-start space-x-2">
-          {generatePageNumbers().map((page, index) => (
-            <button
-              key={index}
-              onClick={() => typeof page === 'number' && onPageChange(page)}
-              disabled={page === '...' || loading}
-              className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
-                page === currentPage
-                  ? 'bg-primary text-white'
-                  : page === '...'
-                  ? 'text-black cursor-default'
-                  : 'bg-gray-100 text-black hover:bg-gray-200'
-              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {page}
-            </button>
-          ))}
+      {totalPages > 1 && (
+        <div className="px-6 py-4 border-t border-gray-200 bg-white">
+          <div className="flex items-center justify-start space-x-2">
+            {generatePageNumbers().map((page, index) => (
+              <button
+                key={index}
+                onClick={() => typeof page === 'number' && onPageChange(page)}
+                disabled={page === '...' || loading}
+                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
+                  page === currentPage
+                    ? 'bg-cyan-500 text-white'
+                    : page === '...'
+                    ? 'text-gray-500 cursor-default'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

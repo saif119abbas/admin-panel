@@ -1,6 +1,68 @@
 import { TemplateDto } from "../dtos/marketingDto/templateDto";
 import { VariableDto } from "../dtos/marketingDto/variableDto";
+import { UsersListDto } from "../dtos/marketingDto/usersListDto";
 import { apiService } from "../api/apiService";
+
+
+const mockUsers = [
+  new UsersListDto(
+    1,
+    "Lourdee Quintero",
+    "tienlopspktnd@gmail.com",
+    "+1 613 555 0143",
+    "Poland",
+    "Cincinnati (OH)",
+  ),
+  new UsersListDto(
+    2,
+    "Leatrice Handler",
+    "tramthuy.nute@gmail.com",
+    "+1 202 555 0125",
+    "Saudi Arabia",
+    "Aurora (IL)",
+  ),
+  new UsersListDto(
+    3,
+    "Johnsie Jock",
+    "manhhoakt08@gmail.com",
+    "+65 1552 4968",
+    "South Africa",
+    "Naltchik",
+  ),
+  new UsersListDto(
+    4,
+    "Hannah Burress",
+    "trungkienspktnd@gmail.com",
+    "+1 613 555 0188",
+    "Palestine, State of",
+    "Cologne",
+  ),
+  new UsersListDto(
+    5,
+    "Rachel Foose",
+    "binhan628@gmail.com",
+    "+65 9860 0772",
+    "Guinea",
+    "Volzhsky",
+  ),
+  new UsersListDto(
+    6,
+    "Tyra Dhillon",
+    "thuhang.nute@gmail.com",
+    "+1 202 555 0107",
+    "Réunion",
+    "La Plata",
+  ),
+  new UsersListDto(
+    7,
+    "Merci Senter",
+    "donghoscnd76@gmail.com",
+    "+1 613 555 0175",
+    "Israel",
+    "North Las Vegas (NV)",
+  ),
+];
+
 const templateData = {
   newTemplateData: [
     {
@@ -184,6 +246,10 @@ class MarketingService {
   async getVariable(name)
   {
     return [new VariableDto()]
+  }
+    async getUsers(name)
+  {
+    return mockUsers
   }
   async sendNotification(data)
   {

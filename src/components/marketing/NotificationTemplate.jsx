@@ -6,6 +6,12 @@ import LeftSidebar from './LeftSidebar';
 import MarketingServices from '../../services/marketingServices';
 import UsersList from './UsersList';
 import ScheduleModal from './ScheduleModal ';
+import FilterModal from './FilterModal';
+
+// Mock user data
+const mockUsers = [
+  { id: 1, name: 'Lourdee Quintero', email: 'tienlopspktnd@gmail.com', phone: '+1 613 555 0143', country: 'Poland', city: 'Cincinnati (OH)', status: 'Active', createdOn: 'tienlopspktnd@gmail.com' },
+];
 
 const NotificationTemplate = () => {
   const [activeTab, setActiveTab] = useState('Email');
@@ -14,34 +20,63 @@ const NotificationTemplate = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(mockUsers);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isUserListExpanded, setIsUserListExpanded] = useState(true);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false); 
+  const [isFilterOpen, setIsFilterOpen] = useState(false); 
+  const [filters, setFilters] = useState({
+    country: "",
+    city: "",
+    startDate: "",
+    endDate: "",
+    status: "",
+  });
 
-  // Mock user data
-  const mockUsers = [
-    { id: 1, name: 'Lourdee Quintero', email: 'tienlopspktnd@gmail.com', phone: '+1 613 555 0143', country: 'Poland', city: 'Cincinnati (OH)', status: 'Active', createdOn: 'tienlopspktnd@gmail.com' },
-  ];
-
+   
   useEffect(() => {
-    setUsers(mockUsers);
-    setTotalPages(1);
+    const loadUserTrendData = async () => {
+      setLoading(true);
+      try {
+        const usersData = await MarketingServices.getUsers()
+        setUsers(usersData);
+        setTotalPages(1)
+      } catch (error) {
+        console.error('Error loading user trend data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserTrendData();
   }, []);
+
 
   useEffect(() => {
     const updatedSelectedUsers = users.filter(user => selectedUserIds.includes(user.id));
     setSelectedUsers(updatedSelectedUsers);
   }, [selectedUserIds, users]);
-
+  const onOpen=()=>
+  {
+    setIsFilterOpen(true)
+  }
+  const onClose=()=>
+  {
+    setIsFilterOpen(false)
+  }
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
     setEditorContent(template.content || '');
     setIsSidebarOpen(false);
   };
+    const handleApplyFilters = (appliedFilters) => {
+    console.log("Applied Filters:", appliedFilters);
+    setFilters(appliedFilters);
 
+    // TODO: Apply your filtering logic here (API call, table filter, etc.)
+  };
   const handleSend = async () => {  
     console.log("Selected Users:", selectedUsers);
     console.log("Selected User IDs:", selectedUserIds);
@@ -50,8 +85,11 @@ const NotificationTemplate = () => {
       ...selectedTemplate,
       content: editorContent
     };
-    
-    const res = await MarketingServices.sendNotification(selectedTemplate.id, newTemplate);
+    const data={
+      template:newTemplate,
+      users:selectedUsers
+    }
+    const res = await MarketingServices.sendNotification(data);
     console.log(res);
   };
 
@@ -63,6 +101,10 @@ const NotificationTemplate = () => {
     }
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   const handleSelectAll = () => {
     if (selectedUserIds.length === users.length && users.length > 0) {
       setSelectedUserIds([]);
@@ -71,41 +113,28 @@ const NotificationTemplate = () => {
     }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="h-screen bg-gray-100 flex flex-col">
+      {/* Fixed Navbar */}
+      <div className="p-4 pb-2">
+        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
       
       {/* User Selection Section */}
-      <div className="m-4 bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <button 
-            className="w-full flex items-center justify-between text-left"
-            onClick={() => setIsUserListExpanded(!isUserListExpanded)}
-          >
-            <h2 className="text-xl font-bold">Select Who to Notify</h2>
-            {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
-        </div>
-        
-        {isUserListExpanded && (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-4 py-2 border-b border-gray-200">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedUserIds.length === users.length && users.length > 0}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-900">Select All</label>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-auto max-h-64">
+      <div className="px-4 pb-4 flex-shrink-0">
+        <div className="bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <button 
+              className="w-full flex items-center justify-between text-left"
+              onClick={() => setIsUserListExpanded(!isUserListExpanded)}
+            >
+              <h2 className="text-xl font-bold">Select Who to Notify</h2>
+              {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+          </div>
+          
+          {isUserListExpanded && (
+            <div className="max-h-64 overflow-y-auto">
               <UsersList
                 users={users}
                 currentPage={currentPage}
@@ -114,23 +143,25 @@ const NotificationTemplate = () => {
                 selectedUsers={selectedUserIds}
                 onSelectUser={handleSelectUser}
                 loading={loading}
+                handleSelectAll={handleSelectAll}
+                onOpen={onOpen}
               />
             </div>
+          )}
+        </div>
+
+        {/* Selected users count */}
+        {selectedUserIds.length > 0 && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
+            </p>
           </div>
         )}
       </div>
 
-      {/* Selected users count */}
-      {selectedUserIds.length > 0 && (
-        <div className="mx-4 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
-          </p>
-        </div>
-      )}
-
       {/* Mobile sidebar toggle */}
-      <div className="md:hidden p-4 border-b border-gray-200 bg-white">
+      <div className="md:hidden px-4 pb-4 flex-shrink-0">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
@@ -139,19 +170,19 @@ const NotificationTemplate = () => {
         </button>
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      {/* Main content area - This takes remaining height */}
+      <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
         <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
           <LeftSidebar 
             activeTab={activeTab}
             selectedTemplate={selectedTemplate}
-            handleTemplateSelect={handleTemplateSelect}
+            handelAddTemplate={handleTemplateSelect}
           />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
           <div className="flex-1 p-4 overflow-auto">
             <div className="flex items-center justify-center py-4">
               <div className="text-center">
@@ -220,7 +251,6 @@ const NotificationTemplate = () => {
         </div>
       </div>
 
-      {/* Schedule Modal */}
       <ScheduleModal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
@@ -228,6 +258,16 @@ const NotificationTemplate = () => {
         content={editorContent}
         users={selectedUsers}
       />
+      {
+        isFilterOpen &&
+        <FilterModal 
+        isOpen={isFilterOpen}
+        currentFilters={filters}
+        onClose={onClose}
+        onApplyFilters={handleApplyFilters}
+        
+        />
+      }
     </div>
   );
 };

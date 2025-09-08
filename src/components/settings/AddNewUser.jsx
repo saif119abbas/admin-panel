@@ -9,8 +9,9 @@ import Button from "../signIn/Button.jsx";
 import AppColors from "../../utils/AppColors.js";
 import AppFonts from "../../utils/AppFonts.js";
 import { useSettings } from "../../context/SettingsContext.js";
+import SettingsService from "../../services/settingsService.js";
 
-const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
+const AddNewUser = ({ onBack, onSubmit }) => {
   const { selectedUser, validateUserData, error } = useSettings();
   const { clearError } = useUser();
 
@@ -37,37 +38,54 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
     clearError();
   }, [clearError]);
 
-
-useEffect(() => {
-  if (selectedUser && Object.keys(selectedUser).length > 0) {
-    setFormData({
-      firstName: selectedUser.firstName || '',
-      lastName: selectedUser.lastName || '',
-      dateOfBirth: selectedUser.dateOfBirth || '',
-      country: selectedUser.country || '',
-      city: selectedUser.city || '',
-      mobileNumber: selectedUser.mobileNumber || '',
-      email: selectedUser.email || '',
-      role: selectedUser.role || '',
-      status: selectedUser.status !== undefined ? selectedUser.status : true
-    });
-    setAvatar(selectedUser.image || null);
-  } else {
-    // Reset form when not editing
-    setFormData({
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      country: '',
-      city: '',
-      mobileNumber: '',
-      email: '',
-      role: '',
-      status: true
-    });
-    setAvatar(null);
-  }
-}, [selectedUser]);
+  useEffect(() => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      // Extract country code from mobile number if it exists
+      let initialCountryCode = "ae";
+      let mobileNumberWithoutCode = selectedUser.mobileNumber || "";
+      
+      if (selectedUser.mobileNumber) {
+        // Try to find matching country code
+        const foundCode = countryCodeOptions.find(option => 
+          selectedUser.mobileNumber.startsWith(option.dialCode)
+        );
+        
+        if (foundCode) {
+          initialCountryCode = foundCode.code;
+          mobileNumberWithoutCode = selectedUser.mobileNumber.replace(foundCode.dialCode, "").trim();
+        }
+      }
+      
+      setSelectedCountryCode(initialCountryCode);
+      
+      setFormData({
+        firstName: selectedUser.firstName || '',
+        lastName: selectedUser.lastName || '',
+        dateOfBirth: selectedUser.dateOfBirth || '',
+        country: selectedUser.country || '',
+        city: selectedUser.city || '',
+        mobileNumber: mobileNumberWithoutCode,
+        email: selectedUser.email || '',
+        role: selectedUser.role || '',
+        status: selectedUser.status !== undefined ? selectedUser.status : true
+      });
+      setAvatar(selectedUser.image || null);
+    } else {
+      // Reset form when not editing
+      setFormData({
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        country: '',
+        city: '',
+        mobileNumber: '',
+        email: '',
+        role: '',
+        status: true
+      });
+      setAvatar(null);
+    }
+  }, [selectedUser]);
 
   const countryCodeOptions = [
     { code: "ae", flag: "🇦🇪", dialCode: "+971", label: "UAE" },
@@ -175,14 +193,26 @@ useEffect(() => {
     try {
       setIsSubmitting(true);
       setErrors({});
-      const validation = validateUserData(formData);
+      
+      // Combine country code with mobile number
+      const countryData = getSelectedCountryCodeData();
+      const fullMobileNumber = countryData ? `${countryData.dialCode} ${formData.mobileNumber}`.trim() : formData.mobileNumber;
+      
+      // Create a copy of formData with the combined mobile number
+      const formDataWithCountryCode = {
+        ...formData,
+        mobileNumber: fullMobileNumber
+      };
+      
+      const validation = validateUserData(formDataWithCountryCode);
       if (!validation.isValid) {
         console.log("not valid")
         setErrors(validation.errors);
         return;
       }
+      
       const userData = {
-        ...formData,
+        ...formDataWithCountryCode,
         image: avatar,
         name: `${formData.firstName} ${formData.lastName}`,
         countryDisplay:
@@ -194,10 +224,11 @@ useEffect(() => {
       };
 
       let savedUser;
+      console.log("userData===", userData)
       if (selectedUser) {
-        savedUser = await updateUser(selectedUser.id, userData);
+        savedUser = await SettingsService.updateUser(selectedUser.id, userData);
       } else {
-        savedUser = await addUser(userData);
+        savedUser = await SettingsService.createUser(userData);
       }
 
       console.log(
@@ -212,7 +243,7 @@ useEffect(() => {
       console.error("Error saving user:", error);
       setErrors((prev) => ({
         ...prev,
-        submit: error.message || "Failed to save user. Please try again.", // Make sure this is a string
+        submit: error.message || "Failed to save user. Please try again.",
       }));
     } finally {
       setIsSubmitting(false);
@@ -231,17 +262,17 @@ useEffect(() => {
     }
   };
 
-const getUserDisplayName = () => {
-  if (selectedUser && Object.keys(selectedUser).length > 0) {
-    if (selectedUser.name) {
-      return selectedUser.name;
+  const getUserDisplayName = () => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      if (selectedUser.name) {
+        return selectedUser.name;
+      }
+      return `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim();
     }
-    return `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim();
-  }
-  return 'Add New User';
-};
+    return 'Add New User';
+  };
 
- const isEditing = selectedUser && Object.keys(selectedUser).length > 0;
+  const isEditing = selectedUser && Object.keys(selectedUser).length > 0;
   const selectedCountryData = getSelectedCountryCodeData();
 
   return (

@@ -1,18 +1,19 @@
 
-/*import { TipReceiverListDto } from "../dtos/tipReceiverListDto";
+import { TipReceiverListDto } from "../dtos/tipReceiverListDto";
 import { TipReceiverDto } from "../dtos/tipReceiverDto";
 import { StatisticsDto } from "../dtos/statisticsDto";
 import { TipReceiverStatisticsDto } from "../dtos/tipReceiverStatisticsDto";
 import { TransactionsDto } from "../dtos/transactionsDto";
-import { PaymentInfoDto } from "../dtos/paymentInfoDto";*/
+import { PaymentInfoDto } from "../dtos/paymentInfoDto";
 import { apiService } from "../api/apiService"
 class TipReceiverService {
+    // eslint-disable-next-line no-useless-constructor
     constructor() {
     }
 
     async getTipReceivers(filters) {
-        //return [new TipReceiverListDto()]
-        try {
+    return [new TipReceiverListDto()]
+       /* try {
             const pageNumber = filters.pageNumber || 1;
             const pageSize = filters.pageSize || 10;
             const response = await apiService.post(`/TipReceiver?pageNumber=${pageNumber}&pageSize=${pageSize}`, filters);
@@ -20,56 +21,56 @@ class TipReceiverService {
         } catch (error) {
             console.error('Error fetching tip receivers:', error);
             return [];
-        }
+        }*/
     }
 
     async getTipReceiverById(id) {
-       // return new TipReceiverDto()
-       try {
+        return new TipReceiverDto()
+      /* try {
             const response = await apiService.get(`/TipReceiver/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching tip receiver by ID:', error);
             return null;
-        }
+        }*/
     }
 
     async getStatisticsByTipReceiverId(id) {
-        //return new TipReceiverStatisticsDto()
-       try {
+        return new TipReceiverStatisticsDto()
+       /*try {
             const response = await apiService.get(`/TipReceiver/Statistics/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching statistics by tip receiver ID:', error);
             return null;
-        }
+        }*/
     }
 
     async getStatistics() {
-      //  return new StatisticsDto()
-        try {
+       return new StatisticsDto()
+      /*  try {
             const response = await apiService.get(`/TipReceiver/Statistics`);
             return response.data;
         } catch (error) {
             console.error('Error fetching statistics:', error);
             return null;
-        }
+        }*/
     }
 
     async getTransactionsByTipReceiverId(id) {
-       // return [new TransactionsDto()]
-       try {
+        return [new TransactionsDto()]
+     /*  try {
             const response = await apiService.get(`/TipReceiver/Transactions/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching transactions by tip receiver ID:', error);
             return null;
-        }
+        }*/
     }
 
     async getPaymentInfoByTipReceiverId(id) {
-       // return new PaymentInfoDto()
-        try {
+        return new PaymentInfoDto()
+         /* try {
             const response = await apiService.get(`/TipReceiver/PaymentInfo/${id}`);
             if (response.success) {
                 const paymentInfoDto = {
@@ -87,8 +88,12 @@ class TipReceiverService {
         } catch (error) {
             console.error('Error fetching payment info by tip receiver ID:', error);
             return null;
-        }
+        }*/
     }
+    async reward(data)
+    {
+
+    } 
 
     async updatePaymentInfoByTipReceiverId(id, paymentInfoDto) {
         try {
@@ -130,5 +135,5 @@ class TipReceiverService {
     }
 
 }
-
+// eslint-disable-next-line import/no-anonymous-default-export
 export default new TipReceiverService();

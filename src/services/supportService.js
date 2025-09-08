@@ -3,9 +3,10 @@ import { TicketListDto } from "../dtos/supportDto/ticketListDto";
 import { StatisticsDto } from "../dtos/supportDto/statisticsDto";
 import { UserByTicket } from "../dtos//supportDto/userByTicket";
 import { TicketDetailsDto } from "../dtos/supportDto/ticketDetailsDto";
-
 import { apiService } from "../api/apiService";
+
 class SupportService {
+    // eslint-disable-next-line no-useless-constructor
     constructor() {
     }
 
@@ -21,8 +22,14 @@ class SupportService {
             return [];
         }*/
     }
+    async deleteTicket(id)
+    {
+        console.log(id);
+        return true
+    }
 
     async getUser(id) {
+        console.log("ticket id======",id)
         return new UserByTicket()
       /* try {
             const response = await apiService.get(`/TipReceiver/${id}`);
@@ -56,7 +63,7 @@ class SupportService {
             return null;
         }*/
     }
-
+     
 
     async updateTikcet(id, ticketDetailsDto) {
         return true
@@ -82,5 +89,5 @@ class SupportService {
 
 
 }
-
+// eslint-disable-next-line import/no-anonymous-default-export
 export default new SupportService();

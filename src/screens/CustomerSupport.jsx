@@ -205,8 +205,6 @@ const CustomerSupport = () => {
     if (allTickets.length === 0) return;
 
     let result = [...allTickets];
-
-    // Apply status filter
     if (statusFilter !== 'all') {
         const statusMap = {
         'pending': 'Pending',
@@ -273,6 +271,7 @@ const CustomerSupport = () => {
     }
     };
 
+
     const handleSelectTicket = (ticketId, checked) => {
     if (checked) {
         setSelectedTickets(prev => [...prev, ticketId]);
@@ -293,12 +292,14 @@ const CustomerSupport = () => {
     setCurrentView('details');
     };
 
+    console.log("currentView",currentView)
+
     const handleBackToList = () => {
     setCurrentView('list');
     setSelectedTicket(null);
     };  
     if (currentView === 'details') {
-    return <Ticket ticket={selectedTicket} onBack={handleBackToList} />;
+        return <Ticket ticket={selectedTicket} onBack={handleBackToList} />;
     }
 
     return (
