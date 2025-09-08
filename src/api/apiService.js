@@ -11,10 +11,10 @@ export const apiService = {
 
 
       const config = {};
-    /*  if (token) {
-        config.headers = { Authorization: `Bearer ${token}` };
-      }*/
- 
+      /*  if (token) {
+          config.headers = { Authorization: `Bearer ${token}` };
+        }*/
+
       const response = await api.get(`${BASE_URL}${endpoint}`);
 
       return response.data;
@@ -23,27 +23,27 @@ export const apiService = {
       throw error;
     }
   },
-  
-  async post(endpoint, data) {
+
+  async post(endpoint, data, config = {}) {
     try {
-      const response = await api.post(`${BASE_URL}${endpoint}`, data);
+      const response = await api.post(`${BASE_URL}${endpoint}`, data, config);
       return response.data;
     } catch (error) {
       console.error(`POST ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
-  
-  async put(endpoint, data = null) {
+
+  async put(endpoint, data = null, config = {}) {
     try {
-      const response = await api.put(`${BASE_URL}${endpoint}`, data);
+      const response = await api.put(`${BASE_URL}${endpoint}`, data, config);
       return response.data;
     } catch (error) {
       console.error(`PUT ${endpoint} error:`, error.response?.data || error.message);
       throw error;
     }
   },
-  
+
   async patch(endpoint, data = null) {
     try {
       const response = await api.patch(`${BASE_URL}${endpoint}`, data);
@@ -53,7 +53,7 @@ export const apiService = {
       throw error;
     }
   },
-  
+
   async delete(endpoint) {
     try {
       const response = await api.delete(`${BASE_URL}${endpoint}`);

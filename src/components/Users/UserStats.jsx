@@ -1,24 +1,26 @@
 //src/components/Users/UserStats.jsx
-import { Users as UsersIcon, UserCheck, UserPlus } from 'lucide-react';
+import { Users as UsersIcon, UserCheck } from 'lucide-react';
 import UserExclamationIcon from "../../assets/icons/UserExclamationIcon";
 
-const UserStats = ({ stats }) => {
+const UserStats = ({ stats = {} }) => {
+  const { total = 0, activeUsers = 0, newUsers = 0 } = stats;
+
   const statCards = [
     {
       title: 'Total No. of Users',
-      value: stats.total.toLocaleString(),
+      value: total.toLocaleString(),
       icon: UsersIcon,
       bgColor: 'bg-secondary',
     },
     {
       title: 'Total No. of Active Users',
-      value: stats.activeUsers.toLocaleString(),
+      value: activeUsers.toLocaleString(),
       icon: UserCheck,
       bgColor: 'bg-success',
     },
     {
       title: 'Total No. of Pending Users',
-      value: stats.newUsers.toLocaleString(),
+      value: newUsers.toLocaleString(),
       icon: UserExclamationIcon,
       bgColor: 'bg-orange_600',
     }

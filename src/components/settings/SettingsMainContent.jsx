@@ -1,5 +1,5 @@
 // src/components/settings/SettingsMainContent.jsx
-import { useMemo, useState, useEffect,useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { 
   Users,            
   UserCheck,        
@@ -17,45 +17,144 @@ import FilterModal from '../Users/modals/FilterModal.jsx';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
 import SettingsService from '../../services/settingsService.js';
+import lookupService from '../../services/lookupService.js';
+import { useSettings } from '../../context/SettingsContext';
 
 const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [statsData, setStatsData] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(null);
-  const [error] = useState("");
-  const [appliedFilters, setAppliedFilters] = useState({
-    country: '',
-    city: '',
-    createdOn: '',
-    status: ''
-  });
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [modalFilters, setModalFilters] = useState({}); 
+  const [statsData, setStatsData] = useState({});
+  const { changeUser } = useSettings();
+  const [allCountries, setAllCountries] = useState([]);
 
-
+  const [filterConfig, setFilterConfig] = useState([
+    { key: 'country', label: 'Country', type: 'dropdown', options: [] },
+    { key: 'city', label: 'City', type: 'dropdown', options: [], disabled: true },
+    { key: 'type', label: 'Type', type: 'dropdown', options: [] },
+  ]);
 
   useEffect(() => {
-    const loadInitialData = async () => {
+    const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const users = await SettingsService.getUsers({});
-        setFilteredUsers(users);
-        
-        // Load statistics
-        const stats = await SettingsService.getStatistics();
-        setStatsData(stats);
+        const [usersData, stats, countryData] = await Promise.all([
+          SettingsService.getUsers(),
+          SettingsService.getStatistics(),
+          lookupService.getCountries(),
+        ]);
+
+        setUsers(usersData || []);
+        setStatsData(stats || {});
+        setAllCountries(countryData || []);
+
+        const countryOptions = countryData ? countryData.map(c => ({ value: c.id, label: c.name })) : [];
+        const typeOptions = [
+          { value: 0, label: 'SuperAdmin' },
+          { value: 1, label: 'Admin' },
+          { value: 2, label: 'Marketing' },
+          { value: 3, label: 'CustomerSupport' },
+        ];
+
+        setFilterConfig(prevConfig => [
+          { ...prevConfig[0], options: countryOptions },
+          { ...prevConfig[1] }, // City options will be updated on country change
+          { ...prevConfig[2], options: typeOptions },
+        ]);
+
       } catch (error) {
-        console.error('Error loading initial data:', error);
+        console.error('Failed to fetch initial data or filter options:', error);
       } finally {
         setLoading(false);
       }
     };
-    
-    loadInitialData();
+
+    fetchInitialData();
   }, []);
 
-  // Calculate statistics using the fetched data
+  const handleOpenFilterModal = () => {
+    setModalFilters(appliedFilters); 
+    setIsFilterModalOpen(true);
+  };
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(filters);
+    setIsFilterModalOpen(false);
+  };
+
+  const handleLiveFilterChange = (updatedFilters) => {
+    setModalFilters(updatedFilters);
+
+    const countryId = updatedFilters.country;
+    const currentCountryId = modalFilters.country;
+
+    if (countryId !== currentCountryId) {
+      const selectedCountry = allCountries.find(c => c.id === countryId);
+      const cityOptions = selectedCountry ? selectedCountry.cities.map(city => ({ value: city.id, label: city.name })) : [];
+      
+      setFilterConfig(prevConfig => [
+        prevConfig[0],
+        { ...prevConfig[1], options: cityOptions, disabled: !countryId },
+        prevConfig[2],
+      ]);
+
+      // Reset city if country changes
+      if (updatedFilters.city) {
+        setModalFilters(prev => ({ ...prev, city: '' }));
+      }
+    }
+  };
+
+  const getUserRoleDisplayName = useCallback((userRole) => {
+    const roleMap = {
+      0: 'SuperAdmin',
+      1: 'Admin',
+      2: 'Marketing',
+      3: 'CustomerSupport',
+    };
+    return roleMap[userRole] || userRole;
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
+
+    // Apply dropdown filters first
+    if (Object.values(appliedFilters).some(v => v)) {
+      filtered = filtered.filter(user => {
+        return Object.entries(appliedFilters).every(([key, value]) => {
+          if (!value) return true; // Ignore empty filters
+          if (key === 'type') {
+            return user.role === value;
+          }
+          return String(user[key]) === String(value);
+        });
+      });
+    }
+
+    // Then apply search term filter to the already filtered list
+    if (searchTerm) {
+      filtered = filtered.filter(user => {
+        const searchableContent = [
+          user.firstName, 
+          user.lastName, 
+          user.email, 
+          user.mobileNumber, 
+          user.countryName, 
+          user.cityName,
+          getUserRoleDisplayName(user.role)
+        ].join(' ').toLowerCase();
+        return searchableContent.includes(searchTerm.toLowerCase());
+      });
+    }
+
+    return filtered;
+  }, [users, searchTerm, appliedFilters, getUserRoleDisplayName]);
+
   const stats = useMemo(() => {
+    const totalUsers = filteredUsers.length;
     if (!statsData) return [];
     
     return [
@@ -73,86 +172,71 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
       },
       {
         title: 'Super Admin',
-        value: statsData.totalNumberOfSuperAdmin,
+        value: statsData.totalNumberOfSuperAdmins,
         icon: <UserCog />,
         iconBackgroundColor: AppColors.cyan_600
       },
       {
         title: 'Admin',
-        value: statsData.totalNumberOfAdmin,
+        value: statsData.totalNumberOfAdmins,
         icon: <User />,
         iconBackgroundColor: AppColors.blue_600
       },
       {
         title: 'Marketing',
-        value: statsData.totalNumberOfMarekting,
+        value: statsData.totalNumberOfMaketingUsers,
         icon: <Megaphone />,
         iconBackgroundColor: AppColors.orange_600
       },
       {
         title: 'Customer Support',
-        value: statsData.totalNumberOfSupport,
+        value: statsData.totalNumberOfCustomerSupportUsers,
         icon: <Headphones />,
         iconBackgroundColor: AppColors.gray_800
       }
     ];
-  }, [statsData]);
-      const getUserStats = useCallback(() => {
-      const totalUsers = filteredUsers.length;
-      const activeUsers = filteredUsers.filter(user => user.status === true).length;
-      const inactiveUsers = totalUsers - activeUsers;
-      
-      // Role-based statistics
-      const roleStats = {
-        superadmin: filteredUsers.filter(user => user.userRole === 'superadmin').length,
-        admin: filteredUsers.filter(user => user.userRole === 'admin').length,
-        marketing: filteredUsers.filter(user => user.userRole === 'marketing').length,
-        customersupport: filteredUsers.filter(user => user.userRole === 'customersupport').length
-      };
+  }, [statsData, filteredUsers]);
+
+  const getUserStats = useCallback(() => {
+    const totalUsers = filteredUsers.length;
+    const activeUsers = filteredUsers.filter(user => user.status === true).length;
+    const inactiveUsers = totalUsers - activeUsers;
+    
+    // Role-based statistics
+    const roleStats = {
+      superadmin: filteredUsers.filter(user => user.userRole === 'superadmin').length,
+      admin: filteredUsers.filter(user => user.userRole === 'admin').length,
+      marketing: filteredUsers.filter(user => user.userRole === 'marketing').length,
+      customersupport: filteredUsers.filter(user => user.userRole === 'customersupport').length
+    };
   
-      return {
-        totalUsers,
-        activeUsers,
-        inactiveUsers,
-        ...roleStats
-      };
-    }, [filteredUsers]);
+    return {
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      ...roleStats
+    };
+  }, [filteredUsers]);
+
   const deleteUser = useCallback((userId) => {
-        try {
-          
-        } catch (error) {
-         
-          throw error;
-        }
-      }, []);
-  const getUserRoleDisplayName = useCallback((userRole) => {
-          const roleMap = {
-            'superadmin': 'Super Admin',
-            'admin': 'Admin', 
-            'marketing': 'Marketing',
-            'customersupport': 'Customer Support'
-          };
-          return roleMap[userRole] || userRole;
-        }, []);
-    
-    
-  
+    try {
+      
+    } catch (error) {
+     
+      throw error;
+    }
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
   const handleFilter = () => {
-    setIsFilterModalOpen(true);
+    handleOpenFilterModal();
   };
 
   const handleCloseFilterModal = () => {
     setIsFilterModalOpen(false);
-  };
-
-  const handleApplyFilters = (filters) => {
-    setAppliedFilters(filters);
-    console.log('Applied filters:', filters);
   };
 
   const handleEditUser = (user) => {
@@ -182,11 +266,11 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
     );
   }
 
-  if (error) {
+  if (statsData.error) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
+          <p className="text-red-600 mb-4">Error: {statsData.error}</p>
           <Button
             onClick={() => window.location.reload()}
             backgroundColor={AppColors.primary}
@@ -288,12 +372,16 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
               <UserCard
                 key={user.id}
                 name={user.name || `${user.firstName} ${user.lastName}`.trim()}
-                country={`${user.cityDisplay || user.city}, ${user.countryDisplay || user.country}`}
+                country={`${user.cityName}, ${user.countryName}`}
                 email={user.email}
                 phone={user.mobileNumber}
                 photo={user.image}
-                status={getUserRoleDisplayName(user.role)}
-                isActive={user.status}
+                type={user.type}
+                countryName={user.countryName}
+                cityName={user.cityName}
+                birthdate={user.birthdate}
+                isActive={user.status === 1}
+                role={getUserRoleDisplayName(user.role)}
                 onEdit={() => handleEditUser(user)}
                 onDelete={() => handleDeleteUser(user.id)}
                 isFirst={index === 0}
@@ -345,7 +433,9 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
         isOpen={isFilterModalOpen}
         onClose={handleCloseFilterModal}
         onApplyFilters={handleApplyFilters}
-        currentFilters={appliedFilters}
+        onFilterChange={handleLiveFilterChange}
+        currentFilters={modalFilters}
+        filterConfig={filterConfig}
       />
     </div>
   );

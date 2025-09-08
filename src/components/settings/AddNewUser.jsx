@@ -9,6 +9,7 @@ import Button from "../signIn/Button.jsx";
 import AppColors from "../../utils/AppColors.js";
 import AppFonts from "../../utils/AppFonts.js";
 import { useSettings } from "../../context/SettingsContext.js";
+import lookupService from "../../services/lookupService.js";
 
 const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
   const { selectedUser, validateUserData, error } = useSettings();
@@ -17,9 +18,9 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    dateOfBirth: "",
-    country: "",
-    city: "",
+    birthdate: "",
+    countryId: "",
+    cityId: "",
     mobileNumber: "",
     email: "",
     role: "",
@@ -28,7 +29,10 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
 
   const [avatar, setAvatar] = useState(null);
   const [errors, setErrors] = useState({});
-  const [selectedCountryCode, setSelectedCountryCode] = useState("ae");
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [countryCodeOptions, setCountryCodeOptions] = useState([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,76 +41,84 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
     clearError();
   }, [clearError]);
 
+  useEffect(() => {
+    const fetchCountries = async () => {
+      const countryData = await lookupService.getCountries();
+      if (countryData && Array.isArray(countryData)) {
+        setCountries(countryData);
+        const codeOptions = countryData.map(c => ({
+          code: c.code.toLowerCase(),
+          flag: c.flag,
+          phoneCode: c.phoneCode,
+          label: c.name
+        }));
+        setCountryCodeOptions(codeOptions);
+      }
+    };
+    fetchCountries();
+  }, []);
 
-useEffect(() => {
-  if (selectedUser && Object.keys(selectedUser).length > 0) {
-    setFormData({
-      firstName: selectedUser.firstName || '',
-      lastName: selectedUser.lastName || '',
-      dateOfBirth: selectedUser.dateOfBirth || '',
-      country: selectedUser.country || '',
-      city: selectedUser.city || '',
-      mobileNumber: selectedUser.mobileNumber || '',
-      email: selectedUser.email || '',
-      role: selectedUser.role || '',
-      status: selectedUser.status !== undefined ? selectedUser.status : true
-    });
-    setAvatar(selectedUser.image || null);
-  } else {
-    // Reset form when not editing
-    setFormData({
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      country: '',
-      city: '',
-      mobileNumber: '',
-      email: '',
-      role: '',
-      status: true
-    });
-    setAvatar(null);
-  }
-}, [selectedUser]);
+  useEffect(() => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      let mobile = selectedUser.mobileNumber || '';
+      if (selectedUser.mobileNumber && countryCodeOptions.length > 0) {
+        const sortedCodes = [...countryCodeOptions].sort((a, b) => (b.phoneCode?.length || 0) - (a.phoneCode?.length || 0));
+        const matchedCode = sortedCodes.find(c => c.phoneCode && selectedUser.mobileNumber.startsWith(c.phoneCode));
+        if (matchedCode) {
+          setSelectedCountryCode(matchedCode.code);
+          mobile = selectedUser.mobileNumber.substring(matchedCode.phoneCode.length);
+        }
+      }
 
-  const countryCodeOptions = [
-    { code: "ae", flag: "🇦🇪", dialCode: "+971", label: "UAE" },
-    { code: "sa", flag: "🇸🇦", dialCode: "+966", label: "Saudi Arabia" },
-    { code: "us", flag: "🇺🇸", dialCode: "+1", label: "United States" },
-    { code: "uk", flag: "🇬🇧", dialCode: "+44", label: "United Kingdom" },
-    { code: "ca", flag: "🇨🇦", dialCode: "+1", label: "Canada" },
-    { code: "au", flag: "🇦🇺", dialCode: "+61", label: "Australia" },
-  ];
+      setFormData({
+        firstName: selectedUser.firstName || '',
+        lastName: selectedUser.lastName || '',
+        birthdate: selectedUser.birthdate || '',
+        countryId: selectedUser.country || '',
+        cityId: selectedUser.city || '',
+        mobileNumber: mobile,
+        email: selectedUser.email || '',
+        role: selectedUser.role || 0,
+        status: selectedUser.status !== undefined ? selectedUser.status : true
+      });
 
-  const countryOptions = [
-    { value: "uae", label: "United Arab Emirates" },
-    { value: "usa", label: "United States" },
-    { value: "uk", label: "United Kingdom" },
-    { value: "canada", label: "Canada" },
-    { value: "australia", label: "Australia" },
-    { value: "saudi", label: "Saudi Arabia" },
-    { value: "egypt", label: "Egypt" },
-    { value: "jordan", label: "Jordan" },
-  ];
+      setAvatar(selectedUser.image || null);
 
-  const cityOptions = [
-    { value: "dubai", label: "Dubai" },
-    { value: "abudhabi", label: "Abu Dhabi" },
-    { value: "sharjah", label: "Sharjah" },
-    { value: "ajman", label: "Ajman" },
-    { value: "riyadh", label: "Riyadh" },
-    { value: "jeddah", label: "Jeddah" },
-    { value: "newyork", label: "New York" },
-    { value: "london", label: "London" },
-    { value: "toronto", label: "Toronto" },
-    { value: "sydney", label: "Sydney" },
-  ];
+      if (selectedUser.country && countries.length > 0) {
+        const selectedCountry = countries.find(c => c.id === selectedUser.country);
+        if (selectedCountry) {
+          setCities(selectedCountry.cities || []);
+        }
+      }
+
+    } else {
+      setFormData({
+        firstName: '',
+        lastName: '',
+        birthdate: '',
+        countryId: '',
+        cityId: '',
+        mobileNumber: '',
+        email: '',
+        role: 0,
+        status: true
+      });
+      setAvatar(null);
+      setCities([]);
+    }
+  }, [selectedUser, countries]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    if (field === 'countryId') {
+      const selectedCountry = countries.find(c => c.id === value);
+      setCities(selectedCountry ? selectedCountry.cities : []);
+      setFormData(prev => ({ ...prev, cityId: '' })); // Reset city
+    }
 
     if (errors[field]) {
       setErrors((prev) => ({
@@ -175,24 +187,32 @@ useEffect(() => {
     try {
       setIsSubmitting(true);
       setErrors({});
+      console.log("formData", formData);
       const validation = validateUserData(formData);
       if (!validation.isValid) {
         console.log("not valid")
         setErrors(validation.errors);
         return;
       }
+      const selectedCountryData = getSelectedCountryCodeData();
+      const fullMobileNumber = selectedCountryData?.phoneCode
+        ? `${selectedCountryData.phoneCode}${formData.mobileNumber}`
+        : formData.mobileNumber;
+
       const userData = {
         ...formData,
+        mobileNumber: fullMobileNumber,
         image: avatar,
         name: `${formData.firstName} ${formData.lastName}`,
         countryDisplay:
-          countryOptions.find((c) => c.value === formData.country)?.label ||
-          formData.country,
-        cityDisplay:
-          cityOptions.find((c) => c.value === formData.city)?.label ||
-          formData.city,
+          countries.find((c) => c.id === formData.countryId)?.name ||
+          formData.countryId,
+        city:
+          cities.find((c) => c.id === formData.cityId)?.name ||
+          formData.cityId,
       };
-
+      userData.status = formData.status ? 1 : 0;
+      userData.type = formData.role;
       let savedUser;
       if (selectedUser) {
         savedUser = await updateUser(selectedUser.id, userData);
@@ -231,17 +251,17 @@ useEffect(() => {
     }
   };
 
-const getUserDisplayName = () => {
-  if (selectedUser && Object.keys(selectedUser).length > 0) {
-    if (selectedUser.name) {
-      return selectedUser.name;
+  const getUserDisplayName = () => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      if (selectedUser.name) {
+        return selectedUser.name;
+      }
+      return `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim();
     }
-    return `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim();
-  }
-  return 'Add New User';
-};
+    return 'Add New User';
+  };
 
- const isEditing = selectedUser && Object.keys(selectedUser).length > 0;
+  const isEditing = selectedUser && Object.keys(selectedUser).length > 0;
   const selectedCountryData = getSelectedCountryCodeData();
 
   return (
@@ -330,11 +350,10 @@ const getUserDisplayName = () => {
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className={`inline-block mt-2 ${
-                    isSubmitting
+                  className={`inline-block mt-2 ${isSubmitting
                       ? "cursor-not-allowed opacity-50"
                       : "cursor-pointer"
-                  }`}
+                    }`}
                 >
                   <span
                     className="
@@ -357,11 +376,10 @@ const getUserDisplayName = () => {
             {/* Status Switch - moved to right side */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${
-                  isSubmitting
+                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${isSubmitting
                     ? "cursor-not-allowed opacity-50"
                     : "cursor-pointer"
-                }`}
+                  }`}
                 onClick={handleStatusToggle}
               >
                 <span
@@ -416,9 +434,9 @@ const getUserDisplayName = () => {
               label="Date of Birth"
               type="date"
               placeholder="Select"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-              error={errors?.dateOfBirth}
+              value={formData.birthdate}
+              onChange={(e) => handleInputChange("birthdate", e.target.value)}
+              error={errors?.birthdate}
               disabled={isSubmitting}
             />
 
@@ -426,11 +444,11 @@ const getUserDisplayName = () => {
             <SelectField
               label="Country"
               placeholder="Select"
-              value={formData.country}
-              onChange={(option) => handleInputChange("country", option.value)}
-              options={countryOptions}
+              value={formData.countryId}
+              onChange={(option) => handleInputChange("countryId", option.value)}
+              options={countries.map(c => ({ value: c.id, label: c.name }))}
               required
-              error={errors?.country}
+              error={errors?.countryId}
               disabled={isSubmitting}
             />
 
@@ -438,12 +456,12 @@ const getUserDisplayName = () => {
             <SelectField
               label="City"
               placeholder="Select"
-              value={formData.city}
-              onChange={(option) => handleInputChange("city", option.value)}
-              options={cityOptions}
+              value={formData.cityId}
+              onChange={(option) => handleInputChange("cityId", option.value)}
+              options={cities.map(c => ({ value: c.id, label: c.name }))}
               required
-              error={errors?.city}
-              disabled={isSubmitting}
+              error={errors?.cityId}
+              disabled={isSubmitting || !formData.countryId} // Disable if no country is selected
             />
 
             {/* Phone Number with Country Code Dropdown */}
@@ -471,16 +489,15 @@ const getUserDisplayName = () => {
                         flex items-center px-2 h-full
                         bg-gray-100 rounded-md
                         hover:bg-gray-200
-                        ${
-                          isSubmitting
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer"
+                        ${isSubmitting
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
                         }
                       `}
                       onClick={
                         !isSubmitting
                           ? () =>
-                              setIsCountryDropdownOpen(!isCountryDropdownOpen)
+                            setIsCountryDropdownOpen(!isCountryDropdownOpen)
                           : undefined
                       }
                     >
@@ -496,7 +513,7 @@ const getUserDisplayName = () => {
                         className="text-black font-medium mr-1 text-sm"
                         style={AppFonts.smMedium({ color: AppColors.black })}
                       >
-                        {selectedCountryData?.dialCode}
+                        {selectedCountryData?.phoneCode}
                       </span>
                       <ChevronDown className="w-3 h-3 text-gray-400" />
                     </div>
@@ -534,7 +551,7 @@ const getUserDisplayName = () => {
                                     color: AppColors.black,
                                   })}
                                 >
-                                  {option.dialCode}
+                                  {option.phoneCode}
                                 </span>
                                 <span
                                   className="text-gray-600 text-sm"

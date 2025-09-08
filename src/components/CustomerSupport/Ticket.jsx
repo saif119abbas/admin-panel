@@ -5,7 +5,7 @@ import TicketUserCard from './TicketUserCard';
 import TicketDetailsCard from './TicketDetailsCard';
 import ReasonMessageSection from './ReasonMessageSection';
 import RewardModal from '../Users/modals/RewardModal';
-import  SupportService from "../../services/supportService"
+import  supportService from "../../services/supportService"
   const defaultTicketData = {
     ticketId: 'TCK-00123',
     user: {
@@ -36,7 +36,7 @@ const Ticket = ({ ticket }) => {
           await new Promise(resolve => setTimeout(resolve, 500));
           try {
   
-          const userData=await SupportService.getUser(ticket.id)
+          const userData=await supportService.getUser(ticket.id)
           console.log("user Data",userData)
           setUser(userData);
           

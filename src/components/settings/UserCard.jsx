@@ -12,20 +12,20 @@ const UserCard = ({
   email,
   phone,
   photo,
-  status, 
-  isActive = true,
+  role, 
+  isActive,
   onEdit,
   onDelete,
   isLast = false,
   id,
   className = ""
 }) => {
-  const getStatusColor = (status) => {
-    const statusLower = status?.toLowerCase() || '';
-    if (statusLower.includes('super admin')) return AppColors.primary;
-    if (statusLower.includes('admin')) return AppColors.info_500;
-    if (statusLower.includes('marketing')) return AppColors.orange_600;
-    if (statusLower.includes('customer support')) return AppColors.gray_800;
+  const getroleColor = (role) => {
+    const roleLower = role?.toLowerCase() || '';
+    if (roleLower.includes('super admin')) return AppColors.primary;
+    if (roleLower.includes('admin')) return AppColors.info_500;
+    if (roleLower.includes('marketing')) return AppColors.orange_600;
+    if (roleLower.includes('customer support')) return AppColors.gray_800;
     return AppColors.primary;
   };
 
@@ -109,22 +109,22 @@ const UserCard = ({
               </p>
             </div>
 
-            {/* Role Status Badge */}
+            {/* Role role Badge */}
             <div className="mt-1.5">
               <span
                 className="px-3 py-1 rounded-full text-xs font-medium text-white inline-block"
                 style={{
-                  backgroundColor: getStatusColor(status),
+                  backgroundColor: getroleColor(role),
                   ...AppFonts.h6({ color: AppColors.white })
                 }}
               >
-                {status}
+                {role}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right side - Action buttons and active status */}
+        {/* Right side - Action buttons and active role */}
         <div className="flex flex-col items-center sm:items-end justify-center space-y-3 flex-shrink-0">
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
@@ -146,7 +146,7 @@ const UserCard = ({
             />
           </div>
 
-          {/* Active/Inactive status indicator */}
+          {/* Active/Inactive role indicator */}
           <div className="flex items-center space-x-2">
             <span 
               className={`text-sm font-medium ${isActive ? 'text-green-500' : 'text-red-500'}`}

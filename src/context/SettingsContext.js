@@ -50,15 +50,15 @@ function SettingsProvider({ children }) {
        console.log(userData.mobileNumber)
       errors.mobileNumber = "Phone number is required";
     }
-    if (!userData.country) {
-        console.log(userData.country)
-      errors.country = "Country is required";
+    if (!userData.countryId) {
+        console.log(userData.countryId)
+      errors.countryId = "Country is required";
     }
-    if (!userData.city) {
-        console.log(userData.city)
+    if (!userData.cityId) {
+        console.log(userData.cityId)
       errors.city = "City is required";
     }
-    if (!userData.role) {
+    if (userData.role == null) {
          console.log(userData.role)
       errors.role = "User role is required";
     }

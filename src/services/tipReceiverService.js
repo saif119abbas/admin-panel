@@ -1,22 +1,14 @@
-
-/*import { TipReceiverListDto } from "../dtos/tipReceiverListDto";
-import { TipReceiverDto } from "../dtos/tipReceiverDto";
-import { StatisticsDto } from "../dtos/statisticsDto";
-import { TipReceiverStatisticsDto } from "../dtos/tipReceiverStatisticsDto";
-import { TransactionsDto } from "../dtos/transactionsDto";
-import { PaymentInfoDto } from "../dtos/paymentInfoDto";*/
 import { apiService } from "../api/apiService"
 class TipReceiverService {
     constructor() {
     }
 
     async getTipReceivers(filters) {
-        //return [new TipReceiverListDto()]
         try {
             const pageNumber = filters.pageNumber || 1;
             const pageSize = filters.pageSize || 10;
             const response = await apiService.post(`/TipReceiver?pageNumber=${pageNumber}&pageSize=${pageSize}`, filters);
-            return response.data;
+            return response.data.items;
         } catch (error) {
             console.error('Error fetching tip receivers:', error);
             return [];
@@ -24,8 +16,7 @@ class TipReceiverService {
     }
 
     async getTipReceiverById(id) {
-       // return new TipReceiverDto()
-       try {
+        try {
             const response = await apiService.get(`/TipReceiver/${id}`);
             return response.data;
         } catch (error) {
@@ -35,8 +26,7 @@ class TipReceiverService {
     }
 
     async getStatisticsByTipReceiverId(id) {
-        //return new TipReceiverStatisticsDto()
-       try {
+        try {
             const response = await apiService.get(`/TipReceiver/Statistics/${id}`);
             return response.data;
         } catch (error) {
@@ -46,7 +36,6 @@ class TipReceiverService {
     }
 
     async getStatistics() {
-      //  return new StatisticsDto()
         try {
             const response = await apiService.get(`/TipReceiver/Statistics`);
             return response.data;
@@ -57,10 +46,11 @@ class TipReceiverService {
     }
 
     async getTransactionsByTipReceiverId(id) {
-       // return [new TransactionsDto()]
-       try {
-            const response = await apiService.get(`/TipReceiver/Transactions/${id}`);
-            return response.data;
+        try {
+            const response = await apiService.post(`/TipTransaction`, {
+                tipReceiverId: id
+            });
+            return response.data.items;
         } catch (error) {
             console.error('Error fetching transactions by tip receiver ID:', error);
             return null;
@@ -68,16 +58,15 @@ class TipReceiverService {
     }
 
     async getPaymentInfoByTipReceiverId(id) {
-       // return new PaymentInfoDto()
         try {
             const response = await apiService.get(`/TipReceiver/PaymentInfo/${id}`);
             if (response.success) {
                 const paymentInfoDto = {
                     id: response.data.id,
                     accountHolderName: response.data.accountHolderName,
-                    IBAN: response.data.IBAN,
+                    IBAN: response.data.iban,
                     bankName: response.data.bankName,
-                    countryId: response.data.bankCountryId
+                    countryId: response.data.countryId
                 }
                 return paymentInfoDto;
             } else {
@@ -129,6 +118,17 @@ class TipReceiverService {
         return true;
     }
 
+    async getTipReceiverQRCode(id) {
+        try {
+            const response = await apiService.get(`/QRCode/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching tip receiver QR code:', error);
+            return null;
+        }
+    }
+
 }
 
-export default new TipReceiverService();
+const tipReceiverService = new TipReceiverService();
+export { tipReceiverService as default };

@@ -1,50 +1,34 @@
 import { Eye, Trash2 } from 'lucide-react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
+import { formatTicketStatus, formatTicketSubject, formatDate,formatTime } from '../../utils/formatters';
 
-const SupportTable = ({ 
-  tickets, 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  selectedTickets, 
-  onSelectTicket, 
+const SupportTable = ({
+  tickets,
+  currentPage,
+  totalPages,
+  onPageChange,
+  selectedTickets,
+  onSelectTicket,
   onTicketClick,
-  loading = false 
+  loading = false
 }) => {
-  
+
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Pending':
+    switch (status) {
+      case 1:
         return 'text-warning';
-      case 'In-progress':
+      case 2:
         return 'text-info';
-      case 'Resolved':
+      case 3:
         return 'text-success';
       default:
         return 'text-gray-600';
     }
   };
-  const onClick=async(ticket)=>
-  {
+  const onClick = async (ticket) => {
     console.log("ticket data clicked")
     await onTicketClick(ticket.id)
   }
-
-  /*const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'Critical':
-        return 'text-red-600 font-semibold';
-      case 'High':
-        return 'text-red-500';
-      case 'Medium':
-        return 'text-yellow-600';
-      case 'Low':
-        return 'text-green-600';
-      default:
-        return 'text-gray-600';
-    }
-  };*/
-
 
   const generatePageNumbers = () => {
     const pages = [];
@@ -70,7 +54,7 @@ const SupportTable = ({
 
     return pages;
   };
-  console.log("tickets",tickets)
+  console.log("tickets", tickets)
 
   if (loading && tickets.length === 0) {
     return (
@@ -99,7 +83,7 @@ const SupportTable = ({
 
           <tbody>
             {tickets.map((ticket) => (
-              
+
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
                 <td className="px-6 py-2 w-16">
                   <input
@@ -113,31 +97,31 @@ const SupportTable = ({
                   />
                 </td>
                 <td className="px-0 py-4">
-                  <span className="text-md text-text font-medium">{ticket.id}</span>
+                  <span className="text-md text-text font-medium">{ticket.ticketId}</span>
                 </td>
                 <td className="px-4 py-4">
                   <span className="text-md text-text">{ticket.username}</span>
                 </td>
                 <td className="px-4 py-4">
                   <span className="text-md text-text max-w-xs truncate inline-block" title={ticket.subject}>
-                    {ticket.subject}
+                    {formatTicketSubject(ticket.issueType)}
                   </span>
                 </td>
                 <td className="px-4 py-4">
                   <span className={`text-md ${getStatusColor(ticket.status)}`}>
-                    {ticket.status}
+                    {formatTicketStatus(ticket.status)}
                   </span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{ticket.dateSubmitted}</span>
+                  <span className="text-md text-text">{formatDate(ticket.createdAt) + ' ' + formatTime(ticket.createdAt)}</span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{ticket.lastUpdated}</span>
+                  <span className="text-md text-text">{formatDate(ticket.lastUpdatedAt) + ' ' + formatTime(ticket.lastUpdatedAt)}</span>
                 </td>
                 <td className="px-2 py-4">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>  onClick(ticket)}
+                      onClick={() => onClick(ticket)}
                       className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
                       title="View Details"
                     >
@@ -170,13 +154,12 @@ const SupportTable = ({
                 key={index}
                 onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...' || loading}
-                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
-                  page === currentPage
+                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${page === currentPage
                     ? 'bg-primary text-white'
                     : page === '...'
-                    ? 'text-black cursor-default'
-                    : 'bg-gray-100 text-black hover:bg-gray-200'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'text-black cursor-default'
+                      : 'bg-gray-100 text-black hover:bg-gray-200'
+                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {page}
               </button>

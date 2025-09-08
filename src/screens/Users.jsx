@@ -1,5 +1,5 @@
 // src/screens/Users.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import UserTable from '../components/Users/UserTable';
 import UserStats from '../components/Users/UserStats';
 import UserFilters from '../components/Users/UserFilters';
@@ -8,167 +8,143 @@ import UserProfile from '../components/Users/UserProfile';
 import '../App.css';
 import { useUser } from '../context/UserContext';
 import TipReceiverService from '../services/tipReceiverService';
+import lookupService from '../services/lookupService';
 
 const Users = () => {
-  const {allUsers,setAllUsers,stats, setStats,selectedUser,setSelectedUser}=useUser()
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [loading, setLoading] = useState(true);  
+  const { allUsers, setAllUsers, stats, setStats, selectedUser, setSelectedUser } = useUser();
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectCurrentPage, setSelectCurrentPage] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState({
-    country: '',
-    city: '',
-    createdOn: '',
-    status: ''
-  });
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [modalFilters, setModalFilters] = useState({});
+  const [allCountries, setAllCountries] = useState([]);
+  const [filterConfig, setFilterConfig] = useState([
+    { key: 'country', label: 'Country', type: 'dropdown', options: [] },
+    { key: 'status', label: 'Status', type: 'dropdown', options: [] },
+  ]);
   const [currentView, setCurrentView] = useState('list');
 
-  // Debounce search term to avoid too many re-renders
-  useEffect(() => {
-    const timerId = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms delay
-
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [searchTerm]);
-
-  // Load initial data (stats and all users)
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
       try {
-        const users=await TipReceiverService.getTipReceivers({
-          
-        })
-        setAllUsers(users);
-        const newStats=await TipReceiverService.getStatistics()
-        setStats({
-          total: newStats.totalNumberOfUsers,
-          activeUsers: newStats.totalNumberOfActiveUsers,
-          newUsers: newStats.totalNumberOfPendingUsers 
-        });
-        
-        setFilteredUsers(allUsers);
-        
+        const [usersData, statsData, countryData] = await Promise.all([
+          TipReceiverService.getTipReceivers({}),
+          TipReceiverService.getStatistics(),
+          lookupService.getCountries(),
+        ]);
+
+        setAllUsers(usersData || []);
+        setStats(statsData || {});
+        setAllCountries(countryData || []);
+
+        const countryOptions = countryData ? countryData.map(c => ({ value: c.id, label: c.name })) : [];
+        const statusOptions = [
+          { value: 'Active', label: 'Active' },
+          { value: 'Pending', label: 'Pending' },
+        ];
+
+        setFilterConfig([
+          { key: 'country', label: 'Country', type: 'dropdown', options: countryOptions },
+          { key: 'status', label: 'Status', type: 'dropdown', options: statusOptions },
+        ]);
+
       } catch (error) {
-        console.error('Error loading initial data:', error);
+        console.error('Failed to fetch initial data:', error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadInitialData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Apply filters when they change
   useEffect(() => {
-    if (allUsers===undefined ||  allUsers.length === 0) return;
-    
-    let result = [...allUsers];
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(user => 
-        statusFilter === 'active' ? user.status === 'Active' : user.status === 'Pending'
-      );
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timerId);
+  }, [searchTerm]);
+
+  const getCountryNameById = useCallback((countryId) => {
+    if (!allCountries.length) return countryId;
+    const country = allCountries.find(c => c.id === countryId);
+    return country ? country.name : countryId;
+  }, [allCountries]);
+
+  const processedUsers = useMemo(() => {
+    let filtered = allUsers;
+
+    if (Object.values(appliedFilters).some(v => v)) {
+      filtered = filtered.filter(user => {
+        return Object.entries(appliedFilters).every(([key, value]) => {
+          if (!value) return true;
+          if (key === 'country') return user.countryId === value;
+          if (key === 'status') {
+            const isPending = value === 'Pending';
+            return user.isPending === isPending;
+          }
+          return String(user[key]).toLowerCase() === String(value).toLowerCase();
+        });
+      });
     }
-    
-    // Apply search filter with debounced term - SEARCH IN ALL FIELDS
+
     if (debouncedSearchTerm) {
       const searchLower = debouncedSearchTerm.toLowerCase();
-      result = result.filter(user => 
-        user.name.toLowerCase().includes(searchLower) || 
-        user.country.toLowerCase().includes(searchLower) ||
-        user.city.toLowerCase().includes(searchLower) ||
-        user.status.toLowerCase().includes(searchLower) ||
-        user.createdOn.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(user =>
+        Object.values(user).some(val =>
+          String(val).toLowerCase().includes(searchLower)
+        )
       );
     }
-    
-    // Apply advanced filters
-    if (advancedFilters.country && advancedFilters.country !== 'All Countries') {
-      result = result.filter(user => user.country === advancedFilters.country);
-    }
-    
-    if (advancedFilters.city && advancedFilters.city !== 'All Cities') {
-      result = result.filter(user => user.city === advancedFilters.city);
-    }
-    
-    if (advancedFilters.status && advancedFilters.status !== 'All Status') {
-      result = result.filter(user => user.status === advancedFilters.status);
-    }
-    
-    // Apply createdOn filter (simplified for demo)
-    if (advancedFilters.createdOn && advancedFilters.createdOn !== 'All Dates') {
-      // This is a simplified implementation for demo purposes
-      // In a real app, you would parse the dates and compare them
-      result = result.filter(user => user.createdOn.includes('2025'));
-    }
-    
-    setFilteredUsers(result);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [allUsers, statusFilter, debouncedSearchTerm, advancedFilters]);
 
-  // Pagination
+    return filtered.map(user => ({ ...user, countryName: getCountryNameById(user.countryId) }));
+  }, [allUsers, appliedFilters, debouncedSearchTerm, getCountryNameById]);
+
   const usersPerPage = 12;
-  const totalFilteredPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const startIndex = (currentPage - 1) * usersPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+  const totalFilteredPages = Math.ceil(processedUsers.length / usersPerPage);
+  const paginatedUsers = processedUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
 
-  // Handle selection functions
-  const handleSelectAll = (checked) => {
-    setSelectAll(checked);
-    setSelectCurrentPage(false);
-    if (checked) {
-      setSelectedUsers(filteredUsers.map(user => user.id));
-    } else {
-      setSelectedUsers([]);
-    }
-  };
+  const handleSelectAll = useCallback((checked) => {
+    setSelectedUsers(checked ? processedUsers.map(u => u.id) : []);
+  }, [processedUsers]);
 
-  const handleSelectCurrentPage = (checked) => {
-    setSelectCurrentPage(checked);
-    setSelectAll(false);
-    if (checked) {
-      setSelectedUsers(paginatedUsers.map(user => user.id));
-    } else {
-      setSelectedUsers([]);
-    }
-  };
+  const handleSelectCurrentPage = useCallback((checked) => {
+    setSelectedUsers(checked ? paginatedUsers.map(u => u.id) : []);
+  }, [paginatedUsers]);
 
-  const handleSelectUser = (userId, checked) => {
-    if (checked) {
-      setSelectedUsers(prev => [...prev, userId]);
-    } else {
-      setSelectedUsers(prev => prev.filter(id => id !== userId));
-      setSelectAll(false);
-      setSelectCurrentPage(false);
-    }
-  };
+  const handleSelectUser = useCallback((userId, checked) => {
+    setSelectedUsers(prev => checked ? [...prev, userId] : prev.filter(id => id !== userId));
+  }, []);
 
-  const handleApplyFilters = (filters) => {
-    setAdvancedFilters(filters);
-  };
+  const handleOpenFilterModal = useCallback(() => {
+    setModalFilters(appliedFilters);
+    setIsFilterModalOpen(true);
+  }, [appliedFilters]);
 
-  const handleUserClick = async (user) => {
-    const data=await TipReceiverService.getTipReceiverById(user.id)
+  const handleApplyFilters = useCallback((filters) => {
+    setAppliedFilters(filters);
+    setIsFilterModalOpen(false);
+  }, []);
+
+  const handleLiveFilterChange = useCallback((updatedFilters) => {
+    setModalFilters(updatedFilters);
+  }, []);
+
+  const handleUserClick = useCallback(async (user) => {
+    const data = await TipReceiverService.getTipReceiverById(user.id);
     setSelectedUser(data);
     setCurrentView('profile');
-  };
+  }, [setSelectedUser]);
 
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     setCurrentView('list');
     setSelectedUser(null);
-  };
+  }, [setSelectedUser]);
 
   if (currentView === 'profile') {
     return <UserProfile user={selectedUser} onBack={handleBackToList} />;
@@ -176,23 +152,11 @@ const Users = () => {
 
   return (
     <div className="relative">
-      {/* Stats Cards - Only loaded once */}
       <UserStats stats={stats} loading={loading} />
-      
-      {/* Filters */}
       <UserFilters 
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        selectAll={selectAll}
-        selectCurrentPage={selectCurrentPage}
-        onSelectAll={handleSelectAll}
-        onSelectCurrentPage={handleSelectCurrentPage}
-        onOpenFilter={() => setIsFilterModalOpen(true)}
+        onOpenFilter={handleOpenFilterModal}
       />
-
-      {/* User Table - Changes with filters */}
       <UserTable 
         users={paginatedUsers}
         currentPage={currentPage}
@@ -203,13 +167,13 @@ const Users = () => {
         onUserClick={handleUserClick}
         loading={loading}
       />
-
-      {/* Filter Modal */}
       <FilterModal 
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilters={handleApplyFilters}
-        currentFilters={advancedFilters}
+        onFilterChange={handleLiveFilterChange}
+        currentFilters={modalFilters}
+        filterConfig={filterConfig}
       />
     </div>
   );
