@@ -4,13 +4,10 @@ import { CountriesResponse } from '../models/apiResponses';
 class LookupService {
   constructor() {
     this.countries = null;
-    this.lastFetched = null;
-    this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
   }
 
   isCacheValid() {
-    return this.countries && this.lastFetched && 
-           (Date.now() - this.lastFetched) < this.CACHE_DURATION;
+    return !!this.countries;
   }
 
   async getCountries() {
@@ -22,12 +19,11 @@ class LookupService {
       const response = await apiService.get('/lookups/countries');
       const countriesResponse = new CountriesResponse({
         success: true,
-        data: response.data || response // Handle both {data: [...]} and [...] response formats
+        data: response.data || response
       });
       
       if (countriesResponse.success) {
         this.countries = countriesResponse;
-        this.lastFetched = Date.now();
       } else {
         console.warn('Failed to load countries:', countriesResponse.message);
       }
@@ -44,10 +40,35 @@ class LookupService {
     }
   }
 
+  async getCountryNameById(countryId) {
+    await this.getCountries();
+    if (!this.countries || !this.countries.data) return null;
+
+    const country = this.countries.data.find(c => c.id === countryId);
+    return country ? country.name : null;
+  }
+
+  async getCityById(cityId) {
+    await this.getCountries();
+    if (!this.countries || !this.countries.data) return null;
+
+    for (const country of this.countries.data) {
+      const city = country.cities.find(c => c.id === cityId);
+      if (city) return city;
+    }
+    return null;
+  }
+
+  async getCityNameById(cityId) {
+    const city = await this.getCityById(cityId);
+    return city ? city.name : null;
+  }
+  
+
   clearCache() {
     this.countries = null;
-    this.lastFetched = null;
   }
 }
 
-export default new LookupService();
+const instance = new LookupService();
+export { instance as default };

@@ -185,8 +185,8 @@ const CustomerSupport = () => {
         setStats({
             total: statsData.totalNumberOfTickets,
             pending: statsData.totalNumberOfPendingTickets,
-            inProgress: statsData.totalNumberOfOnProgressTickets,
-            resolved: statsData.totalNumberOfReseolvedTickets
+            inProgress: statsData.totalNumberOfInProgressTickets,
+            resolved: statsData.totalNumberOfResolvedTickets
         });
         
         setFilteredTickets(ticketsData);
@@ -218,7 +218,7 @@ const CustomerSupport = () => {
     if (debouncedSearchTerm) {
         const searchLower = debouncedSearchTerm.toLowerCase();
         result = result.filter(ticket => 
-        ticket.id.toLowerCase().includes(searchLower) ||
+        ticket.ticketId.toLowerCase().includes(searchLower) ||
         ticket.userName.toLowerCase().includes(searchLower) ||
         ticket.subject.toLowerCase().includes(searchLower) ||
         ticket.status.toLowerCase().includes(searchLower) ||

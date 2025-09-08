@@ -1,10 +1,10 @@
 export class StatisticsDto {
-    constructor() {
-        this.totalNumberOfUsers = 50;
-        this.totalNumberOfActiveUsers = 20;
-        this.totalNumberOfSuperAdmin = 1;
-        this.totalNumberOfAdmin = 4;
-        this.totalNumberOfMarekting= 2;
-        this.totalNumberOfSupport= 5;
+    constructor(dto) {
+        this.totalNumberOfUsers = dto.totalNumberOfUsers;
+        this.totalNumberOfActiveUsers = dto.totalNumberOfActiveUsers;
+        this.totalNumberOfSuperAdmins = dto.totalNumberOfSuperAdmins;
+        this.totalNumberOfAdmins = dto.totalNumberOfAdmins;
+        this.totalNumberOfMaketingUsers= dto.totalNumberOfMaketingUsers;
+        this.totalNumberOfCustomerSupportUsers= dto.totalNumberOfCustomerSupportUsers;
     }
 }

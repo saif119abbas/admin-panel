@@ -7,9 +7,30 @@ import ReasonMessageSection from './ReasonMessageSection';
 import RewardModal from '../Users/modals/RewardModal';
 import SupportService from "../../services/supportService"
 import LoadingSpinner from '../Users/common/LoadingSpinner';
+import  supportService from "../../services/supportService"
+  const defaultTicketData = {
+    ticketId: 'TCK-00123',
+    user: {
+      name: 'Barbara Gordon',
+      image: null, 
+      location: 'Dubai, United Arab Emirates',
+      phoneNumber: '+971 12 345 6789',
+      status: 'Active'
+    },
+    ticketDetails: {
+      ticketNumber: 'TCK-00123',
+      createdOn: '25 Jul 2025, 4:00 PM',
+      resolvedOn: null,
+      startedBy: 'Barbara Gordon',
+      issueType: 'Tip Issue',
+      status: 'in-progress'
+    },
+    reasonMessage: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+  };
 
 const Ticket = ({ ticket, onBack }) => {
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Start with loading true
 
@@ -26,6 +47,25 @@ const Ticket = ({ ticket, onBack }) => {
         setLoading(false);
       }
     };
+      useEffect(() => {
+      const loadInitialData = async () => {
+          setLoading(true);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          try {
+  
+          const userData=await supportService.getUser(ticket.id)
+          console.log("user Data",userData)
+          setUser(userData);
+          
+          } catch (error) {
+          console.error('Error loading user:', error);
+          } finally {
+          setLoading(false);
+          }
+      };
+  
+      loadInitialData();
+      }, []);
 
     loadInitialData();
   }, [ticket.id]);

@@ -35,7 +35,7 @@ const SettingsContent = () => {
     console.log(res)
   }
   const handleAddUser=async(user)=>{
-    const res=await SettingsService.updateUser(user)
+    const res=await SettingsService.createUser(user)
     console.log(res)
   }
 

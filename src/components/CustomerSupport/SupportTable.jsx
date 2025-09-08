@@ -3,39 +3,37 @@ import { useState } from 'react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
 import ConfirmationModal from '../ConfirmationModal'; // Adjust the path as needed
 import SupportService from '../../services/supportService';
+import { formatTicketStatus, formatTicketSubject, formatDate,formatTime } from '../../utils/formatters';
 
 
-const SupportTable = ({ 
-  tickets, 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  selectedTickets, 
-  onSelectTicket, 
+const SupportTable = ({
+  tickets,
+  currentPage,
+  totalPages,
+  onPageChange,
+  selectedTickets,
+  onSelectTicket,
   onTicketClick,
-  loading = false,
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+  loading = false
+}) => {
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Pending':
+    switch (status) {
+      case 1:
         return 'text-warning';
-      case 'In-progress':
+      case 2:
         return 'text-info';
-      case 'Resolved':
+      case 3:
         return 'text-success';
       default:
         return 'text-gray-600';
     }
   };
 
-  const onClick = async (ticket) => {
-    console.log("ticket data clicked");
-    await onTicketClick(ticket.id);
-  };
+
 
   const handleDeleteClick = (ticket, e) => {
     e.stopPropagation();
@@ -64,6 +62,11 @@ const SupportTable = ({
     setTicketToDelete(null);
   };
 
+  const onClick = async (ticket) => {
+    console.log("ticket data clicked")
+    await onTicketClick(ticket.id)
+  }
+
   const generatePageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -89,7 +92,6 @@ const SupportTable = ({
     return pages;
   };
 
-  console.log("tickets", tickets);
 
   if (loading && tickets.length === 0) {
     return (
@@ -131,26 +133,26 @@ const SupportTable = ({
                   />
                 </td>
                 <td className="px-0 py-4">
-                  <span className="text-md text-text font-medium">{ticket.id}</span>
+                  <span className="text-md text-text font-medium">{ticket.ticketId}</span>
                 </td>
                 <td className="px-4 py-4">
                   <span className="text-md text-text">{ticket.username}</span>
                 </td>
                 <td className="px-4 py-4">
                   <span className="text-md text-text max-w-xs truncate inline-block" title={ticket.subject}>
-                    {ticket.subject}
+                    {formatTicketSubject(ticket.issueType)}
                   </span>
                 </td>
                 <td className="px-4 py-4">
                   <span className={`text-md ${getStatusColor(ticket.status)}`}>
-                    {ticket.status}
+                    {formatTicketStatus(ticket.status)}
                   </span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{ticket.dateSubmitted}</span>
+                  <span className="text-md text-text">{formatDate(ticket.createdAt) + ' ' + formatTime(ticket.createdAt)}</span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{ticket.lastUpdated}</span>
+                  <span className="text-md text-text">{formatDate(ticket.lastUpdatedAt) + ' ' + formatTime(ticket.lastUpdatedAt)}</span>
                 </td>
                 <td className="px-2 py-4">
                   <div className="flex items-center gap-2">
@@ -185,13 +187,12 @@ const SupportTable = ({
                 key={index}
                 onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...' || loading}
-                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
-                  page === currentPage
+                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${page === currentPage
                     ? 'bg-primary text-white'
                     : page === '...'
-                    ? 'text-black cursor-default'
-                    : 'bg-gray-100 text-black hover:bg-gray-200'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'text-black cursor-default'
+                      : 'bg-gray-100 text-black hover:bg-gray-200'
+                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {page}
               </button>

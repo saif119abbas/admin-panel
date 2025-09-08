@@ -36,14 +36,16 @@ class Country {
    * @param {string} data.name - Country name
    * @param {string} data.code - Country code (ISO 3166-1 alpha-2)
    * @param {string} [data.flag] - Country flag emoji
-   * @param {string} [data.dialCode] - Country dialing code
+   * @param {string} [data.phoneCode] - Country dialing code
+   * @param {Array<Object>} [data.cities=[]] - Array of city objects
    */
-  constructor({ id, name, code, flag, dialCode }) {
+  constructor({ id, name, code, flag, phoneCode,cities }) {
     this.id = id;
     this.name = name;
     this.code = code;
     this.flag = flag || '';
-    this.dialCode = dialCode || '';
+    this.phoneCode = phoneCode || '';
+    this.cities = cities || [];
   }
 }
 

@@ -10,6 +10,8 @@ import AppColors from "../../utils/AppColors.js";
 import AppFonts from "../../utils/AppFonts.js";
 import { useSettings } from "../../context/SettingsContext.js";
 import SettingsService from "../../services/settingsService.js";
+import lookupService from "../../services/lookupService.js";
+
 
 const AddNewUser = ({ onBack, onSubmit }) => {
   const { selectedUser, validateUserData, error } = useSettings();
@@ -18,9 +20,9 @@ const AddNewUser = ({ onBack, onSubmit }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    dateOfBirth: "",
-    country: "",
-    city: "",
+    birthdate: "",
+    countryId: "",
+    cityId: "",
     mobileNumber: "",
     email: "",
     role: "",
@@ -29,7 +31,10 @@ const AddNewUser = ({ onBack, onSubmit }) => {
 
   const [avatar, setAvatar] = useState(null);
   const [errors, setErrors] = useState({});
-  const [selectedCountryCode, setSelectedCountryCode] = useState("ae");
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [countryCodeOptions, setCountryCodeOptions] = useState([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -119,12 +124,84 @@ const AddNewUser = ({ onBack, onSubmit }) => {
     { value: "toronto", label: "Toronto" },
     { value: "sydney", label: "Sydney" },
   ];
+    const fetchCountries = async () => {
+      const countryData = await lookupService.getCountries();
+      if (countryData && Array.isArray(countryData)) {
+        setCountries(countryData);
+        const codeOptions = countryData.map(c => ({
+          code: c.code.toLowerCase(),
+          flag: c.flag,
+          phoneCode: c.phoneCode,
+          label: c.name
+        }));
+        setCountryCodeOptions(codeOptions);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      let mobile = selectedUser.mobileNumber || '';
+      if (selectedUser.mobileNumber && countryCodeOptions.length > 0) {
+        const sortedCodes = [...countryCodeOptions].sort((a, b) => (b.phoneCode?.length || 0) - (a.phoneCode?.length || 0));
+        const matchedCode = sortedCodes.find(c => c.phoneCode && selectedUser.mobileNumber.startsWith(c.phoneCode));
+        if (matchedCode) {
+          setSelectedCountryCode(matchedCode.code);
+          mobile = selectedUser.mobileNumber.substring(matchedCode.phoneCode.length);
+        }
+      }
+
+      setFormData({
+        firstName: selectedUser.firstName || '',
+        lastName: selectedUser.lastName || '',
+        birthdate: selectedUser.birthdate || '',
+        countryId: selectedUser.country || '',
+        cityId: selectedUser.city || '',
+        mobileNumber: mobile,
+        email: selectedUser.email || '',
+        role: selectedUser.role || 0,
+        status: selectedUser.status !== undefined ? selectedUser.status : true
+      });
+
+      setAvatar(selectedUser.image || null);
+
+      if (selectedUser.country && countries.length > 0) {
+        const selectedCountry = countries.find(c => c.id === selectedUser.country);
+        if (selectedCountry) {
+          setCities(selectedCountry.cities || []);
+        }
+      }
+
+    } else {
+      setFormData({
+        firstName: '',
+        lastName: '',
+        birthdate: '',
+        countryId: '',
+        cityId: '',
+        mobileNumber: '',
+        email: '',
+        role: 0,
+        status: true
+      });
+      setAvatar(null);
+      setCities([]);
+    }
+  }, [selectedUser, countries]);
+
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    if (field === 'countryId') {
+      const selectedCountry = countries.find(c => c.id === value);
+      setCities(selectedCountry ? selectedCountry.cities : []);
+      setFormData(prev => ({ ...prev, cityId: '' })); // Reset city
+    }
 
     if (errors[field]) {
       setErrors((prev) => ({
@@ -205,24 +282,29 @@ const AddNewUser = ({ onBack, onSubmit }) => {
       };
       
       const validation = validateUserData(formDataWithCountryCode);
+      console.log("formData", formData);
+      const validation = validateUserData(formData);
       if (!validation.isValid) {
         console.log("not valid")
         setErrors(validation.errors);
         return;
       }
-      
+     
+
       const userData = {
-        ...formDataWithCountryCode,
+        ...formData,
+        mobileNumber: fullMobileNumber,
         image: avatar,
         name: `${formData.firstName} ${formData.lastName}`,
         countryDisplay:
-          countryOptions.find((c) => c.value === formData.country)?.label ||
-          formData.country,
-        cityDisplay:
-          cityOptions.find((c) => c.value === formData.city)?.label ||
-          formData.city,
+          countries.find((c) => c.id === formData.countryId)?.name ||
+          formData.countryId,
+        city:
+          cities.find((c) => c.id === formData.cityId)?.name ||
+          formData.cityId,
       };
-
+      userData.status = formData.status ? 1 : 0;
+      userData.type = formData.role;
       let savedUser;
       console.log("userData===", userData)
       if (selectedUser) {
@@ -361,11 +443,10 @@ const AddNewUser = ({ onBack, onSubmit }) => {
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className={`inline-block mt-2 ${
-                    isSubmitting
+                  className={`inline-block mt-2 ${isSubmitting
                       ? "cursor-not-allowed opacity-50"
                       : "cursor-pointer"
-                  }`}
+                    }`}
                 >
                   <span
                     className="
@@ -388,11 +469,10 @@ const AddNewUser = ({ onBack, onSubmit }) => {
             {/* Status Switch - moved to right side */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${
-                  isSubmitting
+                className={`w-24 h-24 bg-green-100 rounded-lg flex flex-col items-center justify-center ${isSubmitting
                     ? "cursor-not-allowed opacity-50"
                     : "cursor-pointer"
-                }`}
+                  }`}
                 onClick={handleStatusToggle}
               >
                 <span
@@ -447,9 +527,9 @@ const AddNewUser = ({ onBack, onSubmit }) => {
               label="Date of Birth"
               type="date"
               placeholder="Select"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-              error={errors?.dateOfBirth}
+              value={formData.birthdate}
+              onChange={(e) => handleInputChange("birthdate", e.target.value)}
+              error={errors?.birthdate}
               disabled={isSubmitting}
             />
 
@@ -457,11 +537,11 @@ const AddNewUser = ({ onBack, onSubmit }) => {
             <SelectField
               label="Country"
               placeholder="Select"
-              value={formData.country}
-              onChange={(option) => handleInputChange("country", option.value)}
-              options={countryOptions}
+              value={formData.countryId}
+              onChange={(option) => handleInputChange("countryId", option.value)}
+              options={countries.map(c => ({ value: c.id, label: c.name }))}
               required
-              error={errors?.country}
+              error={errors?.countryId}
               disabled={isSubmitting}
             />
 
@@ -469,12 +549,12 @@ const AddNewUser = ({ onBack, onSubmit }) => {
             <SelectField
               label="City"
               placeholder="Select"
-              value={formData.city}
-              onChange={(option) => handleInputChange("city", option.value)}
-              options={cityOptions}
+              value={formData.cityId}
+              onChange={(option) => handleInputChange("cityId", option.value)}
+              options={cities.map(c => ({ value: c.id, label: c.name }))}
               required
-              error={errors?.city}
-              disabled={isSubmitting}
+              error={errors?.cityId}
+              disabled={isSubmitting || !formData.countryId} // Disable if no country is selected
             />
 
             {/* Phone Number with Country Code Dropdown */}
@@ -502,16 +582,15 @@ const AddNewUser = ({ onBack, onSubmit }) => {
                         flex items-center px-2 h-full
                         bg-gray-100 rounded-md
                         hover:bg-gray-200
-                        ${
-                          isSubmitting
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer"
+                        ${isSubmitting
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
                         }
                       `}
                       onClick={
                         !isSubmitting
                           ? () =>
-                              setIsCountryDropdownOpen(!isCountryDropdownOpen)
+                            setIsCountryDropdownOpen(!isCountryDropdownOpen)
                           : undefined
                       }
                     >
@@ -527,7 +606,7 @@ const AddNewUser = ({ onBack, onSubmit }) => {
                         className="text-black font-medium mr-1 text-sm"
                         style={AppFonts.smMedium({ color: AppColors.black })}
                       >
-                        {selectedCountryData?.dialCode}
+                        {selectedCountryData?.phoneCode}
                       </span>
                       <ChevronDown className="w-3 h-3 text-gray-400" />
                     </div>
@@ -565,7 +644,7 @@ const AddNewUser = ({ onBack, onSubmit }) => {
                                     color: AppColors.black,
                                   })}
                                 >
-                                  {option.dialCode}
+                                  {option.phoneCode}
                                 </span>
                                 <span
                                   className="text-gray-600 text-sm"

@@ -1,6 +1,8 @@
 // src/components/Users/UserTable.jsx
 import { useMemo } from 'react';
 import LoadingSpinner from './common/LoadingSpinner';
+import Checkbox from '../signIn/Checkbox';
+import { formatDate, formatStatus } from '../../utils/formatters';
 
 const UserTable = ({ 
   users, 
@@ -10,46 +12,33 @@ const UserTable = ({
   selectedUsers, 
   onSelectUser, 
   onUserClick,
-  loading = false 
+  loading = false,
 }) => {
   const generateAvatar = (name) => {
+    if (!name) return '';
     const words = name.split(' ');
-    
-    if (words.length === 1) {
-      return words[0].charAt(0).toUpperCase();
-    }
-    
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
     return words[0].charAt(0).toUpperCase() + words[words.length - 1].charAt(0).toUpperCase();
   };
 
-  const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'text-success'
-      : 'text-orange-600';
+  const getStatusColor = (isPending) => {
+    return isPending ? 'text-orange-600' : 'text-success';
   };
 
   const generatePageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-
     if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       pages.push(1);
       if (currentPage > 3) pages.push('...');
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
+      for (let i = start; i <= end; i++) pages.push(i);
       if (currentPage < totalPages - 2) pages.push('...');
       if (totalPages > 1) pages.push(totalPages);
     }
-
     return pages;
   };
 
@@ -89,11 +78,9 @@ const UserTable = ({
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0 cursor-pointer" onClick={() => onUserClick && onUserClick(user)}>
                 <td className="px-6 py-4 w-16">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectedUsers.includes(user.id)}
                     onChange={(e) => onSelectUser(user.id, e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -102,37 +89,36 @@ const UserTable = ({
                       {user.image ? (
                         <img
                           src={user.image}
-                          alt={user.name}
+                          alt={`${user.firstName} ${user.lastName}`}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <span className="text-md font-semibold text-white">
-                          {generateAvatar(user.name)}
+                          {generateAvatar(`${user.firstName} ${user.lastName}`)}
                         </span>
                       )}
                     </div>
                     <div className="ml-4">
                       <button
-                        onClick={() => onUserClick && onUserClick(user)}
+                        onClick={(e) => { e.stopPropagation(); onUserClick(user); }}
                         className="text-md text-text text-left"
                       >
-                        {user.name}
+                        {user.firstName} {user.lastName}
                       </button>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-md text-text">{user.createdOn}</td>
+                <td className="px-6 py-4 text-md text-text">{formatDate(user.createdAt)}</td>
                 <td className="px-6 py-4 text-md">
-                  <span className={getStatusColor(user.status)}>{user.status}</span>
+                  <span className={getStatusColor(user.isPending)}>{formatStatus(user.isPending)}</span>
                 </td>
-                <td className="px-6 py-4 text-md text-text">{user.country}</td>
+                <td className="px-6 py-4 text-md text-text">{user.countryName}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="px-6 py-4 border-t border-gray-200">
         <div className="flex items-center justify-start space-x-2">
           {generatePageNumbers().map((page, index) => (

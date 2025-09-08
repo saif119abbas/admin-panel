@@ -1,3 +1,5 @@
+import apiService from "../api/apiService";
+
 
 import { TicketListDto } from "../dtos/supportDto/ticketListDto";
 import { StatisticsDto } from "../dtos/supportDto/statisticsDto";
@@ -11,16 +13,13 @@ class SupportService {
     }
 
     async getTickets(filters) {
-     return [new TicketListDto()]
-      /*  try {
-            const pageNumber = filters.pageNumber || 1;
-            const pageSize = filters.pageSize || 10;
-            const response = await apiService.post(`/TipReceiver?pageNumber=${pageNumber}&pageSize=${pageSize}`, filters);
+        try {
+            const response = await apiService.get("/SupportIssue/0");
             return response.data;
         } catch (error) {
             console.error('Error fetching tip receivers:', error);
             return [];
-        }*/
+        }
     }
     async deleteTicket(id)
     {
@@ -31,7 +30,8 @@ class SupportService {
     async getUser(id) {
         console.log("ticket id======",id)
         return new UserByTicket()
-      /* try {
+
+      /*  try {
             const response = await apiService.get(`/TipReceiver/${id}`);
             return response.data;
         } catch (error) {
@@ -40,54 +40,41 @@ class SupportService {
         }*/
     }
 
-
     async getStatistics() {
-        return new StatisticsDto()
-      /*  try {
-            const response = await apiService.get(`/TipReceiver/Statistics`);
+        try {
+            const response = await apiService.get("/SupportIssue/Statistics");
             return response.data;
         } catch (error) {
             console.error('Error fetching statistics:', error);
             return null;
-        }*/
+        }
     }
 
     async getTicketDetails(id) {
-        
-        return new TicketDetailsDto()
-      /* try {
-            const response = await apiService.get(`/TipReceiver/Transactions/${id}`);
+        try {
+            const response = await apiService.get(`/SupportIssue/${id}`);
             return response.data;
         } catch (error) {
-            console.error('Error fetching transactions by tip receiver ID:', error);
+            console.error('Error fetching ticket details:', error);
             return null;
-        }*/
+        }
     }
-     
 
-    async updateTikcet(id, ticketDetailsDto) {
-        return true
-      /*  try {
-            const response = await apiService.put(`/TipReceiver/PaymentInfo/${id}`, {
-                accountHolderName: paymentInfoDto.accountHolderName,
-                IBAN: paymentInfoDto.IBAN,
-                bankName: paymentInfoDto.bankName,
-                bankCountryId: paymentInfoDto.countryId
+    async updateTikcet(id, status) {
+        try {
+            // status should be number 
+            const response = await apiService.put(`/SupportIssue/${id}`, {
+                status
             });
-            if (response.success) {
-                return true;
-            } else {
-                console.error('Error updating payment info by tip receiver ID:', response.message);
-                return false;
-            }
+            return response.data;
         } catch (error) {
-            console.error('Error updating payment info by tip receiver ID:', error);
+            console.error('Error updating ticket status:', error);
             return false;
-        }*/
+        }
     }
-
-
-
 }
+
 // eslint-disable-next-line import/no-anonymous-default-export
-export default new SupportService();
+const supportService = new SupportService();
+export default supportService;
+

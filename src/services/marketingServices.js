@@ -203,9 +203,8 @@ const templateData = {
     },
   ],
 };
-class MarketingService {
-  constructor() {}
 
+class MarketingService {
   async getAllTemplates() {
     const { newTemplateData, inappTemplates, smsTemplates, emailTemplates } =
       templateData;
@@ -229,24 +228,16 @@ class MarketingService {
             t.type,
             t.category,
             t.variables,
-            t.subjuct
+            t.subject
           )
       )
     );
-    /*  try {
-            const pageNumber = filters.pageNumber || 1;
-            const pageSize = filters.pageSize || 10;
-            const response = await apiService.post(`/TipReceiver?pageNumber=${pageNumber}&pageSize=${pageSize}`, filters);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching tip receivers:', error);
-            return [];
-        }*/
   }
-  async getVariable(name)
-  {
-    return [new VariableDto()]
+
+  async getVariable(name) {
+    return [new VariableDto()];
   }
+
     async getUsers(name)
   {
     return mockUsers
@@ -255,39 +246,27 @@ class MarketingService {
   {
     console.log("send===",data)
     return true
+
+  async sendNotification(data) {
+    console.log("send===", data);
+    return true;
   }
 
-   async scheduleNotification(data)
-  {
-    console.log("send===",data)
-    return true
+  async scheduleNotification(data) {
+    console.log("send===", data);
+    return true;
   }
-  async addTemplate(templateDto)
-  {
-    console.log(templateDto)
-    return true
+
+  async addTemplate(templateDto) {
+    console.log(templateDto);
+    return true;
   }
+
   async updateTemplate(id, template) {
     console.log("update template=", template);
     return true;
-    /*  try {
-            const response = await apiService.put(`/TipReceiver/PaymentInfo/${id}`, {
-                accountHolderName: paymentInfoDto.accountHolderName,
-                IBAN: paymentInfoDto.IBAN,
-                bankName: paymentInfoDto.bankName,
-                bankCountryId: paymentInfoDto.countryId
-            });
-            if (response.success) {
-                return true;
-            } else {
-                console.error('Error updating payment info by tip receiver ID:', response.message);
-                return false;
-            }
-        } catch (error) {
-            console.error('Error updating payment info by tip receiver ID:', error);
-            return false;
-        }*/
   }
 }
 
-export default new MarketingService();
+const marketingService = new MarketingService();
+export default marketingService;

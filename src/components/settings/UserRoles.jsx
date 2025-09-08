@@ -3,9 +3,10 @@ import React from 'react';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
 
-const UserRoles = ({ 
+const UserRoles = (
+  { 
   label = "User Roles",
-  selectedRole = "",
+  selectedRole = 0,
   onChange,
   required = false,
   className = "",
@@ -14,19 +15,19 @@ const UserRoles = ({
 }) => {
   const roles = [
     {
-      id: 'superadmin',
+      id: 0,
       name: 'Super Admin'
     },
     {
-      id: 'admin',
+      id: 1,
       name: 'Admin'
     },
     {
-      id: 'marketing',
+      id: 2,
       name: 'Marketing'
     },
     {
-      id: 'customersupport',
+      id: 3,
       name: 'Customer Support'
     }
   ];

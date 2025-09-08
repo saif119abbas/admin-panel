@@ -8,6 +8,7 @@ import { useUser } from "../../context/UserContext";
 
 const BankDetailsCard = ({
   bankData,
+  bankCountryName,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const {currentUser}=useUser()
@@ -68,7 +69,7 @@ const BankDetailsCard = ({
                        w-full max-w-[368px] h-[82px]"
           >
             <p className="text-xs text-gray-500">Account Holder Name</p>
-            <p className="text-sm font-medium text-gray-900">{bankData.accountHolder}</p>
+            <p className="text-sm font-medium text-gray-900">{bankData.accountHolderName}</p>
           </div>
 
           {/* Country */}
@@ -77,7 +78,7 @@ const BankDetailsCard = ({
                        w-full max-w-[368px] h-[82px]"
           >
             <p className="text-xs text-gray-500">Country</p>
-            <p className="text-sm font-medium text-gray-900">{bankData.country}</p>
+            <p className="text-sm font-medium text-gray-900">{bankCountryName}</p>
           </div>
 
           {/* IBAN */}
@@ -87,7 +88,7 @@ const BankDetailsCard = ({
           >
             <p className="text-xs text-gray-500">IBAN</p>
             <p className="text-sm font-mono font-medium text-gray-900 break-all">
-              {bankData.iban}
+              {bankData.IBAN}
             </p>
           </div>
         </div>
