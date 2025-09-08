@@ -7,8 +7,8 @@ const MOCK_USERS = {
     email: "user@example.com",
     password: "User@123",
     name: "Reema Seema",
-    role: USER_ROLES.MARKETING,
-    roleName: ROLE_NAMES[USER_ROLES.MARKETING],
+    role: USER_ROLES.SUPER_ADMIN,
+    roleName: ROLE_NAMES[USER_ROLES.SUPER_ADMIN],
     token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.support.token",
   },
 };

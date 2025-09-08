@@ -18,7 +18,7 @@ const AllTemplates = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNewTemplate, setIsNewTemplate] = useState(false); // Track if it's a new template
   const [loading] = useState(false);
-  const [variables, setVariables] = useState([]); 
+  const [variables, setVariables] = useState([]);
   
   const { currentView } = useSidebar();
   const { templates } = useMarketing();
