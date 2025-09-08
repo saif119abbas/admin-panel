@@ -1,7 +1,3 @@
-import { TicketListDto } from "../dtos/supportDto/ticketListDto";
-import { StatisticsDto } from "../dtos/supportDto/statisticsDto";
-import { UserByTicket } from "../dtos/supportDto/userByTicket";
-import { TicketDetailsDto } from "../dtos/supportDto/ticketDetailsDto";
 import apiService from "../api/apiService";
 
 class SupportService {
@@ -45,21 +41,15 @@ class SupportService {
         }
     }
 
-    async createTicket(ticketData) {
+    async updateTikcet(id, status) {
         try {
-            const response = await apiService.post('/SupportIssue', ticketData);
+            // status should be number 
+            const response = await apiService.put(`/SupportIssue/${id}`, {
+                status
+            });
             return response.data;
         } catch (error) {
-            console.error('Error creating ticket:', error);
-            throw error;
-        }
-    }
-
-    async updateTikcet(id, ticketDetailsDto) {
-        try {
-            return true
-        } catch (error) {
-            console.error('Error updating payment info by tip receiver ID:', error);
+            console.error('Error updating ticket status:', error);
             return false;
         }
     }
