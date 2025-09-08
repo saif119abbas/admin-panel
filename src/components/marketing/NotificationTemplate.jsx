@@ -6,6 +6,7 @@ import LeftSidebar from './LeftSidebar';
 import MarketingServices from '../../services/marketingServices';
 import UsersList from './UsersList';
 import ScheduleModal from './ScheduleModal ';
+//import FilterModal from './FilterModal';
 
 const NotificationTemplate = () => {
   const [activeTab, setActiveTab] = useState('Email');
@@ -53,7 +54,7 @@ const NotificationTemplate = () => {
     setIsFilterOpen(false)
   }
 
-  const handleApplyFilters = (appliedFilters) => {
+   const handleApplyFilters = (appliedFilters) => {
     console.log("Applied Filters:", appliedFilters);
     setFilters(appliedFilters);
   }
@@ -81,7 +82,7 @@ const NotificationTemplate = () => {
     const res = await MarketingServices.sendNotification(data);
     console.log(res);
   };
-  const handlePageChange = (page) => {
+ const handlePageChange = (page) => {
     setCurrentPage(page);
   };
   const handleSelectUser = (userId, isSelected) => {
@@ -102,23 +103,24 @@ const NotificationTemplate = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* User Selection Section */}
-      <div className="m-4 bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <button
-            className="w-full flex items-center justify-between text-left"
-            onClick={() => setIsUserListExpanded(!isUserListExpanded)}
-          >
+        <div className="h-screen bg-gray-100 flex flex-col">
+      <div className="p-4 pb-2">
+        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+        <div className="px-4 pb-4 flex-shrink-0"></div>
+         <div className="bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <button 
+              className="w-full flex items-center justify-between text-left"
+              onClick={() => setIsUserListExpanded(!isUserListExpanded)}
+            >
             <h2 className="text-xl font-bold">Select Who to Notify</h2>
-            {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
+              {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
         </div>
 
-        {isUserListExpanded && (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          {isUserListExpanded && (
+            <div className="max-h-64 overflow-y-auto">
             <div className="px-4 py-2 border-b border-gray-200">
               <div className="flex items-center">
                 <input
@@ -140,23 +142,24 @@ const NotificationTemplate = () => {
                 selectedUsers={selectedUserIds}
                 onSelectUser={handleSelectUser}
                 loading={loading}
+                handleSelectAll={handleSelectAll}
+                onOpen={onOpen}
               />
             </div>
           </div>
         )}
       </div>
 
-      {/* Selected users count */}
       {selectedUserIds.length > 0 && (
-        <div className="mx-4 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
-          </p>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
+            </p>
         </div>
       )}
 
       {/* Mobile sidebar toggle */}
-      <div className="md:hidden p-4 border-b border-gray-200 bg-white">
+      <div className="md:hidden px-4 pb-4 flex-shrink-0">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
@@ -166,18 +169,19 @@ const NotificationTemplate = () => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
         <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
           <LeftSidebar
             activeTab={activeTab}
             selectedTemplate={selectedTemplate}
             handleTemplateSelect={handleTemplateSelect}
+            handelAddTemplate={handleTemplateSelect}
           />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+       <div className="flex-1 flex flex-col bg-white overflow-hidden">
           <div className="flex-1 p-4 overflow-auto">
             <div className="flex items-center justify-center py-4">
               <div className="text-center">
@@ -254,6 +258,16 @@ const NotificationTemplate = () => {
         content={editorContent}
         users={selectedUsers}
       />
+        {
+      /*  isFilterOpen &&
+        <FilterModal 
+        isOpen={isFilterOpen}
+        currentFilters={filters}
+        onClose={onClose}
+        onApplyFilters={handleApplyFilters}
+
+        />*/
+      }
     </div>
   );
 };
