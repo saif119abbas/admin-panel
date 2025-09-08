@@ -7,6 +7,8 @@ import MarketingServices from '../../services/marketingServices';
 import UsersList from './UsersList';
 import ScheduleModal from './ScheduleModal ';
 import FilterModal from './FilterModal';
+import logoImage from '../../assets/images/TipMe.png';
+
 const mockUsers = [
   {
     id: 1,
@@ -284,14 +286,14 @@ const NotificationTemplate = () => {
         {/* Main Content */}
        <div className="flex-1 flex flex-col bg-white overflow-hidden">
           <div className="flex-1 p-4 overflow-auto">
-            <div className="flex items-center justify-center py-4">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">T</span>
-                </div>
-                <div className="text-lg font-bold text-gray-900">TipMe</div>
+              {/* Logo Container */}
+              <div className="flex items-center justify-center py-4 mb-4">
+                <img 
+                  src={logoImage} 
+                  alt="TipMe Logo" 
+                  className="h-16 w-auto" 
+                />
               </div>
-            </div>
 
             {selectedTemplate ? (
               <div className="bg-white rounded-lg shadow-xs h-full flex flex-col">

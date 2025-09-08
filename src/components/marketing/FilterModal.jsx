@@ -126,14 +126,14 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, onFilterChange, currentF
               onClick={handleResetAndClose}
               fullWidth
             >
-              Reset
+              Cancle
             </ActionButton>
             <ActionButton
               variant="primary"
               onClick={handleApply}
               fullWidth
             >
-              Apply
+              Submit
             </ActionButton>
           </div>
         </div>

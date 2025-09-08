@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Search, Filter } from 'lucide-react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
+import CustomFilterIcon from '../../assets/icons/CustomFilterIcon';
+import ActionButton from '../Users/common/ActionButton';
 
 const UsersList = ({ 
   users, 
@@ -94,14 +96,16 @@ const UsersList = ({
             />
             <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
-          
-          <button 
-          onClick={onOpen}
-          
-          className="flex items-center space-x-2 px-3 py-2 border border-cyan-500 text-cyan-500 rounded-lg hover:bg-cyan-50 transition-colors">
-            <Filter size={16} />
-            <span className="text-sm font-medium">Filter</span>
-          </button>
+
+          {/* Filter Button */}
+          <ActionButton 
+            variant="outline"
+            icon={CustomFilterIcon}
+            onClick={onOpen}
+            className="!w-[107px] !h-[40px] hover:!bg-blue-50 hover:!text-primary"
+          >
+            Filter
+          </ActionButton>
         </div>
       </div>
 
