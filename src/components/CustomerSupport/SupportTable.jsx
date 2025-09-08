@@ -1,7 +1,9 @@
 import { Eye, Trash2 } from 'lucide-react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
-import { formatTicketStatus, formatTicketSubject, formatDate,formatTime } from '../../utils/formatters';
-
+import { formatTicketStatus, formatTicketSubject, formatDate, formatTime } from '../../utils/formatters';
+import { useState } from 'react';
+import ConfirmationModal from '../ConfirmationModal';
+import SupportService from '../../services/supportService';
 const SupportTable = ({
   tickets,
   currentPage,
@@ -12,7 +14,9 @@ const SupportTable = ({
   onTicketClick,
   loading = false
 }) => {
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const getStatusColor = (status) => {
     switch (status) {
       case 1:
@@ -25,6 +29,34 @@ const SupportTable = ({
         return 'text-gray-600';
     }
   };
+
+  const handleDeleteClick = (ticket, e) => {
+    e.stopPropagation();
+    setTicketToDelete(ticket);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!ticketToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      SupportService.deleteTicket(ticketToDelete.id)
+      setIsDeleteModalOpen(false);
+      setTicketToDelete(null);
+
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setTicketToDelete(null);
+  };
+
   const onClick = async (ticket) => {
     console.log("ticket data clicked")
     await onTicketClick(ticket.id)
@@ -129,6 +161,7 @@ const SupportTable = ({
                     </button>
                     <button
                       onClick={(e) => {
+                        handleDeleteClick(ticket, e)
                         e.stopPropagation();
                         // Handle delete action
                       }}
@@ -155,10 +188,10 @@ const SupportTable = ({
                 onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...' || loading}
                 className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${page === currentPage
-                    ? 'bg-primary text-white'
-                    : page === '...'
-                      ? 'text-black cursor-default'
-                      : 'bg-gray-100 text-black hover:bg-gray-200'
+                  ? 'bg-primary text-white'
+                  : page === '...'
+                    ? 'text-black cursor-default'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
                   } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {page}
@@ -167,6 +200,17 @@ const SupportTable = ({
           </div>
         </div>
       )}
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Ticket"
+        message={`Are you sure you want to delete ticket ${ticketToDelete ? ticketToDelete.id : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

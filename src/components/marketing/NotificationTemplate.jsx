@@ -19,18 +19,44 @@ const NotificationTemplate = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isUserListExpanded, setIsUserListExpanded] = useState(true);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false); 
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
-  // Mock user data
-  const mockUsers = [
-    { id: 1, name: 'Lourdee Quintero', email: 'tienlopspktnd@gmail.com', phone: '+1 613 555 0143', country: 'Poland', city: 'Cincinnati (OH)', status: 'Active', createdOn: 'tienlopspktnd@gmail.com' },
-  ];
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    country: "",
+    city: "",
+    startDate: "",
+    endDate: "",
+    status: "",
+  });
 
   useEffect(() => {
-    setUsers(mockUsers);
-    setTotalPages(1);
-  }, []);
+    const loadUserTrendData = async () => {
+      setLoading(true);
+      try {
+        const usersData = await MarketingServices.getUsers()
+        setUsers(usersData);
+        setTotalPages(1)
+      } catch (error) {
+        console.error('Error loading user trend data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    loadUserTrendData();
+  }, []);
+  const onOpen = () => {
+    setIsFilterOpen(true)
+  }
+  const onClose = () => {
+    setIsFilterOpen(false)
+  }
+
+  const handleApplyFilters = (appliedFilters) => {
+    console.log("Applied Filters:", appliedFilters);
+    setFilters(appliedFilters);
+  }
   useEffect(() => {
     const updatedSelectedUsers = users.filter(user => selectedUserIds.includes(user.id));
     setSelectedUsers(updatedSelectedUsers);
@@ -42,19 +68,22 @@ const NotificationTemplate = () => {
     setIsSidebarOpen(false);
   };
 
-  const handleSend = async () => {  
-    console.log("Selected Users:", selectedUsers);
-    console.log("Selected User IDs:", selectedUserIds);
-    
+  const handleSend = async () => {
+
     const newTemplate = {
       ...selectedTemplate,
       content: editorContent
     };
-    
-    const res = await MarketingServices.sendNotification(selectedTemplate.id, newTemplate);
+    const data = {
+      template: newTemplate,
+      users: selectedUsers
+    }
+    const res = await MarketingServices.sendNotification(data);
     console.log(res);
   };
-
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
   const handleSelectUser = (userId, isSelected) => {
     if (isSelected) {
       setSelectedUserIds([...selectedUserIds, userId]);
@@ -71,18 +100,15 @@ const NotificationTemplate = () => {
     }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-      
+
       {/* User Selection Section */}
       <div className="m-4 bg-white shadow-md border-2 border-gray-100 rounded-2xl overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <button 
+          <button
             className="w-full flex items-center justify-between text-left"
             onClick={() => setIsUserListExpanded(!isUserListExpanded)}
           >
@@ -90,7 +116,7 @@ const NotificationTemplate = () => {
             {isUserListExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
         </div>
-        
+
         {isUserListExpanded && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="px-4 py-2 border-b border-gray-200">
@@ -104,7 +130,7 @@ const NotificationTemplate = () => {
                 <label className="ml-2 text-sm font-medium text-gray-900">Select All</label>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-auto max-h-64">
               <UsersList
                 users={users}
@@ -143,7 +169,7 @@ const NotificationTemplate = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Sidebar */}
         <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
-          <LeftSidebar 
+          <LeftSidebar
             activeTab={activeTab}
             selectedTemplate={selectedTemplate}
             handleTemplateSelect={handleTemplateSelect}
@@ -161,7 +187,7 @@ const NotificationTemplate = () => {
                 <div className="text-lg font-bold text-gray-900">TipMe</div>
               </div>
             </div>
-            
+
             {selectedTemplate ? (
               <div className="bg-white rounded-lg shadow-xs h-full flex flex-col">
                 {/* Subject Line */}
@@ -178,21 +204,21 @@ const NotificationTemplate = () => {
                     />
                   </div>
                 )}
-                
+
                 <div className='border-2 border-gray-200 rounded-xl flex-1 min-h-[300px]'>
-                  <Editor value={editorContent} onChange={setEditorContent}/>
+                  <Editor value={editorContent} onChange={setEditorContent} />
                 </div>
-              
+
                 {/* Action Buttons */}
                 <div className="p-3">
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    <button 
+                    <button
                       onClick={handleSend}
                       className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
                     >
                       Send Now
                     </button>
-                    <button 
+                    <button
                       onClick={() => setIsScheduleModalOpen(true)}
                       className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
                     >
@@ -207,7 +233,7 @@ const NotificationTemplate = () => {
                   <Mail size={32} className="text-gray-300 mx-auto mb-2" />
                   <h3 className="text-sm font-medium text-gray-900 mb-1">No Template Selected</h3>
                   <p className="text-xs text-gray-500">Choose a template from the sidebar to get started</p>
-                  <button 
+                  <button
                     onClick={() => setIsSidebarOpen(true)}
                     className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium md:hidden"
                   >

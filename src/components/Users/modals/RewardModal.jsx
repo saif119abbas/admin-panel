@@ -4,7 +4,6 @@ import { ChevronDown, AlertCircle } from 'lucide-react';
 import ActionButton from '../common/ActionButton';
 import BaseModal from '../common/BaseModal';
 import { useModalManager } from '../../Users/hooks/useModalManager';
-
 const ConfirmationModal = ({ 
   isOpen, 
   onClose, 
