@@ -1,3 +1,4 @@
+// src/components/Sidebar.jsx
 import { Users, TrendingUp, Settings, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { TbLayoutDashboard } from "react-icons/tb";
 import { RiCustomerServiceLine } from "react-icons/ri";
@@ -5,32 +6,54 @@ import { useState } from 'react';
 import logo from '../assets/images/logo.png';
 import backgroundImage from '../assets/images/sidebar.svg';
 import { useSidebar } from '../context/SidebarContext';
+import { usePermissions } from '../hooks/usePermissions';
+import { PAGES } from '../utils/rolePermissions';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [isMarketingExpanded, setIsMarketingExpanded] = useState(false);
   const { changeView, currentView } = useSidebar();
+  const { hasPermission, canAccessMarketing } = usePermissions();
   
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: TbLayoutDashboard },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'support', label: 'Customer Support', icon: RiCustomerServiceLine },
+    { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: TbLayoutDashboard,
+      page: PAGES.DASHBOARD
+    },
+    { 
+      id: 'users', 
+      label: 'Users', 
+      icon: Users,
+      page: PAGES.USERS
+    },
+    { 
+      id: 'support', 
+      label: 'Customer Support', 
+      icon: RiCustomerServiceLine,
+      page: PAGES.CUSTOMER_SUPPORT
+    },
     { 
       id: 'marketing', 
       label: 'Marketing', 
       icon: TrendingUp,
       subItems: [
-        { id: 'all-templates', label: 'All Templates' },
-        { id: 'create-templates', label: 'Create Custom Templates' },
-        { id: 'send-notifications', label: 'Send Notifications' }
+        { id: 'all-templates', label: 'All Templates', page: PAGES.MARKETING_ALL_TEMPLATES },
+        { id: 'create-templates', label: 'Create Custom Templates', page: PAGES.MARKETING_CREATE_TEMPLATES },
+        { id: 'send-notifications', label: 'Send Notifications', page: PAGES.MARKETING_SEND_NOTIFICATIONS }
       ]
     },
-    { id: 'whatsapp', label: 'WhatsApp Business', icon: RiCustomerServiceLine },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { 
+      id: 'settings', 
+      label: 'Settings', 
+      icon: Settings,
+      page: PAGES.SETTINGS
+    },
   ];
 
   const handleItemClick = (itemId) => {
     changeView(itemId);
-    onClose(); // Close sidebar on mobile after selection
+    onClose();
   };
 
   const handleMarketingClick = () => {
@@ -39,8 +62,19 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const handleSubItemClick = (itemId) => {
     changeView(itemId);
-    onClose(); // Close sidebar on mobile after selection
+    onClose(); 
   };
+
+  const getVisibleMenuItems = () => {
+    return menuItems.filter(item => {
+      if (item.subItems) {
+        return canAccessMarketing();
+      }
+      return hasPermission(item.page);
+    });
+  };
+
+  const visibleMenuItems = getVisibleMenuItems();
 
   return (
     <div className={`
@@ -82,7 +116,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       {/* Navigation */}
       <nav className="flex-1 px-6 overflow-y-auto">
         <ul className="space-y-1">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = currentView === item.id;
             const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -129,32 +163,34 @@ const Sidebar = ({ isOpen, onClose }) => {
                       )}
                     </button>
                     
-                    {/* Sub-items with smooth animation */}
+                    {/* Sub-items with permission filtering */}
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                       isMarketingExpanded ? 'max-h-96' : 'max-h-0'
                     }`}>
                       <ul className="pl-8 pt-2 space-y-1">
-                        {item.subItems.map((subItem) => {
-                          const isSubItemActive = currentView === subItem.id;
-                          
-                          return (
-                            <li key={subItem.id}>
-                              <button
-                                onClick={() => handleSubItemClick(subItem.id)}
-                                className="w-full flex items-center px-0 py-2 transition-colors duration-200 text-left"
-                              >
-                                <span 
-                                  className="font-medium text-sm whitespace-normal break-words text-left"
-                                  style={{ 
-                                    color: isSubItemActive ? '#05CBE7' : 'white' 
-                                  }}
+                        {item.subItems
+                          .filter(subItem => hasPermission(subItem.page))
+                          .map((subItem) => {
+                            const isSubItemActive = currentView === subItem.id;
+                            
+                            return (
+                              <li key={subItem.id}>
+                                <button
+                                  onClick={() => handleSubItemClick(subItem.id)}
+                                  className="w-full flex items-center px-0 py-2 transition-colors duration-200 text-left"
                                 >
-                                  {subItem.label}
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
+                                  <span 
+                                    className="font-medium text-sm whitespace-normal break-words text-left"
+                                    style={{ 
+                                      color: isSubItemActive ? '#05CBE7' : 'white' 
+                                    }}
+                                  >
+                                    {subItem.label}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
                       </ul>
                     </div>
                   </>

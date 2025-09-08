@@ -1,7 +1,11 @@
-import { Bell, ChevronDown, Menu } from 'lucide-react';
+import { Bell, ChevronDown, Menu, LogOut, User, Settings } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import userImage from '../assets/images/image.png';
 
-const Header = ({ onMenuClick, userName, userRole, userImage }) => {
+const Header = ({ onMenuClick, userName, userRole, userImage, onLogout }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   const getInitials = (name) => {
     if (!name) return "US";
     return name
@@ -10,6 +14,30 @@ const Header = ({ onMenuClick, userName, userRole, userImage }) => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleLogout = () => {
+    setIsDropdownOpen(false);
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   return (
@@ -31,23 +59,74 @@ const Header = ({ onMenuClick, userName, userRole, userImage }) => {
             <p className="text-xs text-gray-500">{userRole}</p>
           </div>
 
-          {/* User Profile Image */}
-          <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center overflow-hidden">
-            {userImage ? (
-              <img 
-                src={userImage} 
-                alt={userName} 
-                className="w-full h-full object-cover"
+          {/* User Profile Section with Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={handleDropdownToggle}>
+              {/* User Profile Image */}
+              <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center overflow-hidden">
+                {userImage ? (
+                  <img 
+                    src={userImage} 
+                    alt={userName} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-white">
+                    {getInitials(userName)}
+                  </span>
+                )}
+              </div>
+
+              {/* Dropdown Arrow */}
+              <ChevronDown 
+                className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                  isDropdownOpen ? 'rotate-180' : ''
+                }`} 
               />
-            ) : (
-              <span className="text-sm font-semibold text-white">
-                {getInitials(userName)}
-              </span>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">{userName}</p>
+                  <p className="text-xs text-gray-500">{userRole}</p>
+                </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Logout
+                  </button>
+                {/* <button
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <User className="w-4 h-4 mr-3" />
+                  Profile
+                </button>
+                
+                <button
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  Settings
+                </button>
+                
+                <div className="border-t border-gray-100 mt-1">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Logout
+                  </button>
+                </div> */}
+              </div>
             )}
           </div>
-
-          {/* Dropdown Arrow */}
-          <ChevronDown className="hidden sm:block w-4 h-4 text-gray-400" />
 
           {/* Notifications with colored background circle */}
           <button className="hidden sm:flex w-10 h-10 bg-dark rounded-full items-center justify-center text-white hover:bg-blue-800 transition-colors">

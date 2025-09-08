@@ -6,7 +6,119 @@ import LeftSidebar from './LeftSidebar';
 import MarketingServices from '../../services/marketingServices';
 import UsersList from './UsersList';
 import ScheduleModal from './ScheduleModal ';
-//import FilterModal from './FilterModal';
+import FilterModal from './FilterModal';
+const mockUsers = [
+  {
+    id: 1,
+    name: "Leatrice Handler",
+    email: "tramhuy.rurte@gmail.com",
+    phone: "+1 613 555 0143",
+    phone2: "+1 202 555 0125",
+    country: "Poland",
+    city: "Aurora (IL)",
+    nationality: "Polish",
+    gender: "Female"
+  },
+  {
+    id: 2,
+    name: "Johnsie Jock",
+    email: "manhhochkt08@gmail.com",
+    phone: "+65 1552 4968",
+    country: "South Africa",
+    city: "Naïcink",
+    nationality: "South African",
+    gender: "Male"
+  },
+  {
+    id: 3,
+    name: "Hannah Burress",
+    email: "trungklenspktnd@gmail.com",
+    phone: "+1 613 555 0188",
+    country: "Palestine, State of",
+    city: "Cologne",
+    nationality: "Palestinian",
+    gender: "Female"
+  },
+  {
+    id: 4,
+    name: "Rachel Foose",
+    email: "binhan628@gmail.com",
+    phone: "+65 9860 0772",
+    country: "Guinea",
+    city: "Volzhsky",
+    nationality: "Guinean",
+    gender: "Female"
+  },
+  {
+    id: 5,
+    name: "Tyra Dhillon",
+    email: "thuhang.rurte@gmail.com",
+    phone: "+1 202 555 0107",
+    country: "Réunion",
+    city: "La Plata",
+    nationality: "French", 
+    gender: "Female"
+  },
+  {
+    id: 6,
+    name: "Murri Santier",
+    email: "danahoona87hi@amail.com",
+    phone: "+1 ATS RSS 0175",
+    country: "Israel",
+    city: "North Lac Vapore (NV)",
+    nationality: "Israeli",
+    gender: "Male"
+  }
+];
+
+  const filterConfig = [
+    {
+      key: 'country',
+      label: 'Country',
+      type: 'dropdown',
+      placeholder: 'Select Country',
+      options: [
+        { value: 'us', label: 'United States' },
+        { value: 'uk', label: 'United Kingdom' },
+        { value: 'ca', label: 'Canada' },
+        // Add more countries as needed
+      ]
+    },
+    {
+      key: 'city',
+      label: 'City',
+      type: 'dropdown',
+      placeholder: 'Select City',
+      options: [
+        { value: 'new_york', label: 'New York' },
+        { value: 'london', label: 'London' },
+        { value: 'toronto', label: 'Toronto' },
+        // Add more cities as needed
+      ]
+    },
+    {
+      key: 'nationality',
+      label: 'Nationality',
+      type: 'dropdown',
+      placeholder: 'Select Nationality',
+      options: [
+        { value: 'american', label: 'American' },
+        { value: 'british', label: 'British' },
+        { value: 'canadian', label: 'Canadian' },
+        // Add more nationalities as needed
+      ]
+    },
+    {
+      key: 'gender',
+      label: 'Gender',
+      type: 'dropdown',
+      placeholder: 'Select Gender',
+      options: [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+      ]
+    }
+  ];
 
 const NotificationTemplate = () => {
   const [activeTab, setActiveTab] = useState('Email');
@@ -15,7 +127,7 @@ const NotificationTemplate = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(mockUsers);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -26,9 +138,8 @@ const NotificationTemplate = () => {
   const [filters, setFilters] = useState({
     country: "",
     city: "",
-    startDate: "",
-    endDate: "",
-    status: "",
+    nationallity: "",
+    gender: "",
   });
 
   useEffect(() => {
@@ -46,7 +157,7 @@ const NotificationTemplate = () => {
     };
 
     loadUserTrendData();
-  }, []);
+  }, [filters]);
   const onOpen = () => {
     setIsFilterOpen(true)
   }
@@ -54,9 +165,10 @@ const NotificationTemplate = () => {
     setIsFilterOpen(false)
   }
 
-   const handleApplyFilters = (appliedFilters) => {
+ const handleApplyFilters = (appliedFilters) => {
     console.log("Applied Filters:", appliedFilters);
     setFilters(appliedFilters);
+    // Here you would typically filter your users based on the applied filters
   }
   useEffect(() => {
     const updatedSelectedUsers = users.filter(user => selectedUserIds.includes(user.id));
@@ -120,19 +232,7 @@ const NotificationTemplate = () => {
         </div>
 
           {isUserListExpanded && (
-            <div className="max-h-64 overflow-y-auto">
-            <div className="px-4 py-2 border-b border-gray-200">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedUserIds.length === users.length && users.length > 0}
-                  onChange={handleSelectAll}
-                  className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-900">Select All</label>
-              </div>
-            </div>
-
+      
             <div className="flex-1 overflow-auto max-h-64">
               <UsersList
                 users={users}
@@ -144,8 +244,9 @@ const NotificationTemplate = () => {
                 loading={loading}
                 handleSelectAll={handleSelectAll}
                 onOpen={onOpen}
+                filters={filters}
               />
-            </div>
+       
           </div>
         )}
       </div>
@@ -258,16 +359,16 @@ const NotificationTemplate = () => {
         content={editorContent}
         users={selectedUsers}
       />
-        {
-      /*  isFilterOpen &&
+         {/* Filter Modal */}
+      {isFilterOpen && (
         <FilterModal 
-        isOpen={isFilterOpen}
-        currentFilters={filters}
-        onClose={onClose}
-        onApplyFilters={handleApplyFilters}
-
-        />*/
-      }
+          isOpen={isFilterOpen}
+          currentFilters={filters}
+          onClose={onClose}
+          onApplyFilters={handleApplyFilters}
+          filterConfig={filterConfig} // Pass the filter configuration
+        />
+      )}
     </div>
   );
 };
