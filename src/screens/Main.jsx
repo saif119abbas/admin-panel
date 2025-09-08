@@ -1,12 +1,14 @@
-import { useState } from 'react';
+// src/screens/Main.jsx
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import Dashboard from './Dashboard';
 import Settings from './Settings';
 import Users from './Users';
 import CustomerSupport from './CustomerSupport';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; 
 import { useSidebar } from '../context/SidebarContext';
+import { usePermissions } from '../hooks/usePermissions';
 import Marketing from './Marketing';
 import { MarketingProvider } from '../context/MarketingContext';
 import userImage from '../assets/images/image.png';
@@ -15,17 +17,69 @@ import { SettingsProvider } from '../context/SettingsContext';
 
 function Main() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
-  const { currentView } = useSidebar();
+  const { isAuthenticated, logout, user } = useAuth(); 
+  const { currentView, changeView } = useSidebar();
+  const { hasPermission, permittedPages } = usePermissions();
   
-  // User data variables - you can make these dynamic based on your auth context or props
+  // get from auth context
   const userData = {
-    name: "Kathryn Murphy",
-    role: "Admin",
-    image: userImage // or backgroundImage if you want to use the imported image as profile picture
+    name: user?.name || "Admin User",
+    role: user?.roleName || "Admin",
+    image: user?.image || userImage
   };
 
+  // Redirect to first permitted page if current view is not permitted
+  useEffect(() => {
+    if (permittedPages.length > 0 && !hasPermission(currentView)) {
+      changeView(permittedPages[0]);
+    }
+  }, [permittedPages, currentView, hasPermission, changeView]);
+
   if (!isAuthenticated) return null;
+
+  const renderContent = () => {
+    // Always ensure user is on a permitted page before rendering
+    if (!hasPermission(currentView) && permittedPages.length > 0) {
+      // Don't render anything while redirecting
+      return null;
+    }
+
+    if (currentView === "dashboard" && hasPermission("dashboard")) {
+      return <Dashboard />;
+    }
+    
+    if (currentView === "settings" && hasPermission("settings")) {
+      return (
+        <SettingsProvider>
+          <Settings />
+        </SettingsProvider>
+      );
+    }
+    
+    if (currentView === "users" && hasPermission("users")) {
+      return (
+        <UserProvider>
+          <Users />
+        </UserProvider>
+      );
+    }
+    
+    if (currentView === "support" && hasPermission("support")) {
+      return <CustomerSupport />;
+    }
+    
+    if ((currentView === "create-templates" || currentView === "all-templates" || currentView === "send-notifications") && 
+        (hasPermission("all-templates") || hasPermission("create-templates") || hasPermission("send-notifications"))) {
+      return (
+        <MarketingProvider>
+          <Marketing />
+        </MarketingProvider>
+      );
+    }
+
+    // If no valid page found and we have permitted pages, redirect will handle it
+    return null;
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 bg-white">
@@ -39,28 +93,10 @@ function Main() {
           userName={userData.name}
           userRole={userData.role}
           userImage={userData.image}
+          onLogout={logout}
         />
         <main className="flex-1 overflow-y-auto p-3 sm:p-6">
-          {currentView==="dashboard" && <Dashboard />}
-          {currentView==="settings" && 
-          <SettingsProvider>
-            <Settings />
-          </SettingsProvider>
-          }
-          {currentView==="users" && 
-          <UserProvider>
-            <Users />
-          </UserProvider>
-      
-          }
-          {currentView==="support" && <CustomerSupport />}
-          {
-            (currentView === "create-templates" || currentView === "all-templates" || currentView === "send-notifications")
-            && 
-            <MarketingProvider>
-              <Marketing />
-            </MarketingProvider>
-          }
+          {renderContent()}
         </main>
         {/* Mobile overlay */}
         {sidebarOpen && (
