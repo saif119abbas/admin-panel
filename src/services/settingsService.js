@@ -5,6 +5,10 @@ import { StatisticsDto } from "../dtos/settingsDto/statisticsDto";
 import lookupService from './lookupService';
 
 class SettingsService {
+
+  // eslint-disable-next-line no-useless-constructor
+  constructor() { }
+
   async getUsers(filter) {
 
     try {
@@ -47,7 +51,12 @@ class SettingsService {
   }
 
   async createUser(userData) {
-    try {
+
+      console.log("userData==========",userData)
+      return true
+ 
+
+  /*  try {
       console.log("createUser",userData)
       return await apiService.post('/Users/Auth/Signup', userData,{
         headers: {
@@ -57,7 +66,7 @@ class SettingsService {
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
-    }
+    }*/
   }
 
   async updateUser(userId, userData) {
@@ -74,6 +83,7 @@ class SettingsService {
   }
 
   async deleteUser(userId) {
+    console.log("delete==",userId)
     try {
       return await apiService.delete(`/users/${userId}`);
     } catch (error) {
@@ -96,5 +106,7 @@ class SettingsService {
   }
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 const settingsService = new SettingsService();
 export default settingsService;
+

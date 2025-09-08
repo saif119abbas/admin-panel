@@ -4,6 +4,7 @@ import { ChevronDown, AlertCircle } from 'lucide-react';
 import ActionButton from '../common/ActionButton';
 import BaseModal from '../common/BaseModal';
 import { useModalManager } from '../../Users/hooks/useModalManager';
+import CommonsService from '../../../services/CommonsService';
 
 const ConfirmationModal = ({ 
   isOpen, 
@@ -65,7 +66,8 @@ const ConfirmationModal = ({
 };
 
 const RewardModal = ({ isOpen, onClose, user }) => {
-  // use hook to manage the status of modals
+
+  console.log("user reward:",user)
   const {
     isConfirmationModalOpen,
     openConfirmationModal,
@@ -95,13 +97,13 @@ const RewardModal = ({ isOpen, onClose, user }) => {
     openConfirmationModal();
   };
 
-  const handleConfirmReward = () => {
-    console.log('Reward confirmed and submitted:', {
-      user: user?.name || 'Barbara Gordon',
-      country: selectedCountry,
-      currency: selectedCurrency,
-      amount: rewardAmount
-    });
+  const handleConfirmReward = async() => {
+    const res=await CommonsService.reward(
+      {country:selectedCountry,
+      amount:parseInt(rewardAmount),
+      currency:selectedCurrency,
+      userId:user.id})
+    console.log(res)
     onClose();
   };
 

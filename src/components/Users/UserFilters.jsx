@@ -1,5 +1,3 @@
-// src/components/Users/UserFilters.jsx
-import { Search, Filter } from 'lucide-react';
 import CustomFilterIcon from '../../assets/icons/CustomFilterIcon';
 import ActionButton from './common/ActionButton';
 import SearchField from './common/SearchField';
@@ -13,7 +11,7 @@ const UserFilters = ({
   selectCurrentPage,
   onSelectAll,
   onSelectCurrentPage,
-  onOpenFilter
+  setIsFilterOpen
 }) => {
   return (
     <div className="bg-white rounded-lg p-2 w-full max-w-[1360px] h-15">
@@ -61,7 +59,7 @@ const UserFilters = ({
           <ActionButton 
             variant="outline"
             icon={CustomFilterIcon}
-            onClick={onOpenFilter}
+            onClick={()=>setIsFilterOpen(true)}
             className="!w-[107px] !h-[40px] hover:!bg-blue-50 hover:!text-primary"
           >
             Filter

@@ -1,5 +1,5 @@
 // src/components/CustomerSupport/TicketDetailsCard.jsx
-import React, { useState } from "react";
+import  { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import StatusChangeConfirmationModal from "../CustomerSupport/modals/StatusChangeConfirmationModal";
 import SupportService from "../../services/supportService";
@@ -38,7 +38,7 @@ const TicketDetailsCard = ({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(status);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState(null);
+  const [pendingStatus] = useState(null);
 
   const getCurrentStatusStyle = () => {
     const currentStatus = statusOptions.find(
@@ -94,7 +94,7 @@ const TicketDetailsCard = ({
 
           <div className="bg-white p-6 rounded-2xl">
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              Started By
+              Stated By
             </label>
             <p className="text-gray-900">{statedBy}</p>
           </div>

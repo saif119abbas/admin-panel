@@ -9,9 +9,11 @@ import Button from "../signIn/Button.jsx";
 import AppColors from "../../utils/AppColors.js";
 import AppFonts from "../../utils/AppFonts.js";
 import { useSettings } from "../../context/SettingsContext.js";
+import SettingsService from "../../services/settingsService.js";
 import lookupService from "../../services/lookupService.js";
 
-const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
+
+const AddNewUser = ({ onBack, onSubmit }) => {
   const { selectedUser, validateUserData, error } = useSettings();
   const { clearError } = useUser();
 
@@ -42,6 +44,86 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
   }, [clearError]);
 
   useEffect(() => {
+    if (selectedUser && Object.keys(selectedUser).length > 0) {
+      // Extract country code from mobile number if it exists
+      let initialCountryCode = "ae";
+      let mobileNumberWithoutCode = selectedUser.mobileNumber || "";
+      
+      if (selectedUser.mobileNumber) {
+        // Try to find matching country code
+        const foundCode = countryCodeOptions.find(option => 
+          selectedUser.mobileNumber.startsWith(option.dialCode)
+        );
+        
+        if (foundCode) {
+          initialCountryCode = foundCode.code;
+          mobileNumberWithoutCode = selectedUser.mobileNumber.replace(foundCode.dialCode, "").trim();
+        }
+      }
+      
+      setSelectedCountryCode(initialCountryCode);
+      
+      setFormData({
+        firstName: selectedUser.firstName || '',
+        lastName: selectedUser.lastName || '',
+        dateOfBirth: selectedUser.dateOfBirth || '',
+        country: selectedUser.country || '',
+        city: selectedUser.city || '',
+        mobileNumber: mobileNumberWithoutCode,
+        email: selectedUser.email || '',
+        role: selectedUser.role || '',
+        status: selectedUser.status !== undefined ? selectedUser.status : true
+      });
+      setAvatar(selectedUser.image || null);
+    } else {
+      // Reset form when not editing
+      setFormData({
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        country: '',
+        city: '',
+        mobileNumber: '',
+        email: '',
+        role: '',
+        status: true
+      });
+      setAvatar(null);
+    }
+  }, [selectedUser]);
+
+  const countryCodeOptions = [
+    { code: "ae", flag: "🇦🇪", dialCode: "+971", label: "UAE" },
+    { code: "sa", flag: "🇸🇦", dialCode: "+966", label: "Saudi Arabia" },
+    { code: "us", flag: "🇺🇸", dialCode: "+1", label: "United States" },
+    { code: "uk", flag: "🇬🇧", dialCode: "+44", label: "United Kingdom" },
+    { code: "ca", flag: "🇨🇦", dialCode: "+1", label: "Canada" },
+    { code: "au", flag: "🇦🇺", dialCode: "+61", label: "Australia" },
+  ];
+
+  const countryOptions = [
+    { value: "uae", label: "United Arab Emirates" },
+    { value: "usa", label: "United States" },
+    { value: "uk", label: "United Kingdom" },
+    { value: "canada", label: "Canada" },
+    { value: "australia", label: "Australia" },
+    { value: "saudi", label: "Saudi Arabia" },
+    { value: "egypt", label: "Egypt" },
+    { value: "jordan", label: "Jordan" },
+  ];
+
+  const cityOptions = [
+    { value: "dubai", label: "Dubai" },
+    { value: "abudhabi", label: "Abu Dhabi" },
+    { value: "sharjah", label: "Sharjah" },
+    { value: "ajman", label: "Ajman" },
+    { value: "riyadh", label: "Riyadh" },
+    { value: "jeddah", label: "Jeddah" },
+    { value: "newyork", label: "New York" },
+    { value: "london", label: "London" },
+    { value: "toronto", label: "Toronto" },
+    { value: "sydney", label: "Sydney" },
+  ];
     const fetchCountries = async () => {
       const countryData = await lookupService.getCountries();
       if (countryData && Array.isArray(countryData)) {
@@ -107,6 +189,7 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
       setCities([]);
     }
   }, [selectedUser, countries]);
+
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -187,6 +270,18 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
     try {
       setIsSubmitting(true);
       setErrors({});
+      
+      // Combine country code with mobile number
+      const countryData = getSelectedCountryCodeData();
+      const fullMobileNumber = countryData ? `${countryData.dialCode} ${formData.mobileNumber}`.trim() : formData.mobileNumber;
+      
+      // Create a copy of formData with the combined mobile number
+      const formDataWithCountryCode = {
+        ...formData,
+        mobileNumber: fullMobileNumber
+      };
+      
+      const validation = validateUserData(formDataWithCountryCode);
       console.log("formData", formData);
       const validation = validateUserData(formData);
       if (!validation.isValid) {
@@ -194,10 +289,7 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
         setErrors(validation.errors);
         return;
       }
-      const selectedCountryData = getSelectedCountryCodeData();
-      const fullMobileNumber = selectedCountryData?.phoneCode
-        ? `${selectedCountryData.phoneCode}${formData.mobileNumber}`
-        : formData.mobileNumber;
+     
 
       const userData = {
         ...formData,
@@ -214,10 +306,11 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
       userData.status = formData.status ? 1 : 0;
       userData.type = formData.role;
       let savedUser;
+      console.log("userData===", userData)
       if (selectedUser) {
-        savedUser = await updateUser(selectedUser.id, userData);
+        savedUser = await SettingsService.updateUser(selectedUser.id, userData);
       } else {
-        savedUser = await addUser(userData);
+        savedUser = await SettingsService.createUser(userData);
       }
 
       console.log(
@@ -232,7 +325,7 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
       console.error("Error saving user:", error);
       setErrors((prev) => ({
         ...prev,
-        submit: error.message || "Failed to save user. Please try again.", // Make sure this is a string
+        submit: error.message || "Failed to save user. Please try again.",
       }));
     } finally {
       setIsSubmitting(false);

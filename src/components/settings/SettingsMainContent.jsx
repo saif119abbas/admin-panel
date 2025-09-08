@@ -14,6 +14,7 @@ import StatsCard from './StatsCard.jsx';
 import UserCard from './UserCard.jsx';
 import Button from '../signIn/Button.jsx';
 import FilterModal from '../Users/modals/FilterModal.jsx';
+import ConfirmationModal from '../ConfirmationModal.jsx';
 import AppColors from '../../utils/AppColors.js';
 import AppFonts from '../../utils/AppFonts.js';
 import SettingsService from '../../services/settingsService.js';
@@ -25,7 +26,14 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({});
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [error, setError] = useState("");
   const [modalFilters, setModalFilters] = useState({}); 
   const [statsData, setStatsData] = useState({});
   const { changeUser } = useSettings();
@@ -37,6 +45,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
     { key: 'type', label: 'Type', type: 'dropdown', options: [] },
   ]);
 
+
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
@@ -45,11 +54,15 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
           SettingsService.getUsers(),
           SettingsService.getStatistics(),
           lookupService.getCountries(),
-        ]);
+          setUsers(usersData || []);
+          setStatsData(stats || {});
+          setAllCountries(countryData || []);
 
-        setUsers(usersData || []);
-        setStatsData(stats || {});
-        setAllCountries(countryData || []);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        setError('Failed to load data');
+
+        ]);
 
         const countryOptions = countryData ? countryData.map(c => ({ value: c.id, label: c.name })) : [];
         const typeOptions = [
@@ -67,6 +80,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
 
       } catch (error) {
         console.error('Failed to fetch initial data or filter options:', error);
+
       } finally {
         setLoading(false);
       }
@@ -195,6 +209,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
         iconBackgroundColor: AppColors.gray_800
       }
     ];
+
   }, [statsData, filteredUsers]);
 
   const getUserStats = useCallback(() => {
@@ -209,7 +224,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
       marketing: filteredUsers.filter(user => user.userRole === 'marketing').length,
       customersupport: filteredUsers.filter(user => user.userRole === 'customersupport').length
     };
-  
+
     return {
       totalUsers,
       activeUsers,
@@ -218,14 +233,39 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
     };
   }, [filteredUsers]);
 
-  const deleteUser = useCallback((userId) => {
+
+  const deleteUser = useCallback(async (userId) => {
     try {
+      setIsDeleting(true);
+      await SettingsService.deleteUser(userId);
       
+      // Remove the user from the local state
+      setFilteredUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      
+      // Refresh statistics
+      const stats = await SettingsService.getStatistics();
+      setStatsData(stats);
+      
+      return true;
     } catch (error) {
-     
+      console.error('Error deleting user:', error);
+      setError('Failed to delete user');
       throw error;
+    } finally {
+      setIsDeleting(false);
     }
   }, []);
+
+  const getUserRoleDisplayName = useCallback((userRole) => {
+    const roleMap = {
+      'superadmin': 'Super Admin',
+      'admin': 'Admin', 
+      'marketing': 'Marketing',
+      'customersupport': 'Customer Support'
+    };
+    return roleMap[userRole] || userRole;
+  }, []);
+
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -245,14 +285,26 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    
     try {
-      if (window.confirm('Are you sure you want to delete this user?')) {
-        await deleteUser(userId);
-      }
+      await deleteUser(userToDelete.id);
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      // Error is already handled in deleteUser function
     }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
   };
 
   if (loading) {
@@ -370,7 +422,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {filteredUsers.map((user, index) => (
               <UserCard
-                key={user.id}
+                key={index}
                 name={user.name || `${user.firstName} ${user.lastName}`.trim()}
                 country={`${user.cityName}, ${user.countryName}`}
                 email={user.email}
@@ -383,7 +435,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
                 isActive={user.status === 1}
                 role={getUserRoleDisplayName(user.role)}
                 onEdit={() => handleEditUser(user)}
-                onDelete={() => handleDeleteUser(user.id)}
+                onDelete={() => handleDeleteClick(user)}
                 isFirst={index === 0}
                 isLast={index === filteredUsers.length - 1}
               />
@@ -436,6 +488,18 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
         onFilterChange={handleLiveFilterChange}
         currentFilters={modalFilters}
         filterConfig={filterConfig}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete User"
+        message={`Are you sure you want to delete ${userToDelete ? userToDelete.name || `${userToDelete.firstName} ${userToDelete.lastName}`.trim() : 'this user'}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
       />
     </div>
   );

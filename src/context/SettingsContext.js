@@ -25,6 +25,7 @@ function SettingsProvider({ children }) {
     dispatch({ type: "setUser", payload: { selectedUser: user } });
   }
 
+
   function changeError(errorObj) {
     dispatch({ type: "setError", payload: { error: errorObj } });
   }

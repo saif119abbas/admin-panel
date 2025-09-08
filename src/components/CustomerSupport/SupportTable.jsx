@@ -1,6 +1,10 @@
 import { Eye, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
+import ConfirmationModal from '../ConfirmationModal'; // Adjust the path as needed
+import SupportService from '../../services/supportService';
 import { formatTicketStatus, formatTicketSubject, formatDate,formatTime } from '../../utils/formatters';
+
 
 const SupportTable = ({
   tickets,
@@ -10,9 +14,12 @@ const SupportTable = ({
   selectedTickets,
   onSelectTicket,
   onTicketClick,
+}) => {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   loading = false
 }) => {
-
   const getStatusColor = (status) => {
     switch (status) {
       case 1:
@@ -25,6 +32,36 @@ const SupportTable = ({
         return 'text-gray-600';
     }
   };
+
+
+
+  const handleDeleteClick = (ticket, e) => {
+    e.stopPropagation();
+    setTicketToDelete(ticket);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!ticketToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      SupportService.deleteTicket(ticketToDelete.id)
+      setIsDeleteModalOpen(false);
+      setTicketToDelete(null);
+
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setTicketToDelete(null);
+  };
+
   const onClick = async (ticket) => {
     console.log("ticket data clicked")
     await onTicketClick(ticket.id)
@@ -54,7 +91,7 @@ const SupportTable = ({
 
     return pages;
   };
-  console.log("tickets", tickets)
+
 
   if (loading && tickets.length === 0) {
     return (
@@ -83,7 +120,6 @@ const SupportTable = ({
 
           <tbody>
             {tickets.map((ticket) => (
-
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
                 <td className="px-6 py-2 w-16">
                   <input
@@ -128,10 +164,7 @@ const SupportTable = ({
                       <Eye className="w-4 h-4 text-blue-600" />
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle delete action
-                      }}
+                      onClick={(e) => handleDeleteClick(ticket, e)}
                       className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
                       title="Delete Ticket"
                     >
@@ -167,6 +200,18 @@ const SupportTable = ({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Ticket"
+        message={`Are you sure you want to delete ticket ${ticketToDelete ? ticketToDelete.id : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

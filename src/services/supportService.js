@@ -1,6 +1,17 @@
 import apiService from "../api/apiService";
 
+
+import { TicketListDto } from "../dtos/supportDto/ticketListDto";
+import { StatisticsDto } from "../dtos/supportDto/statisticsDto";
+import { UserByTicket } from "../dtos//supportDto/userByTicket";
+import { TicketDetailsDto } from "../dtos/supportDto/ticketDetailsDto";
+import { apiService } from "../api/apiService";
+
 class SupportService {
+    // eslint-disable-next-line no-useless-constructor
+    constructor() {
+    }
+
     async getTickets(filters) {
         try {
             const response = await apiService.get("/SupportIssue/0");
@@ -10,15 +21,23 @@ class SupportService {
             return [];
         }
     }
+    async deleteTicket(id)
+    {
+        console.log(id);
+        return true
+    }
 
     async getUser(id) {
-        try {
+        console.log("ticket id======",id)
+        return new UserByTicket()
+
+      /*  try {
             const response = await apiService.get(`/TipReceiver/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching tip receiver by ID:', error);
             return null;
-        }
+        }*/
     }
 
     async getStatistics() {
@@ -55,5 +74,7 @@ class SupportService {
     }
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 const supportService = new SupportService();
 export default supportService;
+
