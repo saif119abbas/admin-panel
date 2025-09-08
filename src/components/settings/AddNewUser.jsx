@@ -136,7 +136,6 @@ const AddNewUser = ({ onBack, onSubmit, addUser, updateUser }) => {
       }));
     }
   };
-
   const handleAvatarUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
