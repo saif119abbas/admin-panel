@@ -12,8 +12,10 @@ const UsersList = ({
   onUserClick,
   handleSelectAll,
   loading = false ,
-  onOpen
+  onOpen,
+  filters
 }) => {
+  console.log("filters=====",filters)
   const generateAvatar = (name) => {
     const words = name.split(' ');
     

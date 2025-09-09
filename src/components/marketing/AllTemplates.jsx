@@ -8,6 +8,7 @@ import { useMarketing } from "../../context/MarketingContext";
 import NoTemplatesFound from "./NoTemplatesFound";
 import { useSidebar } from "../../context/SidebarContext";
 import MarketingServices from "../../services/marketingServices";
+import logoImage from '../../assets/images/TipMe.png';
 
 const AllTemplates = () => {
   const [activeTab, setActiveTab] = useState("Email");
@@ -17,7 +18,7 @@ const AllTemplates = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNewTemplate, setIsNewTemplate] = useState(false); // Track if it's a new template
   const [loading] = useState(false);
-  const [variables, setVariables] = useState([]);
+  const [variables, setVariables] = useState([]); 
   
   const { currentView } = useSidebar();
   const { templates } = useMarketing();
@@ -124,7 +125,7 @@ const AllTemplates = () => {
   };
 
   const handleVariableInsert = (variable) => {
-    const variableText = `{{${variable}}}`;
+    const variableText = `\${${variable}}`;
     setEditorContent((prev) => prev + variableText);
   };
 
@@ -184,7 +185,7 @@ const AllTemplates = () => {
                       {"${" + variable + "}"}
                     </button>
                     <button
-                      onClick={() => navigator.clipboard.writeText(`{{${variable}}}`)}
+                      onClick={() => navigator.clipboard.writeText(`\${${variable}}`)}
                       className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                     >
                       <Copy size={10} className="text-gray-400" />
@@ -198,13 +199,13 @@ const AllTemplates = () => {
           {/* Scrollable content area */}
           <div className="flex-1 overflow-auto">
             <div className="p-4 h-full">
-              <div className="flex items-center justify-center py-4">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">T</span>
-                  </div>
-                  <div className="text-lg font-bold text-gray-900">TipMe</div>
-                </div>
+              {/* Logo Container */}
+              <div className="flex items-center justify-center py-4 mb-4">
+                <img 
+                  src={logoImage} 
+                  alt="TipMe Logo" 
+                  className="h-16 w-auto" 
+                />
               </div>
 
               {selectedTemplate ? (

@@ -1,3 +1,4 @@
+// src/screens/SignIn.jsx
 import { useState, useEffect } from 'react';
 import InputField from '../components/signIn/InputField.jsx';
 import Button from '../components/signIn/Button.jsx';
@@ -17,6 +18,9 @@ const SignIn = () => {
     password: "User@123",
     rememberMe: false
   });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
   const { login, isAuthenticated } = useAuth();
 
   const handleInputChange = (field) => (e) => {
@@ -26,13 +30,12 @@ const SignIn = () => {
     }));
   };
 
-  useEffect(
-    function () {
-      if (isAuthenticated) navigate("/admin", { replace: true });
-    },
-    [isAuthenticated, navigate]
-  );
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) navigate("/admin", { replace: true });
+  }, [isAuthenticated, navigate]);
 
+  // Handle remember me checkbox change
   const handleCheckboxChange = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -40,10 +43,20 @@ const SignIn = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(formData.email, formData.password);
-    console.log('Sign in attempt:', formData);
+    setError("");
+    setIsLoading(true);
+    
+    try {
+      await login(formData.email, formData.password, formData.rememberMe);
+      console.log('Sign in successful');
+    } catch (err) {
+      setError(err.message || "An error occurred during login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const ArrowIcon = () => (
@@ -87,12 +100,19 @@ const SignIn = () => {
         </div>
 
         {/* Form Container */}
-        <div className="bg-white rounded-3xl p-6 w-full max-w-md h-80 shadow-xl flex flex-col justify-center sm:w-[90vw] sm:max-w-md sm:h-auto sm:min-h-80 xs:w-[95vw] xs:max-w-sm xs:p-5 xs:rounded-xl">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 h-full justify-between">
+        <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl flex flex-col justify-center sm:w-[90vw] sm:max-w-md sm:h-auto sm:min-h-80 xs:w-[95vw] xs:max-w-sm xs:p-5 xs:rounded-xl">
+          {/* Error message display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md border border-red-200">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Email Input */}
             <div className="flex flex-col">
               <label 
-                className="block mb-1 text-left"
+                className="block mb-2 text-left"
                 style={{
                   ...AppFonts.mdSemiBold({ color: AppColors.black }),
                 }}
@@ -101,10 +121,11 @@ const SignIn = () => {
               </label>
               <InputField
                 type="email"
-                placeholder="Enter"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange('email')}
                 required
+                className="border-gray-300 focus:border-cyan-400 focus:ring-cyan-400"
               />
             </div>
 
@@ -130,10 +151,11 @@ const SignIn = () => {
                 </div>
                 <InputField
                   type="password"
-                  placeholder="Enter"
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange('password')}
                   required
+                  className="border-gray-300 focus:border-cyan-400 focus:ring-cyan-400"
                 />
               </div>
             </div>
@@ -145,24 +167,27 @@ const SignIn = () => {
                 checked={formData.rememberMe}
                 onChange={handleCheckboxChange}
                 label="Remember Me"
+                className="text-cyan-600 focus:ring-cyan-500"
               />
             </div>
 
             {/* Submit Button */}
             <div className="flex flex-col">
               <Button
-                type="submit"
-                backgroundColor={AppColors.primary}
-                borderColor={AppColors.primary}
-                textColor={AppColors.white}
-                icon={<ArrowIcon />}
-                iconPosition="right"
-                showIcon={true}
-                fullWidth={false}
-                className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90 sm:!max-w-md xs:!max-w-sm"
-              >
-                Sign In
-              </Button>
+                 type="submit"
+                 backgroundColor={AppColors.primary}
+                 borderColor={AppColors.primary}
+                 textColor={AppColors.white}
+                 icon={<ArrowIcon />}
+                 iconPosition="right"
+                 showIcon= {!isLoading}
+                 fullWidth={false}
+                 className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90 sm:!max-w-md xs:!max-w-sm"
+                 disabled={isLoading}
+               >
+                {isLoading ? 'Signing In ...' : 'Sign In'}
+               </Button>
+
             </div>
           </form>
         </div>
