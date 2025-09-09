@@ -379,6 +379,7 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
                 type={user.type}
                 countryName={user.countryName}
                 cityName={user.cityName}
+                isRoot={user.isRoot}
                 birthdate={user.birthdate}
                 isActive={user.status === 1}
                 role={getUserRoleDisplayName(user.role)}

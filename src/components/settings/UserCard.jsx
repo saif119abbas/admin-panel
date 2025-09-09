@@ -1,4 +1,3 @@
-
 // src/components/settings/UserCard.jsx
 import React from 'react';
 import { Pencil , Trash2 } from 'lucide-react';
@@ -16,6 +15,7 @@ const UserCard = ({
   isActive,
   onEdit,
   onDelete,
+  isRoot,
   isLast = false,
   id,
   className = ""
@@ -129,12 +129,13 @@ const UserCard = ({
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
             <CircleButton
-              icon={<Pencil  className="w-5 h-5" />}
+              icon={<Pencil className="w-5 h-5" />}
               onClick={onEdit}
               backgroundColor="white"
               borderColor={AppColors.primary_500}
               iconColor={AppColors.primary_500}
               size={40}
+              disabled={isRoot}
             />
             <CircleButton
               icon={<Trash2 className="w-5 h-5" />}
@@ -143,6 +144,7 @@ const UserCard = ({
               borderColor={AppColors.danger_500}
               iconColor={AppColors.danger_500}
               size={40}
+              disabled={isRoot}
             />
           </div>
 

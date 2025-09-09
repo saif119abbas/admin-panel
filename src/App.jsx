@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoadingSpinner from "./components/Users/common/LoadingSpinner";
+import ResetPassword from "./screens/ResetPassword";
 
 function AppContent() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -20,9 +21,9 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/admin" replace /> : <SignIn />} 
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to="/admin" replace /> : <SignIn />}
         />
         <Route
           path="admin"
@@ -30,6 +31,12 @@ function AppContent() {
             <ProtectedRoute>
               <Main />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="reset-password/:userId/:verificationCode"
+          element={
+            <ResetPassword />
           }
         />
       </Routes>

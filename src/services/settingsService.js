@@ -15,6 +15,7 @@ class SettingsService {
         const element = users[index];
         const userDto = new UsersListDto();
         userDto.id = element.id;
+        userDto.isRoot = element.isRoot;
         userDto.firstName = element.firstName;
         userDto.lastName = element.lastName;
         userDto.country = element.country;

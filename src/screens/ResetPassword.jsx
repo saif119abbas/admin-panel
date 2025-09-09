@@ -1,6 +1,6 @@
 //src\screens\ResetPassword.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import InputField from '../components/signIn/InputField.jsx';
 import Button from '../components/signIn/Button.jsx';
 import AppColors from '../utils/AppColors.js';
@@ -8,30 +8,53 @@ import AppFonts from '../utils/AppFonts.js';
 import logoImage from '../assets/images/logo.png';
 import arrowRightIcon from '../assets/icons/arrow-right.svg';
 import backgroundImage from '../assets/images/background.svg';
+import AuthService from '../services/AuthService.js';
+import LoadingSpinner from '../components/Users/common/LoadingSpinner.jsx';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
-  
+  const { userId, verificationCode } = useParams();
+
   const [formData, setFormData] = useState({
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   const [showPasswords, setShowPasswords] = useState({
     newPassword: false,
     confirmPassword: false
   });
-  
+
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     feedback: []
   });
-  
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'valid', 'invalid'
+  const [verificationError, setVerificationError] = useState('');
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!userId || !verificationCode) {
+        setVerificationStatus('invalid');
+        setVerificationError('Invalid password reset link. Please request a new one.');
+        return;
+      }
+      console.log(userId, verificationCode);
+      const response = await AuthService.verifyResetToken(userId, verificationCode);
+      if (response.success) {
+        setVerificationStatus('valid');
+      } else {
+        setVerificationStatus('invalid');
+        setVerificationError(response.message || 'The password reset link is invalid or has expired.');
+      }
+    };
+
+    verifyToken();
+  }, [userId, verificationCode]);
 
   const validatePasswordStrength = (password) => {
     const requirements = [
@@ -141,30 +164,21 @@ const ResetPassword = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
-    try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // const response = await resetPassword(token, formData.newPassword);
-      
-      setIsSuccess(true);
 
-      
+    try {
+      const response = await AuthService.resetPassword(userId, verificationCode, formData.newPassword, formData.confirmPassword);
+
+      if (response.success) {
+        setIsSuccess(true);
+      } else {
+        setErrors({ general: response.message || 'Failed to reset password. Please try again.' });
+      }
     } catch (error) {
-      setErrors({ general: 'Failed to reset password. Please try again.' });
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Check if token exists 
-  // useEffect(() => {
-  //   if (!token) {
-  //     navigate('/signin', { replace: true });
-  //   }
-  // }, [token, navigate]);
-
 
   const getPasswordStrengthColor = () => {
     if (passwordStrength.score <= 2) return '#ef4444'; 
@@ -187,8 +201,38 @@ const ResetPassword = () => {
   );
 
   const handleGoToSignIn = () => {
-    navigate('/signin', { replace: true });
+    navigate('/', { replace: true });
   };
+
+  if (verificationStatus === 'verifying') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'invalid') {
+    return (
+      <div 
+        className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-5"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      >
+        <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-xl text-center">
+          <h2 style={AppFonts.h4({ color: AppColors.black })} className="mb-4">Invalid Link</h2>
+          <p style={AppFonts.mdMedium({ color: AppColors.text })} className="opacity-70 mb-6">
+            {verificationError}
+          </p>
+          <Button
+            onClick={handleGoToSignIn}
+            className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90"
+          >
+            Back to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -416,7 +460,7 @@ const ResetPassword = () => {
             <div className="text-center mt-4">
               <button
                 type="button"
-                onClick={() => navigate('/signin')}
+                onClick={() => navigate('/admin')}
                 className="text-cyan-400 hover:opacity-80 transition-opacity duration-200"
                 style={AppFonts.mdMedium()}
               >

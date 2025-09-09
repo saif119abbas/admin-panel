@@ -9,9 +9,9 @@ export const usePermissions = () => {
   const [permittedPages, setPermittedPages] = useState([]);
 
   useEffect(() => {
-    if (user && user.role !== undefined) {
-      setUserRole(user.role);
-      setPermittedPages(getPermittedPages(user.role));
+    if (user && user.type !== undefined) {
+      setUserRole(user.type);
+      setPermittedPages(getPermittedPages(user.type));
     } else {
       setUserRole(null);
       setPermittedPages([]);

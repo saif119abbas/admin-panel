@@ -10,6 +10,7 @@ const CircleButton = ({
   size = 40,
   className = "",
   style = {},
+  disabled = false,
   ...props 
 }) => {
   const getBackgroundClass = () => {
@@ -32,6 +33,7 @@ const CircleButton = ({
     focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 
     rounded-full border transition-all duration-200
     hover:opacity-80
+    disabled:opacity-50 disabled:cursor-not-allowed
     ${getBackgroundClass()} ${getBorderClass()} ${className}
   `;
 
@@ -80,6 +82,7 @@ const CircleButton = ({
         height: `${size}px`,
         ...customStyles
       }}
+      disabled={disabled}
       {...props}
     >
       {renderIcon()}

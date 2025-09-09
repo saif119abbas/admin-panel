@@ -233,7 +233,7 @@ const NotificationTemplate = () => {
 
           {isUserListExpanded && (
       
-            <div className="flex-1 overflow-auto max-h-64">
+            <div className="flex-1 max-h-64">
               <UsersList
                 users={users}
                 currentPage={currentPage}
@@ -283,7 +283,7 @@ const NotificationTemplate = () => {
 
         {/* Main Content */}
        <div className="flex-1 flex flex-col bg-white overflow-hidden">
-          <div className="flex-1 p-4 overflow-auto">
+          <div className="flex-1 p-4 max-h-36">
             <div className="flex items-center justify-center py-4">
               <div className="text-center">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2 mx-auto flex items-center justify-center">
@@ -294,9 +294,9 @@ const NotificationTemplate = () => {
             </div>
 
             {selectedTemplate ? (
-              <div className="bg-white rounded-lg shadow-xs h-full flex flex-col">
+              <div className="bg-white rounded-lg shadow-xs flex flex-col">
                 {/* Subject Line */}
-                {selectedTemplate.type === 'email' && (
+                {selectedTemplate.type == 'email' && (
                   <div className="p-3">
                     <h4 className="block text-xs font-medium text-gray-700 mb-1">
                       Subject<span className="text-red-500">*</span>
@@ -333,7 +333,7 @@ const NotificationTemplate = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-xs border border-gray-200 h-full flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xs border border-gray-200 flex items-center justify-center p-4">
                 <div className="text-center">
                   <Mail size={32} className="text-gray-300 mx-auto mb-2" />
                   <h3 className="text-sm font-medium text-gray-900 mb-1">No Template Selected</h3>

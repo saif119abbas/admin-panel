@@ -9,6 +9,7 @@ import NoTemplatesFound from "./NoTemplatesFound";
 import { useSidebar } from "../../context/SidebarContext";
 import MarketingServices from "../../services/marketingServices";
 import logoImage from '../../assets/images/TipMe.png';
+import toast from "react-hot-toast";
 
 const AllTemplates = () => {
   const [activeTab, setActiveTab] = useState("Email");
@@ -23,14 +24,13 @@ const AllTemplates = () => {
   const { currentView } = useSidebar();
   const { templates } = useMarketing();
 
-  // Get variables based on whether it's a new template or existing template
   const getVariables = () => {
     if (isNewTemplate) {
       return variables.map((v)=>v.name); 
     } else if (selectedTemplate && Array.isArray(selectedTemplate.allowedVariabels)) {
-      return selectedTemplate.allowedVariabels; // Use template's allowed variables
+      return selectedTemplate.allowedVariabels;
     }
-    return []; // Fallback to empty array
+    return [];
   };
 
   const variableTemplate = getVariables();
@@ -52,12 +52,12 @@ const AllTemplates = () => {
   }, [activeTab, isNewTemplate]);
 
   const handleTemplateSelect = async (template) => {
-    if (template.id === "new-template") {
+    if (template.id === "") {
       // Handle new template creation
       setIsNewTemplate(true);
       setSelectedTemplate({
-        id: "new-template",
-        name: "New Template",
+        id: "",
+        name: "",
         subject: "",
         type: activeTab,
         content: "",
@@ -84,7 +84,37 @@ const AllTemplates = () => {
     setIsSidebarOpen(false);
   };
 
+  const handleReset = () => {
+    if (!selectedTemplate) return;
+
+    if (isNewTemplate) {
+      setEditorContent("");
+      setSubject("");
+    } else {
+      setEditorContent(selectedTemplate.content || "");
+      setSubject(selectedTemplate.subject || "");
+    }
+    toast.success("Content has been reset.");
+  };
+
   const handelSubmit = async () => {
+    if (!selectedTemplate) {
+      toast.error("Please select a template first.");
+      return;
+    }
+
+    // Validate subject for email templates
+    if (selectedTemplate.type === "email" && !subject.trim()) {
+      toast.error("Subject is required.");
+      return;
+    }
+
+    // Validate content
+    if (!editorContent.trim()) {
+      toast.error("Content cannot be empty.");
+      return;
+    }
+
     if (isNewTemplate) {
       return await handleAddTemplate();
     }
@@ -197,8 +227,8 @@ const AllTemplates = () => {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-auto">
-            <div className="p-4 h-full">
+          <div className="flex-1">
+            <div className="p-4">
               {/* Logo Container */}
               <div className="flex items-center justify-center py-4 mb-4">
                 <img 
@@ -231,7 +261,10 @@ const AllTemplates = () => {
                   {/* Action Buttons */}
                   <div className="flex-shrink-0 p-3">
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                      <button 
+                        onClick={handleReset}
+                        className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm"
+                      >
                         Reset
                       </button>
                       <button className="px-4 py-1.5 w-full md:w-[120px] h-[40px] bg-white text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors font-medium text-sm">

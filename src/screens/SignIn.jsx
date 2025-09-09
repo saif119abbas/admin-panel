@@ -14,13 +14,13 @@ import { useNavigate } from "react-router-dom";
 const SignIn = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: "user@example.com",
-    password: "User@123",
+    email: "",
+    password: "",
     rememberMe: false
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login, isAuthenticated } = useAuth();
 
   const handleInputChange = (field) => (e) => {
@@ -48,10 +48,15 @@ const SignIn = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     try {
-      await login(formData.email, formData.password, formData.rememberMe);
+      const response = await login(formData.email, formData.password, formData.rememberMe);
       console.log('Sign in successful');
+      if (response.success) {
+        navigate("/admin", { replace: true });
+      } else {
+        setError(response.message);
+      }
     } catch (err) {
       setError(err.message || "An error occurred during login");
     } finally {
@@ -60,37 +65,37 @@ const SignIn = () => {
   };
 
   const ArrowIcon = () => (
-    <img 
-      src={arrowRightIcon} 
-      alt="arrow" 
-      className="w-5 h-5 brightness-0 invert" 
+    <img
+      src={arrowRightIcon}
+      alt="arrow"
+      className="w-5 h-5 brightness-0 invert"
     />
   );
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-5 sm:p-4 xs:p-3"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="flex flex-col items-center w-full max-w-md">
         {/* Logo Container */}
         <div className="mb-10">
-          <img 
-            src={logoImage} 
-            alt="TipMe Logo" 
-            className="h-20 w-auto sm:h-15 xs:h-12" 
+          <img
+            src={logoImage}
+            alt="TipMe Logo"
+            className="h-20 w-auto sm:h-15 xs:h-12"
           />
         </div>
 
         {/* Welcome Text */}
         <div className="text-center mb-10 sm:mb-8 xs:mb-8 text-white">
-          <h1 
+          <h1
             className="mb-3 leading-tight"
             style={AppFonts.h3({ color: AppColors.white })}
           >
             Hi, Welcome Back to TipMe
           </h1>
-          <p 
+          <p
             className="leading-relaxed opacity-90"
             style={AppFonts.mdMedium({ color: AppColors.white, opacity: '0.9' })}
           >
@@ -107,11 +112,11 @@ const SignIn = () => {
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Email Input */}
             <div className="flex flex-col">
-              <label 
+              <label
                 className="block mb-2 text-left"
                 style={{
                   ...AppFonts.mdSemiBold({ color: AppColors.black }),
@@ -133,16 +138,16 @@ const SignIn = () => {
             <div className="flex flex-col">
               <div className="relative">
                 <div className="flex justify-between items-center mb-2">
-                  <label 
+                  <label
                     className="password-label"
                     style={AppFonts.mdSemiBold({ color: AppColors.black })}
                   >
                     Password<span className="text-red-500">*</span>
                   </label>
-                  <a 
-                    href="#" 
+                  <a
+                    href="#"
                     className="text-right transition-opacity duration-200 hover:opacity-80 underline"
-                    style={AppFonts.mdSemiBold({ 
+                    style={AppFonts.mdSemiBold({
                       color: AppColors.secondary,
                     })}
                   >
@@ -174,19 +179,19 @@ const SignIn = () => {
             {/* Submit Button */}
             <div className="flex flex-col">
               <Button
-                 type="submit"
-                 backgroundColor={AppColors.primary}
-                 borderColor={AppColors.primary}
-                 textColor={AppColors.white}
-                 icon={<ArrowIcon />}
-                 iconPosition="right"
-                 showIcon= {!isLoading}
-                 fullWidth={false}
-                 className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90 sm:!max-w-md xs:!max-w-sm"
-                 disabled={isLoading}
-               >
+                type="submit"
+                backgroundColor={AppColors.primary}
+                borderColor={AppColors.primary}
+                textColor={AppColors.white}
+                icon={<ArrowIcon />}
+                iconPosition="right"
+                showIcon={!isLoading}
+                fullWidth={false}
+                className="!w-full !max-w-md !h-12 !bg-cyan-400 !border-cyan-400 !border-2 !rounded-full !text-white !flex !items-center !justify-center !gap-2 !font-medium !text-base !cursor-pointer !transition-all !duration-200 !p-0 hover:!opacity-90 sm:!max-w-md xs:!max-w-sm"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Signing In ...' : 'Sign In'}
-               </Button>
+              </Button>
 
             </div>
           </form>

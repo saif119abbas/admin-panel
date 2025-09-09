@@ -1,87 +1,30 @@
 // src/services/AuthService.js
-import { USER_ROLES, ROLE_NAMES } from "../utils/rolePermissions";
-
-// Mock user data with different roles for testing
-const MOCK_USERS = {
-  "user@example.com": {
-    email: "user@example.com",
-    password: "User@123",
-    name: "Reema Seema",
-    role: USER_ROLES.MARKETING,
-    roleName: ROLE_NAMES[USER_ROLES.MARKETING],
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.support.token",
-  },
-};
-
-// Simulate API call with delay
-const fakeApiCall = (email, password) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const user = MOCK_USERS[email.toLowerCase()];
-
-      if (user && user.password === password) {
-        resolve({
-          success: true,
-          token: user.token,
-          user: {
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            roleName: user.roleName,
-          },
-        });
-      } else {
-        reject({
-          success: false,
-          message: "Invalid email or password",
-        });
-      }
-    }, 1000)
-  });
-};
-
-
-const decodeToken = (token) => {
-  try {
-    // In a real app, you'd decode the JWT token
-    // For mock, we'll find the user by token
-    for (const email in MOCK_USERS) {
-      const user = MOCK_USERS[email];
-      if (user.token === token) {
-        return {
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          roleName: user.roleName,
-        };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Failed to decode token:", error);
-    return null;
-  }
-};
-
+import { apiService } from '../api/apiService';
 const AuthService = {
   login: async (email, password, rememberMe = false) => {
     try {
-      const response = await fakeApiCall(email, password);
-
+      const response = await apiService.post(`/Users/Auth/Login`, { UserName: email, Password: password });
       if (response.success) {
         // Store token and user data based on rememberMe selection
         if (rememberMe) {
           localStorage.setItem("authToken", response.token);
-          localStorage.setItem("userData", JSON.stringify(response.user));
+          localStorage.setItem("userData", JSON.stringify(response.data));
         } else {
           sessionStorage.setItem("authToken", response.token);
-          sessionStorage.setItem("userData", JSON.stringify(response.user));
+          sessionStorage.setItem("userData", JSON.stringify(response.data));
         }
-
         return response;
+      } else {
+        return {
+          success: false,
+          message: "Invalid email or password",
+        };
       }
     } catch (error) {
-      throw error;
+      return {
+        success: false,
+        message: "Invalid email or password",
+      };
     }
   },
 
@@ -110,18 +53,46 @@ const AuthService = {
     return !!(token && userData);
   },
 
-  getUserFromToken: (token) => {
-    if (!token) return null;
-
-    const storedData = AuthService.getStoredUserData();
-    if (storedData) return storedData;
-
-    return decodeToken(token);
+  getCurrentUser: () => {
+    return AuthService.getStoredUserData();
   },
 
-  getCurrentUser: () => {
-    const token = AuthService.getToken();
-    return AuthService.getUserFromToken(token);
+  verifyResetToken: async (userId, code) => {
+    try {
+      const response = await apiService.post(`/Users/Auth/VerifyResetPassword`, {
+        Id: userId,
+        ResetCode: code
+      });
+      return response;
+    } catch (error) {
+      return { success: false, message: 'Invalid or expired reset link.' };
+    }
+  },
+
+  resetPassword: async (userId, code, newPassword, confirmPassword) => {
+    try {
+      const response = await apiService.post(`/Users/Auth/ResetPassword`, {
+        Id: userId,
+        RestCode: code,
+        Password: newPassword,
+        ConfirmPassword: confirmPassword
+
+      });
+      return response;
+    } catch (error) {
+      return { success: false, message: 'Failed to reset password. Please try again.' };
+    }
+  },
+
+  forgotPassword: async (email) => {
+    try {
+      const response = await apiService.post(`/Users/Auth/ForgotPassword`, {
+        Username: email
+      });
+      return response;
+    } catch (error) {
+      return { success: false, message: 'Failed to send reset password email. Please try again.' };
+    }
   },
 };
 

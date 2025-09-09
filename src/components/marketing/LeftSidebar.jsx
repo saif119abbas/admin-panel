@@ -96,7 +96,7 @@ export default function LeftSidebar({
 
         <div className="flex-1 overflow-y-auto p-4">
           <button
-            onClick={() => handelAddTemplate({ id: "new-template", title: "New Template" })}
+            onClick={() => handelAddTemplate({ id: "", title: "", type: activeTab })}
             className="w-full bg-primary rounded-full text-white py-2 px-4 text-sm font-medium mb-4"
           >
             Add New Template

@@ -99,7 +99,7 @@ function AuthProvider({ children }) {
       if (response.success) {
         dispatch({
           type: "login",
-          payload: { user: response.user },
+          payload: { user: response.data },
         });
       }
 

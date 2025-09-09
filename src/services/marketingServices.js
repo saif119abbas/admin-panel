@@ -148,27 +148,17 @@ class MarketingService {
   async getAllTemplates_v2() {
     try {
       const response = await apiService.get('/MarketingTemplate');
-      const { newTemplateData, inappTemplates, smsTemplates, emailTemplates } = response.data;
-      const allGroups = [
-        ...newTemplateData,
-        ...inappTemplates,
-        ...smsTemplates,
-        ...emailTemplates,
-      ];
-      return allGroups.flatMap((group) =>
-        group.templates.map(
-          (t) =>
-            new TemplateDto(
-              t.id,
-              t.title,
-              t.content,
-              t.type,
-              t.category,
-              t.variables,
-              t.subject
-            )
+      return response.data.map((t) =>
+        new TemplateDto(
+          t.id,
+          t.title,
+          t.content,
+          this.getTemplateTypeName(t.type),
+          this.getTemplateCategoryName(t.category),
+          t.variables,
+          t.subject
         )
-      );
+      )
     } catch (error) {
       console.error('Error fetching templates:', error);
       return [];
@@ -177,6 +167,8 @@ class MarketingService {
 
   async addTemplate(templateDto) {
     try {
+      templateDto.type = this.getTemplateTypeNumber(templateDto.type);
+      templateDto.category = this.getTemplateCategoryNumber(templateDto.category);
       const response = await apiService.post('/MarketingTemplate', templateDto);
       return response.data;
     } catch (error) {
@@ -187,6 +179,8 @@ class MarketingService {
 
   async updateTemplate(id, templateDto) {
     try {
+      templateDto.type = this.getTemplateTypeNumber(templateDto.type);
+      templateDto.category = this.getTemplateCategoryNumber(templateDto.category);
       const response = await apiService.put(`/MarketingTemplate/${id}`, templateDto);
       return response.data;
     } catch (error) {
@@ -237,7 +231,47 @@ class MarketingService {
     console.log("send===", data);
     return true;
   }
+
+
+  getTemplateTypeName = (type) => {
+    const typeMap = {
+      1: 'email',
+      2: 'sms',
+      3: 'inapp',
+    };
+    return typeMap[type] || type;
+  }
+
+  getTemplateCategoryName = (category) => {
+    const categoryMap = {
+      1: 'General',
+      2: 'Custom Template',
+      3: 'User Template',
+    };
+    return categoryMap[category] || category;
+  }
+
+
+  getTemplateTypeNumber = (type) => {
+    const typeMap = {
+      'email': 1,
+      'sms': 2,
+      'inapp': 3,
+    };
+    return typeMap[type] || type;
+  }
+
+  getTemplateCategoryNumber = (category) => {
+    const categoryMap = {
+      'General': 1,
+      'Custom Template': 2,
+      'User Template': 3,
+    };
+    return categoryMap[category] || category;
+  }
 }
+
+
 
 const marketingService = new MarketingService();
 export default marketingService;

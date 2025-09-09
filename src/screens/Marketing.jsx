@@ -14,7 +14,7 @@ export default function Marketing() {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 500));
       try {
-        const templatesData = await MarketingServices.getAllTemplates();
+        const templatesData = await MarketingServices.getAllTemplates_v2();
         console.log("templatesData", templatesData);
         setTemplates(templatesData);
       } catch (error) {
