@@ -63,7 +63,7 @@ const SettingsContent = () => {
 
   return (
     <div className="h-screen bg-white">
-      <main className="h-full overflow-y-auto p-3 sm:p-6 bg-white">
+      <main className="h-full overflow-y-auto bg-white">
         {renderMainContent()}
       </main>
     </div>

@@ -4,6 +4,7 @@ import { formatTicketStatus, formatTicketSubject, formatDate, formatTime } from 
 import { useState } from 'react';
 import ConfirmationModal from '../ConfirmationModal';
 import SupportService from '../../services/supportService';
+
 const SupportTable = ({
   tickets,
   currentPage,
@@ -12,19 +13,23 @@ const SupportTable = ({
   selectedTickets,
   onSelectTicket,
   onTicketClick,
-  loading = false
+  loading = false,
+  onRefreshData
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 1:
+      case 1: // Pending
         return 'text-warning';
-      case 2:
+      case 2: // In Progress
         return 'text-info';
-      case 3:
+      case 3: // Resolved
         return 'text-success';
+      case 4: // Closed
+        return 'text-gray-500';
       default:
         return 'text-gray-600';
     }
@@ -41,12 +46,24 @@ const SupportTable = ({
 
     setIsDeleting(true);
     try {
-      SupportService.deleteTicket(ticketToDelete.id)
+      const response = await SupportService.deleteTicket(ticketToDelete.id);
+      
+      if (response.success) {
+        console.log('Ticket deleted successfully');
+        // Refresh data after successful deletion
+        if (onRefreshData) {
+          onRefreshData();
+        }
+      } else {
+        console.error('Failed to delete ticket:', response.error);
+        alert('Failed to delete ticket. Please try again.');
+      }
+      
       setIsDeleteModalOpen(false);
       setTicketToDelete(null);
-
     } catch (error) {
       console.error('Error deleting ticket:', error);
+      alert('An error occurred while deleting the ticket.');
     } finally {
       setIsDeleting(false);
     }
@@ -58,9 +75,9 @@ const SupportTable = ({
   };
 
   const onClick = async (ticket) => {
-    console.log("ticket data clicked")
-    await onTicketClick(ticket.id)
-  }
+    console.log("ticket data clicked");
+    await onTicketClick(ticket.id);
+  };
 
   const generatePageNumbers = () => {
     const pages = [];
@@ -86,12 +103,19 @@ const SupportTable = ({
 
     return pages;
   };
-  console.log("tickets", tickets)
 
   if (loading && tickets.length === 0) {
     return (
       <div className="bg-white p-8 flex justify-center rounded-lg">
         <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!loading && tickets.length === 0) {
+    return (
+      <div className="bg-white p-8 text-center rounded-lg">
+        <p className="text-gray-600">No tickets found matching your criteria.</p>
       </div>
     );
   }
@@ -115,7 +139,6 @@ const SupportTable = ({
 
           <tbody>
             {tickets.map((ticket) => (
-
               <tr key={ticket.id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
                 <td className="px-6 py-2 w-16">
                   <input
@@ -135,7 +158,7 @@ const SupportTable = ({
                   <span className="text-md text-text">{ticket.username}</span>
                 </td>
                 <td className="px-4 py-4">
-                  <span className="text-md text-text max-w-xs truncate inline-block" title={ticket.subject}>
+                  <span className="text-md text-text max-w-xs truncate inline-block" title={ticket.subject || formatTicketSubject(ticket.issueType)}>
                     {formatTicketSubject(ticket.issueType)}
                   </span>
                 </td>
@@ -145,10 +168,14 @@ const SupportTable = ({
                   </span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{formatDate(ticket.createdAt) + ' ' + formatTime(ticket.createdAt)}</span>
+                  <span className="text-md text-text">
+                    {formatDate(ticket.createdAt)} {formatTime(ticket.createdAt)}
+                  </span>
                 </td>
                 <td className="px-2 py-4">
-                  <span className="text-md text-text">{formatDate(ticket.lastUpdatedAt) + ' ' + formatTime(ticket.lastUpdatedAt)}</span>
+                  <span className="text-md text-text">
+                    {formatDate(ticket.lastUpdatedAt)} {formatTime(ticket.lastUpdatedAt)}
+                  </span>
                 </td>
                 <td className="px-2 py-4">
                   <div className="flex items-center gap-2">
@@ -160,11 +187,7 @@ const SupportTable = ({
                       <Eye className="w-4 h-4 text-blue-600" />
                     </button>
                     <button
-                      onClick={(e) => {
-                        handleDeleteClick(ticket, e)
-                        e.stopPropagation();
-                        // Handle delete action
-                      }}
+                      onClick={(e) => handleDeleteClick(ticket, e)}
                       className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
                       title="Delete Ticket"
                     >
@@ -187,12 +210,13 @@ const SupportTable = ({
                 key={index}
                 onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...' || loading}
-                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${page === currentPage
-                  ? 'bg-primary text-white'
-                  : page === '...'
+                className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${
+                  page === currentPage
+                    ? 'bg-primary text-white'
+                    : page === '...'
                     ? 'text-black cursor-default'
                     : 'bg-gray-100 text-black hover:bg-gray-200'
-                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {page}
               </button>
@@ -200,13 +224,14 @@ const SupportTable = ({
           </div>
         </div>
       )}
+
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Ticket"
-        message={`Are you sure you want to delete ticket ${ticketToDelete ? ticketToDelete.id : ''}? This action cannot be undone.`}
+        message={`Are you sure you want to delete ticket ${ticketToDelete ? ticketToDelete.ticketId : ''}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         isLoading={isDeleting}

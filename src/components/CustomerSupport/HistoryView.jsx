@@ -3,140 +3,22 @@ import { useState, useEffect } from 'react';
 import LoadingSpinner from '../Users/common/LoadingSpinner';
 import SupportFilters from './SupportFilters';
 import HistoryFilterModal from './modals/HistoryFilterModal';
+import SupportService from '../../services/supportService';
+import { formatDate, formatTime, formatTicketSubject, formatTicketStatus } from '../../utils/formatters';
 
-const HistoryView = () => {
-  // Mock history data
-  const mockHistoryData = [
-    {
-      id: '#TICK-00156',
-      userName: 'Marvin McKinney',
-      issueType: 'Tip Issue',
-      createdOn: '25 Jul 2025, 4:00 PM',
-      resolvedOn: '26 Jul 2025, 1:00 PM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00157',
-      userName: 'Leslie Alexander',
-      issueType: 'Bug Report',
-      createdOn: '24 Jul 2025, 11:30 AM',
-      resolvedOn: '24 Jul 2025, 2:30 PM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00155',
-      userName: 'Ronald Richards',
-      issueType: 'Tip Issue',
-      createdOn: '25 Jul 2025, 4:00 PM',
-      resolvedOn: '26 Jul 2025, 1:00 PM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00158',
-      userName: 'Jane Cooper',
-      issueType: 'Account Issue',
-      createdOn: '23 Jul 2025, 9:15 AM',
-      resolvedOn: '23 Jul 2025, 3:45 PM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00159',
-      userName: 'Devon Lane',
-      issueType: 'Payment Issue',
-      createdOn: '22 Jul 2025, 2:30 PM',
-      resolvedOn: '23 Jul 2025, 10:00 AM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00160',
-      userName: 'Robert Fox',
-      issueType: 'Technical Issue',
-      createdOn: '21 Jul 2025, 1:00 PM',
-      resolvedOn: '22 Jul 2025, 11:30 AM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00161',
-      userName: 'Cody Fisher',
-      issueType: 'Bug Report',
-      createdOn: '20 Jul 2025, 4:45 PM',
-      resolvedOn: '21 Jul 2025, 2:15 PM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00162',
-      userName: 'Savannah Nguyen',
-      issueType: 'Tip Issue',
-      createdOn: '19 Jul 2025, 11:20 AM',
-      resolvedOn: '20 Jul 2025, 9:00 AM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00163',
-      userName: 'Jacob Jones',
-      issueType: 'Account Issue',
-      createdOn: '18 Jul 2025, 3:30 PM',
-      resolvedOn: '19 Jul 2025, 1:45 PM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00164',
-      userName: 'Kristin Watson',
-      issueType: 'Payment Issue',
-      createdOn: '17 Jul 2025, 10:15 AM',
-      resolvedOn: '18 Jul 2025, 8:30 AM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00165',
-      userName: 'Albert Flores',
-      issueType: 'Technical Issue',
-      createdOn: '16 Jul 2025, 2:00 PM',
-      resolvedOn: '17 Jul 2025, 12:00 PM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00166',
-      userName: 'Wade Warren',
-      issueType: 'Bug Report',
-      createdOn: '15 Jul 2025, 9:45 AM',
-      resolvedOn: '16 Jul 2025, 4:20 PM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00167',
-      userName: 'Guy Hawkins',
-      issueType: 'Tip Issue',
-      createdOn: '14 Jul 2025, 1:30 PM',
-      resolvedOn: '15 Jul 2025, 11:15 AM',
-      status: 'Closed'
-    },
-    {
-      id: '#TICK-00168',
-      userName: 'Dianne Russell',
-      issueType: 'Account Issue',
-      createdOn: '13 Jul 2025, 4:15 PM',
-      resolvedOn: '14 Jul 2025, 2:45 PM',
-      status: 'Resolved'
-    },
-    {
-      id: '#TICK-00169',
-      userName: 'Courtney Henry',
-      issueType: 'Payment Issue',
-      createdOn: '12 Jul 2025, 11:00 AM',
-      resolvedOn: '13 Jul 2025, 9:30 AM',
-      status: 'Closed'
-    }
-  ];
-
+const HistoryView = ({ 
+  currentPage, 
+  onPageChange, 
+  searchTerm, 
+  onSearchChange,
+  onRefreshData 
+}) => {
   const [historyData, setHistoryData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedTickets, setSelectedTickets] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [selectCurrentPage, setSelectCurrentPage] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
@@ -161,17 +43,23 @@ const HistoryView = () => {
     };
   }, [searchTerm]);
 
-  // Load data on mount
+  // Load history data (resolved and closed tickets only)
   useEffect(() => {
-    const loadData = async () => {
+    const loadHistoryData = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setHistoryData(mockHistoryData);
-      setFilteredData(mockHistoryData);
-      setLoading(false);
+      try {
+        const historyTickets = await SupportService.getTickets({ pageType: 'history' });
+        setHistoryData(historyTickets);
+        setFilteredData(historyTickets);
+      } catch (error) {
+        console.error('Error loading history data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadData();
-  }, []);
+
+    loadHistoryData();
+  }, [onRefreshData]);
 
   // Apply filters when they change
   useEffect(() => {
@@ -183,47 +71,45 @@ const HistoryView = () => {
     if (debouncedSearchTerm) {
       const searchLower = debouncedSearchTerm.toLowerCase();
       result = result.filter(ticket =>
-        ticket.id.toLowerCase().includes(searchLower) ||
-        ticket.userName.toLowerCase().includes(searchLower) ||
-        ticket.issueType.toLowerCase().includes(searchLower) ||
-        ticket.status.toLowerCase().includes(searchLower)
+        ticket.ticketId.toLowerCase().includes(searchLower) ||
+        ticket.username.toLowerCase().includes(searchLower) ||
+        formatTicketSubject(ticket.issueType).toLowerCase().includes(searchLower) ||
+        formatTicketStatus(ticket.status).toLowerCase().includes(searchLower)
       );
     }
 
     // Apply advanced filters
     if (advancedFilters.ticketId) {
       result = result.filter(ticket => 
-        ticket.id.toLowerCase().includes(advancedFilters.ticketId.toLowerCase())
+        ticket.ticketId.toLowerCase().includes(advancedFilters.ticketId.toLowerCase())
       );
     }
 
     if (advancedFilters.user) {
       result = result.filter(ticket => 
-        ticket.userName.toLowerCase().includes(advancedFilters.user.toLowerCase())
+        ticket.username.toLowerCase().includes(advancedFilters.user.toLowerCase())
       );
     }
 
     if (advancedFilters.issueType && advancedFilters.issueType !== 'All Issue Types') {
-      result = result.filter(ticket => ticket.issueType === advancedFilters.issueType);
+      result = result.filter(ticket => 
+        formatTicketSubject(ticket.issueType) === advancedFilters.issueType
+      );
     }
 
     if (advancedFilters.status && advancedFilters.status !== 'All Status') {
-      result = result.filter(ticket => ticket.status === advancedFilters.status);
-    }
-
-    // Apply date filters (simplified for demo)
-    if (advancedFilters.createdOn) {
-      // This would need proper date parsing in a real application
-      result = result.filter(ticket => ticket.createdOn.includes('2025'));
-    }
-
-    if (advancedFilters.resolvedOn) {
-      // This would need proper date parsing in a real application
-      result = result.filter(ticket => ticket.resolvedOn.includes('2025'));
+      const statusMap = {
+        'Resolved': 3,
+        'Closed': 4
+      };
+      const statusNumber = statusMap[advancedFilters.status];
+      if (statusNumber) {
+        result = result.filter(ticket => ticket.status === statusNumber);
+      }
     }
 
     setFilteredData(result);
-    setCurrentPage(1);
+    onPageChange(1); // Reset to first page when filters change
   }, [historyData, debouncedSearchTerm, advancedFilters]);
 
   // Pagination logic
@@ -243,10 +129,8 @@ const HistoryView = () => {
     setSelectAll(false);
 
     if (checked) {
-      // Add only current page tickets to selection
       setSelectedTickets(prev => [...new Set([...prev, ...paginatedData.map(t => t.id)])]);
     } else {
-      // Remove current page tickets from selection
       setSelectedTickets(prev => prev.filter(id => !paginatedData.map(t => t.id).includes(id)));
     }
   };
@@ -265,19 +149,15 @@ const HistoryView = () => {
     setAdvancedFilters(filters);
   };
 
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // Reset only selectCurrentPage (Select All remains if active)
-    setSelectCurrentPage(false);
-  };
-
   // Status color helper
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Resolved': return 'text-green-600 font-medium';
-      case 'Closed': return 'text-gray-500 font-medium';
-      default: return 'text-gray-500';
+      case 3: // Resolved
+        return 'text-green-600 font-medium';
+      case 4: // Closed
+        return 'text-danger font-medium';
+      default: 
+        return 'text-gray-500';
     }
   };
 
@@ -312,7 +192,7 @@ const HistoryView = () => {
       {/* Filters */}
       <SupportFilters
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={onSearchChange}
         selectAll={selectAll}
         selectCurrentPage={selectCurrentPage}
         onSelectAll={handleSelectAll}
@@ -330,29 +210,43 @@ const HistoryView = () => {
               <th className="px-4 py-3 text-left text-md font-bold text-black">User Name</th>
               <th className="px-4 py-3 text-left text-md font-bold text-black">Issue Type</th>
               <th className="px-4 py-3 text-left text-md font-bold text-black">Created On</th>
-              <th className="px-4 py-3 text-left text-md font-bold text-black">Resolved On</th>
+              <th className="px-4 py-3 text-left text-md font-bold text-black">Last Updated</th>
               <th className="px-4 py-3 text-left text-md font-bold text-black">Status</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((ticket, index) => (
-              <tr key={`${ticket.id}-${index}`} className="hover:bg-gray-50 border-b border-gray-200">
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedTickets.includes(ticket.id)}
-                    onChange={(e) => handleSelectTicket(ticket.id, e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 focus:ring-2"
-                  />
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-4 py-8 text-center text-gray-600">
+                  {loading ? 'Loading...' : 'No history tickets found'}
                 </td>
-                <td className="px-4 py-3 text-md font-medium text-text">{ticket.id}</td>
-                <td className="px-4 py-3 text-md text-text">{ticket.userName}</td>
-                <td className="px-4 py-3 text-md text-text">{ticket.issueType}</td>
-                <td className="px-4 py-3 text-md text-text">{ticket.createdOn}</td>
-                <td className="px-4 py-3 text-md text-text">{ticket.resolvedOn}</td>
-                <td className={`px-4 py-3 text-md ${getStatusColor(ticket.status)}`}>{ticket.status}</td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map((ticket, index) => (
+                <tr key={`${ticket.id}-${index}`} className="hover:bg-gray-50 border-b border-gray-200">
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedTickets.includes(ticket.id)}
+                      onChange={(e) => handleSelectTicket(ticket.id, e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 focus:ring-2"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-md font-medium text-text">{ticket.ticketId}</td>
+                  <td className="px-4 py-3 text-md text-text">{ticket.username}</td>
+                  <td className="px-4 py-3 text-md text-text">{formatTicketSubject(ticket.issueType)}</td>
+                  <td className="px-4 py-3 text-md text-text">
+                    {formatDate(ticket.createdAt)} {formatTime(ticket.createdAt)}
+                  </td>
+                  <td className="px-4 py-3 text-md text-text">
+                    {formatDate(ticket.lastUpdatedAt)} {formatTime(ticket.lastUpdatedAt)}
+                  </td>
+                  <td className={`px-4 py-3 text-md ${getStatusColor(ticket.status)}`}>
+                    {formatTicketStatus(ticket.status)}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -364,7 +258,7 @@ const HistoryView = () => {
             {generatePageNumbers().map((page, index) => (
               <button
                 key={index}
-                onClick={() => typeof page === 'number' && handlePageChange(page)}
+                onClick={() => typeof page === 'number' && onPageChange(page)}
                 disabled={page === '...' || loading}
                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm transition-colors ${
                   page === currentPage
