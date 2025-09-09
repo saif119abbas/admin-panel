@@ -10,7 +10,9 @@ const MOCK_USERS = {
     role: USER_ROLES.SUPER_ADMIN,
     roleName: ROLE_NAMES[USER_ROLES.SUPER_ADMIN],
     token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.support.token",
-  },
+    imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+
+  }
 };
 
 // Simulate API call with delay
@@ -28,6 +30,7 @@ const fakeApiCall = (email, password) => {
             email: user.email,
             role: user.role,
             roleName: user.roleName,
+            imageUrl: user.imageUrl, 
           },
         });
       } else {
@@ -36,10 +39,9 @@ const fakeApiCall = (email, password) => {
           message: "Invalid email or password",
         });
       }
-    }, 1000)
+    }, 1000);
   });
 };
-
 
 const decodeToken = (token) => {
   try {
@@ -53,6 +55,7 @@ const decodeToken = (token) => {
           email: user.email,
           role: user.role,
           roleName: user.roleName,
+          imageUrl: user.imageUrl,
         };
       }
     }
@@ -122,6 +125,11 @@ const AuthService = {
   getCurrentUser: () => {
     const token = AuthService.getToken();
     return AuthService.getUserFromToken(token);
+  },
+
+  // Helper method to get user image with fallback
+  getUserImage: (user, fallbackImage) => {
+    return user?.imageUrl || fallbackImage;
   },
 };
 

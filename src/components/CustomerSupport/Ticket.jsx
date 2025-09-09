@@ -1,4 +1,3 @@
-// src/components/CustomerSupport/Ticket.jsx
 import { useState, useEffect } from 'react';
 import TicketHeader from './TicketHeader';
 import TicketUserCard from './TicketUserCard';
@@ -7,27 +6,9 @@ import ReasonMessageSection from './ReasonMessageSection';
 import RewardModal from '../Users/modals/RewardModal';
 import supportService from "../../services/supportService"
 import LoadingSpinner from '../Users/common/LoadingSpinner';
-const defaultTicketData = {
-  ticketId: 'TCK-00123',
-  user: {
-    name: 'Barbara Gordon',
-    image: null,
-    location: 'Dubai, United Arab Emirates',
-    phoneNumber: '+971 12 345 6789',
-    status: 'Active'
-  },
-  ticketDetails: {
-    ticketNumber: 'TCK-00123',
-    createdOn: '25 Jul 2025, 4:00 PM',
-    resolvedOn: null,
-    startedBy: 'Barbara Gordon',
-    issueType: 'Tip Issue',
-    status: 'in-progress'
-  },
-  reasonMessage: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-};
+import { formatTicketSubject } from '../../utils/formatters';
 
-const Ticket = ({ ticket, onBack }) => {
+const Ticket = ({ ticket, onBack, onStatusChange }) => {
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,9 +17,8 @@ const Ticket = ({ ticket, onBack }) => {
     const loadInitialData = async () => {
       setLoading(true);
       try {
-        const userData = await supportService.getUser(ticket.id)
+        const userData = await supportService.getUser(ticket.userId);
         setUser(userData);
-
       } catch (error) {
         console.error('Error loading user:', error);
       } finally {
@@ -46,17 +26,23 @@ const Ticket = ({ ticket, onBack }) => {
       }
     };
 
-    loadInitialData();
-  }, [ticket.id]);
-
+    if (ticket?.userId) {
+      loadInitialData();
+    }
+  }, [ticket?.userId]);
 
   const handleRewardClick = () => {
     setIsRewardModalOpen(true);
   };
 
-  const handleStatusChange = (newStatus) => {
+  const handleStatusChange = (ticketId, newStatus) => {
     console.log('Status changed to:', newStatus);
+    // Pass the status change up to the parent component
+    if (onStatusChange) {
+      onStatusChange(ticketId, newStatus);
+    }
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -65,7 +51,8 @@ const Ticket = ({ ticket, onBack }) => {
       </div>
     );
   }
-  if (!user) {
+
+  if (!user || !ticket) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -80,6 +67,7 @@ const Ticket = ({ ticket, onBack }) => {
       </div>
     );
   }
+
   return (
     <div style={{ padding: '8px' }} className="space-y-4">
       {/* Ticket Header */}
@@ -114,8 +102,9 @@ const Ticket = ({ ticket, onBack }) => {
         <TicketDetailsCard
           ticketNumber={ticket.ticketId}
           createdOn={ticket.createdAt}
-          startedBy={ticket.statedBy}
-          issueType={ticket.issueType}
+          resolvedOn={ticket.lastUpdatedAt}
+          startedBy={ticket.username}
+          issueType={formatTicketSubject(ticket.issueType)}
           status={ticket.status}
           statedBy={ticket.username}
           id={ticket.id}
@@ -129,11 +118,13 @@ const Ticket = ({ ticket, onBack }) => {
       />
 
       {/* Reward Modal */}
-      <RewardModal
-        isOpen={isRewardModalOpen}
-        onClose={() => setIsRewardModalOpen(false)}
-        user={user}
-      />
+      {user && (
+        <RewardModal
+          isOpen={isRewardModalOpen}
+          onClose={() => setIsRewardModalOpen(false)}
+          user={user}
+        />
+      )}
     </div>
   );
 };

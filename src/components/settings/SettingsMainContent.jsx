@@ -19,6 +19,8 @@ import AppFonts from '../../utils/AppFonts.js';
 import SettingsService from '../../services/settingsService.js';
 import lookupService from '../../services/lookupService.js';
 import { useSettings } from '../../context/SettingsContext';
+import CustomFilterIcon from '../../assets/icons/CustomFilterIcon';
+import ActionButton from '../Users/common/ActionButton';
 
 const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
   const [users, setUsers] = useState([]);
@@ -342,25 +344,15 @@ const SettingsMainContent = ({ onAddNewUser, onEditUser }) => {
 
           {/* Filter button */}
           <div className="flex items-center space-x-3 w-full sm:w-auto">
-            <Button
+            {/* Filter Button */}
+            <ActionButton 
+              variant="outline"
+              icon={CustomFilterIcon}
               onClick={handleFilter}
-              backgroundColor={AppColors.white}
-              borderColor={AppColors.primary}
-              textColor={AppColors.primary}
-              icon={<SlidersHorizontal className="w-4 h-4" />}
-              iconPosition="left"
-              showIcon={true}
-              fullWidth={false}
-              variant="filter"
-              className="flex-shrink-0 w-full sm:w-auto"
-              style={{
-                minWidth: '107px',
-                height: '40px',
-                borderRadius: '96px'
-              }}
+              className="!w-[107px] !h-[40px] hover:!bg-blue-50 hover:!text-primary"
             >
               Filter
-            </Button>
+            </ActionButton>
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { Bell, ChevronDown, Menu, LogOut, User, Settings } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import userImage from '../assets/images/image.png';
 
 const Header = ({ onMenuClick, userName, userRole, userImage, onLogout }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -63,7 +62,7 @@ const Header = ({ onMenuClick, userName, userRole, userImage, onLogout }) => {
           <div className="relative" ref={dropdownRef}>
             <div className="flex items-center space-x-2 cursor-pointer" onClick={handleDropdownToggle}>
               {/* User Profile Image */}
-              <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                 {userImage ? (
                   <img 
                     src={userImage} 
@@ -129,7 +128,7 @@ const Header = ({ onMenuClick, userName, userRole, userImage, onLogout }) => {
           </div>
 
           {/* Notifications with colored background circle */}
-          <button className="hidden sm:flex w-10 h-10 bg-dark rounded-full items-center justify-center text-white hover:bg-blue-800 transition-colors">
+          <button className="hidden sm:flex w-10 h-10 bg-dark_bg rounded-full items-center justify-center text-white hover:bg-blue-800 transition-colors">
             <Bell className="w-5 h-5" />
           </button>
         </div>

@@ -11,9 +11,11 @@ import { useSidebar } from '../context/SidebarContext';
 import { usePermissions } from '../hooks/usePermissions';
 import Marketing from './Marketing';
 import { MarketingProvider } from '../context/MarketingContext';
-import userImage from '../assets/images/image.png';
+import userImage from '../assets/images/profileIcon.png';
 import { UserProvider } from '../context/UserContext';
 import { SettingsProvider } from '../context/SettingsContext';
+import AuthService from '../services/AuthService';
+
 
 function Main() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,11 +23,12 @@ function Main() {
   const { currentView, changeView } = useSidebar();
   const { hasPermission, permittedPages } = usePermissions();
   
-  // get from auth context
+  // Get user data with dynamic image from auth context
   const userData = {
     name: user?.name || "Admin User",
     role: user?.roleName || "Admin",
-    image: user?.image || userImage
+    // Use image URL from database/auth service, fallback to local image
+    image: AuthService.getUserImage(user, userImage)
   };
 
   // Redirect to first permitted page if current view is not permitted
@@ -88,7 +91,7 @@ function Main() {
         onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
+        <Header
           onMenuClick={() => setSidebarOpen(true)}
           userName={userData.name}
           userRole={userData.role}
